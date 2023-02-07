@@ -147,6 +147,11 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
             }
             false
         }
+        binding.btnSetSr.setOnClickListener {
+            val srNum = binding.editSr.text?.trim()?.toString()
+            binding.editSr.clearFocus()
+            updateRtcSr(srNum?.toIntOrNull() ?: DEFAULT_RTC_SR)
+        }
     }
 
     private fun updateRtcSr(srNum: Int) {
@@ -288,11 +293,14 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
         } catch (e: Exception) {
             LogTools.e("RtcEngine.create() called error: $e")
         }
-        if (enableHardware) {
-            // 开启android硬解, 硬解不支持频道内设置
-            rtcEngine?.setParameters("{\"che.hardware_encoding\":1}")
-        } else {
-            rtcEngine?.setParameters("{\"che.hardware_encoding\":0}")
+        rtcEngine?.let {
+            val retHardware = if (enableHardware) {
+                // 开启android硬解, 硬解不支持频道内设置
+                it.setParameters("{\"engine.video.enable_hw_decoder\":true}")
+            } else {
+                it.setParameters("{\"engine.video.enable_hw_decoder\":false}")
+            }
+            LogTools.d("Rtc Engine set hardware_decoding enableHardware:$enableHardware ret:$retHardware")
         }
         // 默认开启1倍超分 1.33倍为7,1倍超分为6
         rtcEngine?.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\":1}}")
@@ -371,7 +379,6 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
         }
         mediaPlayerHls = rtcEngine?.createMediaPlayer()
         mediaPlayerHls?.open(hlsUrl, 0)
-        mediaPlayerHls?.mute(true)
         mediaPlayerHls?.registerPlayerObserver(object : MediaPlayerObserver() {
 
             override fun onPlayerStateChanged(
@@ -383,6 +390,7 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
                 when (state) {
                     io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED -> {
                         // 资源准备完成，可以播放
+                        mediaPlayerHls?.mute(true)
                         mediaPlayerHls?.play()
                     }
                     io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_FAILED -> {
@@ -408,7 +416,7 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
         }
         mediaPlayerFlv = rtcEngine?.createMediaPlayer()
         mediaPlayerFlv?.open(flvUrl, 0)
-        mediaPlayerFlv?.mute(true)
+        // mediaPlayerFlv?.mute(true) 这里不生效
         mediaPlayerFlv?.registerPlayerObserver(object : MediaPlayerObserver() {
             override fun onPlayerStateChanged(
                 state: io.agora.mediaplayer.Constants.MediaPlayerState?,
@@ -418,6 +426,7 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
                 LogTools.d("IMediaPlayer FLV onPlayerStateChanged ,$state $error")
                 when (state) {
                     io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED -> {
+                        mediaPlayerFlv?.mute(true) // 这里生效
                         // 资源准备完成，可以播放
                         mediaPlayerFlv?.play()
                     }

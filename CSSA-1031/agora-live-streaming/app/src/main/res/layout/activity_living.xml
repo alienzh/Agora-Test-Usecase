@@ -238,4 +238,16 @@
         app:layout_constraintTop_toTopOf="@id/edit_sr"
         app:layout_constraintBottom_toBottomOf="@id/edit_sr"
         app:layout_constraintEnd_toStartOf="@id/edit_sr"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_set_sr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="设置超分"
+        android:textSize="14sp"
+        android:textColor="@color/white"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/text_sr"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="30dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
