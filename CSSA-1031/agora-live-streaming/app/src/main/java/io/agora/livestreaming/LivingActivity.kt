@@ -7,6 +7,7 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.TextureView
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.transition.TransitionManager
@@ -28,12 +29,18 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
         private const val KEY_CHANNEL = "key_channel"
         private const val KEY_FLV_URL = "key_flv_url"
         private const val KEY_HLS_URL = "key_hls_url"
+        private const val KEY_ENABLE_HARDWARE = "key_enable_hardware"
 
-        fun start(activity: Activity, channel: String, flvUrl: String, hlsUrl: String) {
+        // 默认超分
+        private const val DEFAULT_RTC_SR = 6
+
+        fun start(activity: Activity, channel: String, flvUrl: String, hlsUrl: String, enableHardware: Boolean) {
             val intent = Intent(activity, LivingActivity::class.java).apply {
                 putExtra(KEY_CHANNEL, channel)
                 putExtra(KEY_FLV_URL, flvUrl)
                 putExtra(KEY_HLS_URL, hlsUrl)
+                putExtra(KEY_HLS_URL, hlsUrl)
+                putExtra(KEY_ENABLE_HARDWARE, enableHardware)
             }
             activity.startActivity(intent)
         }
@@ -59,6 +66,10 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
 
     private val flvUrl: String by lazy {
         intent?.getStringExtra(KEY_FLV_URL) ?: ""
+    }
+
+    private val enableHardware: Boolean by lazy {
+        intent?.getBooleanExtra(KEY_ENABLE_HARDWARE, true) ?: true
     }
 
     override fun getViewBinding(inflater: LayoutInflater): ActivityLivingBinding {
@@ -121,6 +132,27 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
         binding.ivBack.setOnClickListener {
             onBackPressed()
         }
+        binding.editSr.setText("$DEFAULT_RTC_SR")
+        binding.editSr.post {
+            binding.editSr.setSelection(binding.editSr.text?.length ?: 0)
+        }
+        binding.editSr.setOnEditorActionListener { textView, actionId, keyEvent ->
+            when (actionId and EditorInfo.IME_MASK_ACTION) {
+                EditorInfo.IME_ACTION_DONE -> {
+                    val srNum = binding.editSr.text?.trim()?.toString()
+                    binding.editSr.clearFocus()
+                    updateRtcSr(srNum?.toIntOrNull() ?: DEFAULT_RTC_SR)
+                }
+                else -> {}
+            }
+            false
+        }
+    }
+
+    private fun updateRtcSr(srNum: Int) {
+        // 默认开启1倍超分 1.33倍为7,1倍超分为6，超分支持频道内设置
+        rtcEngine?.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\":1}}")
+        rtcEngine?.setParameters("{\"rtc.video.sr_type\":$srNum}")
     }
 
     private fun enlargeLiving() {
@@ -256,6 +288,15 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
         } catch (e: Exception) {
             LogTools.e("RtcEngine.create() called error: $e")
         }
+        if (enableHardware) {
+            // 开启android硬解, 硬解不支持频道内设置
+            rtcEngine?.setParameters("{\"che.hardware_encoding\":1}")
+        } else {
+            rtcEngine?.setParameters("{\"che.hardware_encoding\":0}")
+        }
+        // 默认开启1倍超分 1.33倍为7,1倍超分为6
+        rtcEngine?.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\":1}}")
+        rtcEngine?.setParameters("{\"rtc.video.sr_type\":$DEFAULT_RTC_SR}")
         // 将用户角色设置为观众，将延时性设置为低延时。
         val clientRoleOptions = ClientRoleOptions()
         clientRoleOptions.audienceLatencyLevel = Constants.AUDIENCE_LATENCY_LEVEL_LOW_LATENCY
@@ -312,6 +353,14 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
         val mediaOptions = ChannelMediaOptions()
         mediaOptions.autoSubscribeAudio = false
         mediaOptions.autoSubscribeVideo = true
+        // 开启媒体帧加速渲染
+        val ret = rtcEngine?.enableInstantMediaRendering()
+        if (ret == 0) {
+            LogTools.d("Rtc Engine enableInstantMediaRendering success")
+        } else {
+            LogTools.e("Rtc Engine enableInstantMediaRendering failed:$ret")
+        }
+
         rtcEngine?.joinChannel(null, channel, 0, mediaOptions)
     }
 
@@ -339,7 +388,7 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
                     io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_FAILED -> {
                         // 播放失败
                         ThreadTools.get().runOnMainThread {
-                            ToastTools.toastLong(this@LivingActivity,"HLS 拉流播放失败")
+                            ToastTools.toastLong(this@LivingActivity, "HLS 拉流播放失败")
                         }
                     }
                     else -> {}
@@ -375,7 +424,7 @@ class LivingActivity : BaseUiActivity<ActivityLivingBinding>() {
                     io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_FAILED -> {
                         // 播放失败
                         ThreadTools.get().runOnMainThread {
-                            ToastTools.toastLong(this@LivingActivity,"FLV 拉流播放失败")
+                            ToastTools.toastLong(this@LivingActivity, "FLV 拉流播放失败")
                         }
                     }
                     else -> {}

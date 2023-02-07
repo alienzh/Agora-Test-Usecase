@@ -20,7 +20,8 @@ class MainActivity : BaseUiActivity<ActivityMainBinding>() {
                 this,
                 binding.etChannel.text.toString(),
                 binding.etFlv.text.toString(),
-                binding.etHls.text.toString()
+                binding.etHls.text.toString(),
+                binding.checkHardware.isChecked
             )
         }
         binding.etChannel.doAfterTextChanged { editable ->

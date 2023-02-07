@@ -214,4 +214,28 @@
         app:layout_constraintBottom_toBottomOf="@id/container_flv"
         app:layout_constraintStart_toStartOf="@id/container_flv" />
 
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/edit_sr"
+        android:maxLines="1"
+        android:textSize="14sp"
+        android:inputType="number"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="30dp"
+        android:imeOptions="actionDone|flagNoExtractUi"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_sr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="@color/white_80"
+        android:text="输入超分："
+        app:layout_constraintTop_toTopOf="@id/edit_sr"
+        app:layout_constraintBottom_toBottomOf="@id/edit_sr"
+        app:layout_constraintEnd_toStartOf="@id/edit_sr"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

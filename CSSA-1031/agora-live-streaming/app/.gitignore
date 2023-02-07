@@ -2,3 +2,5 @@
 .gradle/
 .idea/
 local.properties
+/libs/
+/src/main/jniLibs/
