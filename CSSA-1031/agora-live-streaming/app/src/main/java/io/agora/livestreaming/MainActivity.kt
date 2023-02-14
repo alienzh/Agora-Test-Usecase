@@ -21,7 +21,8 @@ class MainActivity : BaseUiActivity<ActivityMainBinding>() {
                 binding.etChannel.text.toString(),
                 binding.etFlv.text.toString(),
                 binding.etHls.text.toString(),
-                binding.checkHardware.isChecked
+                binding.checkHardware.isChecked,
+                binding.checkStream.isChecked
             )
         }
         binding.etChannel.doAfterTextChanged { editable ->

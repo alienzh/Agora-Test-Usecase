@@ -99,23 +99,41 @@
             android:textCursorDrawable="@drawable/bg_edit_cursor" />
     </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.checkbox.MaterialCheckBox
-            android:id="@+id/check_hardware"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            android:checked="true"
-            app:layout_constraintTop_toBottomOf="@id/container_hls"/>
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/check_hardware"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/container_hls" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:layout_width="wrap_content"
-        app:layout_constraintTop_toTopOf="@id/check_hardware"
+        android:layout_height="wrap_content"
+        android:text="硬解"
+        android:textColor="@color/white"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/check_hardware"
         app:layout_constraintStart_toEndOf="@id/check_hardware"
-        android:text="硬解"
-        android:textSize="14sp"
+        app:layout_constraintTop_toTopOf="@id/check_hardware" />
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/check_stream"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/check_hardware" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="默认拉流"
         android:textColor="@color/white"
-        android:layout_height="wrap_content"/>
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="@id/check_stream"
+        app:layout_constraintStart_toEndOf="@id/check_stream"
+        app:layout_constraintTop_toTopOf="@id/check_stream" />
 
     <TextView
         android:id="@+id/bt_submit"
