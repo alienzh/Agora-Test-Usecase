@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF6200EE"
+    tools:context=".MainFragment">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:text="@string/app_name"
+        android:textColor="@color/white"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/horizontal30"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.3" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_channel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/channel_name"
+        android:textColorHint="#FFD34D"
+        app:boxBackgroundColor="#33A0C5FF"
+        app:boxBackgroundMode="outline"
+        app:boxCornerRadiusBottomEnd="12dp"
+        android:layout_marginHorizontal="60dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxStrokeColor="#FFD34D"
+        app:hintTextColor="#FFD34D"
+        app:layout_constraintTop_toBottomOf="@id/horizontal30">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_channel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="123"
+            android:inputType="number"
+            android:maxLength="7"
+            android:textColor="@color/white"
+            android:textCursorDrawable="@drawable/bg_edit_cursor" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/text_select_role"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="30dp"
+        android:text="@string/select_role"
+        android:textColor="#99FFFFFF"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/layout_channel"/>
+
+    <RadioGroup
+        android:id="@+id/radio_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        android:gravity="center_vertical"
+        android:layout_marginStart="60dp"
+        app:layout_constraintTop_toBottomOf="@id/text_select_role">
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/radio_broadcaster"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:checked="true"
+            android:text="@string/role_broadcaster"/>
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/radio_audience"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text="@string/role_audience"/>
+    </RadioGroup>
+
+    <TextView
+        android:id="@+id/bt_submit"
+        android:layout_width="240dp"
+        android:layout_height="48dp"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/bg_btn_primary_r24"
+        android:gravity="center"
+        android:letterSpacing="0.2"
+        android:text="@string/enter_room"
+        android:textColor="#282828"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginTop="60dp"
+        app:layout_constraintTop_toBottomOf="@id/radio_parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

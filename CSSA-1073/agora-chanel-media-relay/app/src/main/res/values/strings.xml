@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">MediaRelay</string>
+    <string name="channel_name">Channel ID</string>
+    <string name="enter_room">Enter Room</string>
+    <string name="select_role">Select Role</string>
+    <string name="role_broadcaster">Broadcaster</string>
+    <string name="role_audience">Audience</string>
+    <string name="enter_pk_channel_id">Enter PK Channel Id</string>
+    <string name="confirm">Confirm</string>
+    <string name="pk">PK</string>
+    <string name="start_pk">Start PK</string>
+    <string name="end_pk">End PK</string>
+    <string name="rtc_audience">Rtc Audience</string>
+    <string name="cdn_audience">CDN Audience</string>
+</resources>
