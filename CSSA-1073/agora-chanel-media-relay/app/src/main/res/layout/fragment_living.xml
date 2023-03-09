@@ -24,24 +24,25 @@
         android:id="@+id/btn_back"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/icon_back"
-        android:padding="12dp"
         android:background="@android:color/transparent"
+        android:padding="12dp"
+        android:layout_marginTop="25dp"
+        android:src="@drawable/icon_back"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_channel_id"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
-        app:layout_constraintTop_toTopOf="@id/btn_back"
-        app:layout_constraintBottom_toBottomOf="@id/btn_back"
-        android:textSize="16sp"
         android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="16sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/btn_back"
         app:layout_constraintStart_toEndOf="@id/btn_back"
-        tools:text="123"
-        android:textColor="@color/white"/>
+        app:layout_constraintTop_toTopOf="@id/btn_back"
+        tools:text="123" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/horizontal30"
@@ -51,17 +52,17 @@
         app:layout_constraintGuide_percent="0.2" />
 
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/horizontal80"
+        android:id="@+id/horizontal70"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.8" />
+        app:layout_constraintGuide_percent="0.7" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_channel"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginStart="30dp"
         android:hint="@string/enter_pk_channel_id"
         android:textColorHint="#FFD34D"
         app:boxBackgroundColor="#33A0C5FF"
@@ -72,8 +73,8 @@
         app:boxCornerRadiusTopStart="12dp"
         app:boxStrokeColor="#FFD34D"
         app:hintTextColor="#FFD34D"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/horizontal70">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_pk_channel"
@@ -91,33 +92,33 @@
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:layout_centerHorizontal="true"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="5dp"
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
-        android:letterSpacing="0.2"
         android:paddingHorizontal="12dp"
         android:text="@string/start_pk"
         android:textColor="#282828"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="@id/layout_channel"
-        app:layout_constraintTop_toBottomOf="@id/layout_channel" />
+        app:layout_constraintBottom_toBottomOf="@id/layout_channel"
+        app:layout_constraintStart_toEndOf="@id/layout_channel"
+        app:layout_constraintTop_toTopOf="@id/layout_channel" />
 
     <TextView
         android:id="@+id/bt_switch_stream"
         android:layout_width="wrap_content"
-        android:layout_height="48dp"
+        android:layout_height="36dp"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="5dp"
+        android:layout_marginEnd="15dp"
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
-        android:letterSpacing="0.2"
         android:paddingHorizontal="12dp"
         android:text="@string/cdn_audience"
         android:textColor="#282828"
         android:textSize="14sp"
         android:textStyle="bold"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="@id/layout_channel"
-        app:layout_constraintTop_toBottomOf="@id/layout_channel" />
+        app:layout_constraintBottom_toBottomOf="@id/btn_back"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_back" />
 </androidx.constraintlayout.widget.ConstraintLayout>

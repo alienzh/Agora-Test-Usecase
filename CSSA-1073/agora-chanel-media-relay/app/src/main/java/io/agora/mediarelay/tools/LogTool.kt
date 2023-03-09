@@ -7,7 +7,7 @@ import io.agora.mediarelay.MApp
 /**
  * @author create by zhangwei03
  */
-object LogTools {
+object LogTool {
 
     private const val TAG = "MediaRelay"
 

@@ -8,6 +8,7 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.fragment.findNavController
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentMainBinding
+import io.agora.mediarelay.tools.ToastTool
 import io.agora.rtc2.Constants
 
 /**
@@ -40,10 +41,13 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
     }
 
     private fun checkChannelId(channelId: String): Boolean {
-        return channelId.isEmpty().also {
-            showToast("Please enter channel id")
+        if (channelId.isEmpty()){
+            ToastTool.showToast("Please enter channel id")
+            return true
         }
+        return false
     }
+
 
     override fun onResume() {
         activity?.let {

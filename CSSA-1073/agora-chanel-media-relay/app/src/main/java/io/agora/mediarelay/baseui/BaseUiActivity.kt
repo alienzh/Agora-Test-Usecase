@@ -12,7 +12,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.viewbinding.ViewBinding
-import io.agora.mediarelay.tools.LogTools
+import io.agora.mediarelay.tools.LogTool
 
 abstract class BaseUiActivity<B : ViewBinding> : AppCompatActivity() {
     lateinit var binding: B
@@ -21,7 +21,7 @@ abstract class BaseUiActivity<B : ViewBinding> : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         val binding = getViewBinding(layoutInflater)
         if (binding == null) {
-            LogTools.e("Inflate Error")
+            LogTool.e("Inflate Error")
             finish()
         } else {
             this.binding = binding

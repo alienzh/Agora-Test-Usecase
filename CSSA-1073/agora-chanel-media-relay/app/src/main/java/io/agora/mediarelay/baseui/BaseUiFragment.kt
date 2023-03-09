@@ -10,11 +10,10 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
-import io.agora.mediarelay.tools.LogTools
+import io.agora.mediarelay.tools.LogTool
 
 abstract class BaseUiFragment<B : ViewBinding> : Fragment() {
 
@@ -30,8 +29,8 @@ abstract class BaseUiFragment<B : ViewBinding> : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
             val systemInset = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            LogTools.d("systemInset l:${systemInset.left},t:${systemInset.top},r:${systemInset.right},b:${systemInset.bottom}")
-            binding.root.setPaddingRelative(0, systemInset.top, 0, 0)
+            LogTool.d("systemInset l:${systemInset.left},t:${systemInset.top},r:${systemInset.right},b:${systemInset.bottom}")
+            binding.root.setPaddingRelative(0, 0, 0, 0)
             WindowInsetsCompat.CONSUMED
         }
     }
@@ -57,11 +56,5 @@ abstract class BaseUiFragment<B : ViewBinding> : Fragment() {
     open fun showKeyboard(editText: EditText) {
         val imm = editText.context.getSystemService(AppCompatActivity.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(editText, 0)
-    }
-
-    protected fun showToast(msg: String) {
-        activity?.let {
-            Toast.makeText(it, msg, Toast.LENGTH_SHORT).show()
-        }
     }
 }
