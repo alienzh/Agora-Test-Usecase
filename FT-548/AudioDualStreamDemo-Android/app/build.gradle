@@ -1,0 +1,63 @@
+plugins {
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.kotlinAndroid)
+}
+
+Properties properties = new Properties()
+InputStream inputStream = project.rootProject.file('local.properties').newDataInputStream()
+properties.load(inputStream)
+
+android {
+    namespace 'io.agora.dualstream'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "io.agora.dualstream"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "RTC_APP_ID", "\"${properties.getProperty("APP_ID", "")}\""
+        buildConfigField "String", "RTC_APP_CERT", "\"${properties.getProperty("APP_CERTIFICATE", "")}\""
+
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+}
+
+dependencies {
+
+    implementation libs.core.ktx
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.constraintlayout
+    implementation libs.bundles.androidx.navigation
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.test.ext.junit
+    androidTestImplementation libs.espresso.core
+
+    implementation libs.agora.uikit
+    implementation libs.agora.special.full
+}

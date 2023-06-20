@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".HomeFragment">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="90dp"
+        android:letterSpacing="-0.01"
+        android:text="@string/app_name"
+        android:textColor="@color/black"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <io.agora.auikit.ui.basic.AUIEditText
+        android:id="@+id/etChannelId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="58dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="42dp"
+        app:aui_edittext_icon_right="@drawable/aui_jukebox_choose_icon_close"
+        app:aui_edittext_input_backgroundColor="#b9b9bb"
+        app:aui_edittext_input_backgroundType="line"
+        app:aui_edittext_input_hintText="@string/channel_id"
+        app:aui_edittext_input_hintTextColor="#993C3C43"
+        app:aui_edittext_input_paddingEnd="16dp"
+        app:aui_edittext_input_paddingStart="0dp"
+        app:aui_edittext_input_phoneAreaText="dada"
+        app:aui_edittext_input_textColor="#666666"
+        app:aui_edittext_input_textSize="16sp"
+        app:aui_edittext_input_type="text"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_marginTop="35dp"
+        android:layout_marginHorizontal="47dp"
+        android:background="@drawable/home_tab_layout_bg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etChannelId"
+        app:tabBackground="@drawable/home_tab_bg"
+        app:tabGravity="fill"
+        app:tabIndicator="@null"
+        app:tabIndicatorFullWidth="false"
+        app:tabMode="fixed"
+        app:tabIndicatorHeight="0dp"
+        app:tabIndicatorGravity="center"
+        app:tabSelectedTextColor="@color/black"
+        app:tabTextAppearance="@style/TextAppearance.Design.Tab.HomeTab"
+        app:tabTextColor="@color/black">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/audience" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/host" />
+    </com.google.android.material.tabs.TabLayout>
+
+    <io.agora.auikit.ui.basic.AUIButton
+        android:id="@+id/btnJoinChannel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:aui_button_backgroundMode="solid"
+        android:layout_marginTop="56dp"
+        app:aui_button_text="@string/join"
+        app:aui_button_drawableTint="#3478f6"
+        app:aui_button_cornersRadius="14sp"
+        app:aui_button_textNormalColor="#3478f6"
+        app:aui_button_backgroundNormalColor="#dceafd"
+        app:layout_constraintTop_toBottomOf="@id/tabLayout"/>
+</androidx.constraintlayout.widget.ConstraintLayout>
