@@ -9,5 +9,7 @@
     <string name="leave_channel">Leave Channel</string>
     <string name="high_stream">High</string>
     <string name="low_stream">Low</string>
+    <string name="high_stream_pre">H</string>
+    <string name="low_stream_pre">L</string>
     <string name="low_stream_for_all">Low Stream for All</string>
 </resources>

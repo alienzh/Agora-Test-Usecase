@@ -1,4 +1,4 @@
-package io.agora.dualstream
+package io.agora.dualstream.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.tabs.TabLayout
+import io.agora.dualstream.R
 import io.agora.dualstream.databinding.FragmentHomeBinding
 import io.agora.rtc2.Constants
 
@@ -27,6 +28,9 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.etChannelId.setRightIconClickListener {
+            binding.etChannelId.text = ""
+        }
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
 

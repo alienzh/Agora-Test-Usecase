@@ -1,4 +1,4 @@
-package io.agora.dualstream;
+package io.agora.dualstream.ui;
 
 import android.app.Activity;
 import android.content.Context;

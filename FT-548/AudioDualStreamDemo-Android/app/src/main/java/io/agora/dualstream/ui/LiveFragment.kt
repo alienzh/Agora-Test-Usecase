@@ -1,4 +1,4 @@
-package io.agora.dualstream
+package io.agora.dualstream.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -7,18 +7,24 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.AdapterView.OnItemClickListener
 import android.widget.ArrayAdapter
 import android.widget.ImageView
-import android.widget.PopupWindow
 import android.widget.TextView
+import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import io.agora.dualstream.rtc.IChannelEventListener
+import io.agora.dualstream.utils.KeyCenter
+import io.agora.dualstream.R
+import io.agora.dualstream.rtc.RtcEngineInstance
+import io.agora.dualstream.model.UserModel
 import io.agora.dualstream.databinding.FragmentLiveBinding
 import io.agora.dualstream.databinding.PopLayoutBinding
+import io.agora.dualstream.utils.PermissionHelp
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
 import io.agora.rtc2.RtcConnection
@@ -42,16 +48,20 @@ class LiveFragment : Fragment() {
             ?: Constants.CLIENT_ROLE_AUDIENCE
     }
 
-    private val mainConnection: RtcConnection by lazy {
-        RtcConnection(channelId, role)
-    }
-
     private val lowStreamConnection: RtcConnection by lazy {
-        RtcConnection(channelId + "_low", role)
+        RtcConnection(channelId + "_low", KeyCenter.rtcUid)
     }
     private lateinit var userAdapter: RecyclerView.Adapter<InnerItemViewHolder>
 
     private val userList = mutableListOf<UserModel>()
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        activity?.onBackPressedDispatcher?.addCallback {
+            handleOnBackPressed()
+            leaveChannel()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -64,7 +74,6 @@ class LiveFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initView()
-
         joinChannel()
     }
 
@@ -79,13 +88,11 @@ class LiveFragment : Fragment() {
             binding.layoutLowStream.isVisible = true
         }
         binding.titleBar.setOnBackClickListener {
-            RtcEngineInstance.leaveChannelEx(mainConnection)
-            RtcEngineInstance.leaveChannelEx(lowStreamConnection)
+            leaveChannel()
             findNavController().popBackStack()
         }
         binding.btnLeaveChannel.setOnClickListener {
-            RtcEngineInstance.leaveChannelEx(mainConnection)
-            RtcEngineInstance.leaveChannelEx(lowStreamConnection)
+            leaveChannel()
             findNavController().popBackStack()
         }
 
@@ -93,28 +100,23 @@ class LiveFragment : Fragment() {
             val mainChannelMediaOptions = ChannelMediaOptions().apply {
                 publishMicrophoneTrack = isChecked
             }
-            RtcEngineInstance.updateChannelMediaOptionsEx(
-                mainChannelMediaOptions,
-                mainConnection
-            )
+            RtcEngineInstance.updateChannelMediaOptions(mainChannelMediaOptions)
         }
         binding.checkPublishDualStream.setOnCheckedChangeListener { buttonView, isChecked ->
             val lowStreamChannelMediaOptions = ChannelMediaOptions().apply {
                 publishMicrophoneTrack = isChecked
             }
             RtcEngineInstance.updateChannelMediaOptionsEx(
-                lowStreamChannelMediaOptions,
-                lowStreamConnection
+                lowStreamChannelMediaOptions, lowStreamConnection
             )
         }
         binding.checkLowStream.setOnCheckedChangeListener { buttonView, isChecked ->
-            val lowStreamChannelMediaOptions = ChannelMediaOptions().apply {
-                autoSubscribeAudio = isChecked
+            RtcEngineInstance.muteAllRemoteAudioStreamsEx(!isChecked, lowStreamConnection)
+            RtcEngineInstance.muteAllRemoteAudioStreams(isChecked)
+            userList.forEach {
+                it.lowStream = isChecked
             }
-            RtcEngineInstance.updateChannelMediaOptionsEx(
-                lowStreamChannelMediaOptions,
-                lowStreamConnection
-            )
+            userAdapter.notifyDataSetChanged()
         }
 
         userAdapter = object : RecyclerView.Adapter<InnerItemViewHolder>() {
@@ -140,8 +142,8 @@ class LiveFragment : Fragment() {
                 holder.tvUserName.text = "${userModel.userId}"
                 holder.tvStream.isVisible = role != Constants.CLIENT_ROLE_BROADCASTER
                 holder.tvStream.text =
-                    if (userModel.lowStream) resources.getText(R.string.low_stream) else resources.getText(
-                        R.string.high_stream
+                    if (userModel.lowStream) resources.getText(R.string.low_stream_pre) else resources.getText(
+                        R.string.high_stream_pre
                     )
                 holder.itemView.setOnClickListener {
                     showPop(it, userModel.userId)
@@ -152,6 +154,7 @@ class LiveFragment : Fragment() {
     }
 
     private fun showPop(itemView: View, uid: Int) {
+        if (role != Constants.CLIENT_ROLE_AUDIENCE) return
         //Gets the coordinates attached to the view
         val location = IntArray(2)
         itemView.getLocationInWindow(location)
@@ -170,11 +173,26 @@ class LiveFragment : Fragment() {
                 view.listView.adapter = adapter
                 view.listView.setOnItemClickListener { parent, view, position, id ->
                     if (position == 0) {
-                        RtcEngineInstance.muteRemoteAudioStreamEx(uid, false, mainConnection)
+                        RtcEngineInstance.muteRemoteAudioStream(uid, false)
                         RtcEngineInstance.muteRemoteAudioStreamEx(uid, true, lowStreamConnection)
+                        userList.forEach {
+                            if (it.userId == uid) {
+                                it.lowStream = false
+                            }
+                            return@forEach
+                        }
+                        userAdapter.notifyDataSetChanged()
+
                     } else {
-                        RtcEngineInstance.muteRemoteAudioStreamEx(uid, true, mainConnection)
+                        RtcEngineInstance.muteRemoteAudioStream(uid, true)
                         RtcEngineInstance.muteRemoteAudioStreamEx(uid, false, lowStreamConnection)
+                        userList.forEach {
+                            if (it.userId == uid) {
+                                it.lowStream = true
+                            }
+                            return@forEach
+                        }
+                        userAdapter.notifyDataSetChanged()
                     }
                     popupWindow.dismiss()
                 }
@@ -192,16 +210,15 @@ class LiveFragment : Fragment() {
         val mainChannelMediaOptions = ChannelMediaOptions().apply {
             autoSubscribeAudio = true
             publishMicrophoneTrack = role == Constants.CLIENT_ROLE_BROADCASTER
+            clientRoleType = role
         }
-        RtcEngineInstance.joinChannelEx(mainConnection, mainChannelMediaOptions,
+        RtcEngineInstance.joinChannel(channelId,
+            KeyCenter.rtcUid,
+            mainChannelMediaOptions,
             IChannelEventListener(
                 onChannelJoined = {
                     if (role == Constants.CLIENT_ROLE_BROADCASTER) {
                         userList.add(0, UserModel(it))
-                        userList.add(UserModel(it))
-                        userList.add(UserModel(it))
-                        userList.add(UserModel(it))
-                        userList.add(UserModel(it))
                         userAdapter.notifyDataSetChanged()
                     }
                 },
@@ -215,13 +232,16 @@ class LiveFragment : Fragment() {
                 }
             ))
         val lowStreamChannelMediaOptions = ChannelMediaOptions().apply {
-            autoSubscribeAudio = role == Constants.CLIENT_ROLE_BROADCASTER
+            autoSubscribeAudio = true
             publishMicrophoneTrack = role == Constants.CLIENT_ROLE_BROADCASTER
+            clientRoleType = role
         }
         RtcEngineInstance.joinChannelEx(lowStreamConnection, lowStreamChannelMediaOptions,
             IChannelEventListener(
                 onChannelJoined = {
-
+                    if (role == Constants.CLIENT_ROLE_AUDIENCE) {
+                        RtcEngineInstance.muteAllRemoteAudioStreamsEx(true, lowStreamConnection)
+                    }
                 },
                 onUserJoined = {
 
@@ -230,6 +250,11 @@ class LiveFragment : Fragment() {
 
                 }
             ))
+    }
+
+    private fun leaveChannel() {
+        RtcEngineInstance.leaveChannel()
+        RtcEngineInstance.leaveChannelEx(lowStreamConnection)
     }
 
     override fun onResume() {

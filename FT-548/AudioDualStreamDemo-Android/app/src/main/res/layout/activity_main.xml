@@ -9,6 +9,6 @@
     android:name="androidx.navigation.fragment.NavHostFragment"
     app:navGraph="@navigation/app_main_navigation"
     android:fitsSystemWindows="true"
-    tools:context=".HomeActivity"/>
+    tools:context=".ui.HomeActivity"/>
 
 

@@ -1,8 +1,8 @@
-package io.agora.dualstream
+package io.agora.dualstream.model
 
 data class UserModel constructor(
     val userId: Int,
-    val lowStream: Boolean = false
+    var lowStream: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (other is UserModel) {

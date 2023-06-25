@@ -40,7 +40,7 @@
         app:layout_constraintEnd_toEndOf="@id/ivUserAvatar"
         app:layout_constraintTop_toBottomOf="@id/ivUserAvatar"
         app:layout_constraintTop_toTopOf="@id/ivUserAvatar"
-        tools:text="大"
+        tools:text="H"
         tools:visibility="invisible" />
 
 

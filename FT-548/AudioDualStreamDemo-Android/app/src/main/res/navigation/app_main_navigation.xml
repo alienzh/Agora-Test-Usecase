@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="io.agora.dualstream.HomeFragment"
+        android:name="io.agora.dualstream.ui.HomeFragment"
         android:label="HomeFragment"
         tools:layout="@layout/fragment_home">
 
@@ -20,7 +20,7 @@
     <fragment
         android:id="@+id/liveFragment"
         android:label="LiveFragment"
-        android:name="io.agora.dualstream.LiveFragment"
+        android:name="io.agora.dualstream.ui.LiveFragment"
         tools:layout="@layout/fragment_live" />
 
 </navigation>

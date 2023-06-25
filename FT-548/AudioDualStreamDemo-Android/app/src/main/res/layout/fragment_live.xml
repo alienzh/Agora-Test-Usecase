@@ -5,13 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".HomeFragment">
+    tools:context=".ui.HomeFragment">
 
     <io.agora.auikit.ui.basic.AUITitleBar
         android:id="@+id/titleBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:aui_titleBar_mode="back"
+        app:aui_titleBar_backWidth="32dp"
+        app:aui_titleBar_backHeight="32sp"
         app:aui_titleBar_titleText="@string/app_name"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -185,6 +187,7 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
     <io.agora.auikit.ui.basic.AUIButton
         android:id="@+id/btnLeaveChannel"
         android:layout_width="200dp"
@@ -197,6 +200,7 @@
         app:aui_button_backgroundNormalColor="#2c2c2e"
         app:aui_button_cornersRadius="14sp"
         app:aui_button_text="@string/leave_channel"
+        app:aui_button_drawableStart="@drawable/leave_channel"
         app:aui_button_textNormalColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
