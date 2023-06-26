@@ -144,28 +144,61 @@ object RtcEngineInstance {
         rtcEngine.leaveChannel()
     }
 
-    fun updateChannelMediaOptionsEx(options: ChannelMediaOptions, rtcConnection: RtcConnection) {
-        rtcEngine.updateChannelMediaOptionsEx(options, rtcConnection)
+    fun muteLocalAudioStreamEx(mute: Boolean, rtcConnection: RtcConnection): Int {
+        val ret = rtcEngine.muteLocalAudioStreamEx(mute, rtcConnection)
+        Log.d(TAG, "muteLocalAudioStreamEx mute $mute, ret:$ret")
+        return ret
     }
 
-    fun updateChannelMediaOptions(options: ChannelMediaOptions) {
-        rtcEngine.updateChannelMediaOptions(options)
+    fun muteLocalAudioStream(mute: Boolean): Int {
+        val ret = rtcEngine.muteLocalAudioStream(mute)
+        Log.d(TAG, "muteLocalAudioStream mute $mute, ret:$ret")
+        return ret
     }
 
-    fun muteRemoteAudioStreamEx(uid: Int, mute: Boolean, rtcConnection: RtcConnection) {
-        rtcEngine.muteRemoteAudioStreamEx(uid, mute, rtcConnection)
+    fun updateChannelMediaOptionsEx(
+        options: ChannelMediaOptions,
+        rtcConnection: RtcConnection
+    ): Int {
+        val ret = rtcEngine.updateChannelMediaOptionsEx(options, rtcConnection)
+        Log.d(
+            TAG,
+            "updateChannelMediaOptionsEx publishMicrophoneTrack ${options.publishMicrophoneTrack}, ret:$ret"
+        )
+        return ret
     }
 
-    fun muteRemoteAudioStream(uid: Int, mute: Boolean) {
-        rtcEngine.muteRemoteAudioStream(uid, mute)
+    fun updateChannelMediaOptions(options: ChannelMediaOptions): Int {
+        val ret = rtcEngine.updateChannelMediaOptions(options)
+        Log.d(
+            TAG,
+            "updateChannelMediaOptions publishMicrophoneTrack ${options.publishMicrophoneTrack}, ret:$ret"
+        )
+        return ret
     }
 
-    fun muteAllRemoteAudioStreamsEx(mute: Boolean, rtcConnection: RtcConnection) {
-        rtcEngine.muteAllRemoteAudioStreamsEx(mute, rtcConnection)
+    fun muteRemoteAudioStreamEx(uid: Int, mute: Boolean, rtcConnection: RtcConnection): Int {
+        val ret = rtcEngine.muteRemoteAudioStreamEx(uid, mute, rtcConnection)
+        Log.d(TAG, "muteRemoteAudioStreamEx uid $uid, mute $mute, ret:$ret")
+        return ret
     }
 
-    fun muteAllRemoteAudioStreams(mute: Boolean) {
-        rtcEngine.muteAllRemoteAudioStreams(mute)
+    fun muteRemoteAudioStream(uid: Int, mute: Boolean): Int {
+        val ret = rtcEngine.muteRemoteAudioStream(uid, mute)
+        Log.d(TAG, "muteRemoteAudioStream uid $uid, mute $mute, ret:$ret")
+        return ret
+    }
+
+    fun muteAllRemoteAudioStreamsEx(mute: Boolean, rtcConnection: RtcConnection): Int {
+        val ret = rtcEngine.muteAllRemoteAudioStreamsEx(mute, rtcConnection)
+        Log.d(TAG, "muteAllRemoteAudioStreamsEx mute $mute, ret:$ret")
+        return ret
+    }
+
+    fun muteAllRemoteAudioStreams(mute: Boolean): Int {
+        val ret = rtcEngine.muteAllRemoteAudioStreams(mute)
+        Log.d(TAG, "muteAllRemoteAudioStreams mute $mute, ret:$ret")
+        return ret
     }
 
     fun destroy() {

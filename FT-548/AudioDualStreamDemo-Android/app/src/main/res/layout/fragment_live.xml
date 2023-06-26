@@ -11,22 +11,33 @@
         android:id="@+id/titleBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:aui_titleBar_mode="back"
-        app:aui_titleBar_backWidth="32dp"
         app:aui_titleBar_backHeight="32sp"
+        app:aui_titleBar_backWidth="32dp"
+        app:aui_titleBar_mode="back"
         app:aui_titleBar_titleText="@string/app_name"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvChannelId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#666666"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/titleBar"
+        tools:text="1234" />
 
     <io.agora.auikit.ui.basic.AUIRecyclerView
         android:id="@+id/recyclerAvatar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        app:layout_constraintTop_toBottomOf="@id/titleBar"
-        app:spanCount="3"
-        tools:itemCount="6"
         android:paddingStart="18dp"
         android:paddingTop="18dp"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:layout_constraintTop_toBottomOf="@id/tvChannelId"
+        app:spanCount="3"
+        tools:itemCount="6"
         tools:layout_editor_absoluteX="0dp"
         tools:listitem="@layout/item_live_view" />
 
@@ -158,7 +169,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="80dp"
-            android:text="@string/publish_dual_stream"
+            android:text="@string/low_stream_for_all"
             android:textColor="@color/black"
             android:textSize="14sp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -199,8 +210,8 @@
         app:aui_button_backgroundMode="solid"
         app:aui_button_backgroundNormalColor="#2c2c2e"
         app:aui_button_cornersRadius="14sp"
-        app:aui_button_text="@string/leave_channel"
         app:aui_button_drawableStart="@drawable/leave_channel"
+        app:aui_button_text="@string/leave_channel"
         app:aui_button_textNormalColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
