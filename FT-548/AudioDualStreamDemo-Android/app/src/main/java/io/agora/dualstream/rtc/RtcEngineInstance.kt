@@ -82,6 +82,10 @@ object RtcEngineInstance {
         eventListener: IChannelEventListener
     ) {
         RtcEngineInstance.eventListener = eventListener
+        rtcEngine.setAudioProfile(
+            Constants.AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO,
+            Constants.AUDIO_SCENARIO_GAME_STREAMING
+        )
         rtcEngine.joinChannel("", channelId, rtcUid, mediaOptions)
     }
 
