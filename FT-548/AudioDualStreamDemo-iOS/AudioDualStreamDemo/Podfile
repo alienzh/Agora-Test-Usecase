@@ -1,0 +1,14 @@
+
+project 'AudioDualStreamDemo.xcodeproj'
+
+use_frameworks!
+
+platform :ios, '13.0'
+
+target 'AudioDualStreamDemo' do
+#pod 'AgoraRtcEngine_iOS', '~> 4.1.1'
+pod 'AgoraRtcEngine_iOS', :path => './libs'
+#pod 'AUIKit', :path => 'AUIKit/iOS'
+pod 'SDWebImage'
+
+end
