@@ -24,7 +24,8 @@ class RTCManager: NSObject {
         let agoraKit = AgoraRtcEngineKit.sharedEngine(with: config, delegate: nil)
         self.agoraKit = agoraKit
         // get channel name from configs
-        agoraKit.setChannelProfile(.liveBroadcasting)
+//        agoraKit.setChannelProfile(.liveBroadcasting)
+        agoraKit.setAudioProfile(.musicHighQualityStereo, scenario: .gameStreaming)
         agoraKit.enableAudio()
         agoraKit.setDefaultAudioRouteToSpeakerphone(true)
     }
