@@ -5,6 +5,9 @@ import android.os.Looper
 import android.util.Log
 import io.agora.dualstream.BuildConfig
 import io.agora.dualstream.MApp
+import io.agora.mediaplayer.IMediaPlayerObserver
+import io.agora.mediaplayer.data.PlayerUpdatedInfo
+import io.agora.mediaplayer.data.SrcInfo
 import io.agora.rtc2.*
 import java.util.concurrent.Executors
 
@@ -203,6 +206,15 @@ object RtcEngineInstance {
         val ret = rtcEngine.muteAllRemoteAudioStreams(mute)
         Log.d(TAG, "muteAllRemoteAudioStreams mute $mute, ret:$ret")
         return ret
+    }
+
+    fun startAudioMixing(path:String){
+        rtcEngine.stopAudioMixing()
+        rtcEngine.startAudioMixing(path,false,-1)
+    }
+
+    fun stopAudioMixing(){
+        rtcEngine.stopAudioMixing()
     }
 
     fun destroy() {

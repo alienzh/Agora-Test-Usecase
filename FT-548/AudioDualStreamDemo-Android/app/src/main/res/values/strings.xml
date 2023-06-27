@@ -6,6 +6,7 @@
     <string name="join">Join</string>
     <string name="publish_audio">Publish Audio</string>
     <string name="publish_dual_stream">Publish Dual Stream</string>
+    <string name="playing_music">Playing Music</string>
     <string name="leave_channel">Leave Channel</string>
     <string name="high_stream">High</string>
     <string name="low_stream">Low</string>

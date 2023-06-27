@@ -97,8 +97,8 @@
         android:id="@+id/layoutPublishDualStream"
         android:layout_width="match_parent"
         android:layout_height="44dp"
-        android:layout_marginBottom="45dp"
-        app:layout_constraintBottom_toTopOf="@id/btnLeaveChannel">
+        android:layout_marginBottom="28dp"
+        app:layout_constraintBottom_toTopOf="@id/layoutPlayingMusic">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:layout_width="30dp"
@@ -125,6 +125,58 @@
 
         <androidx.appcompat.widget.AppCompatCheckBox
             android:id="@+id/checkPublishDualStream"
+            android:layout_width="51dp"
+            android:layout_height="31dp"
+            android:layout_marginEnd="33dp"
+            android:background="@drawable/aui_musicplayer_def_selector"
+            android:button="@android:color/transparent"
+            android:checked="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:layout_marginStart="80dp"
+            android:layout_marginEnd="18dp"
+            app:dividerColor="#b9b9bb"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutPlayingMusic"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginBottom="45dp"
+        app:layout_constraintBottom_toTopOf="@id/btnLeaveChannel">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="34dp"
+            android:background="#3478f6"
+            app:contentPadding="6dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearance="@style/RoundedStyle"
+            app:srcCompat="@drawable/volume" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="80dp"
+            android:text="@string/playing_music"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatCheckBox
+            android:id="@+id/checkPlayingMusic"
             android:layout_width="51dp"
             android:layout_height="31dp"
             android:layout_marginEnd="33dp"

@@ -38,6 +38,8 @@ class LiveFragment : Fragment() {
     companion object {
         const val KEY_CHANNEL = "key_channel"
         const val KEY_ROLE = "key_role"
+
+        const val AUDIO_PATH = "/assets/audio.m4a"
     }
 
     private val channelId: String by lazy {
@@ -98,10 +100,12 @@ class LiveFragment : Fragment() {
         if (role == Constants.CLIENT_ROLE_BROADCASTER) {
             binding.layoutPublishAudio.isVisible = true
             binding.layoutPublishDualStream.isVisible = true
+            binding.layoutPlayingMusic.isVisible = true
             binding.layoutLowStream.isVisible = false
         } else {
             binding.layoutPublishAudio.isVisible = false
             binding.layoutPublishDualStream.isVisible = false
+            binding.layoutPlayingMusic.isVisible = false
             binding.layoutLowStream.isVisible = true
         }
         binding.tvChannelId.text = channelId
@@ -119,6 +123,13 @@ class LiveFragment : Fragment() {
         }
         binding.checkPublishDualStream.setOnCheckedChangeListener { buttonView, isChecked ->
             RtcEngineInstance.muteLocalAudioStreamEx(!isChecked, lowStreamConnection)
+        }
+        binding.checkPlayingMusic.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked) {
+                RtcEngineInstance.startAudioMixing(AUDIO_PATH)
+            } else {
+                RtcEngineInstance.stopAudioMixing()
+            }
         }
         binding.checkLowStream.setOnCheckedChangeListener { buttonView, isChecked ->
             RtcEngineInstance.muteAllRemoteAudioStreamsEx(!isChecked, lowStreamConnection)
@@ -224,6 +235,7 @@ class LiveFragment : Fragment() {
                     if (role == Constants.CLIENT_ROLE_BROADCASTER) {
                         userList.add(0, UserModel(it))
                         userAdapter.notifyDataSetChanged()
+                        RtcEngineInstance.startAudioMixing(AUDIO_PATH)
                     }
                 },
                 onUserJoined = {
@@ -253,6 +265,9 @@ class LiveFragment : Fragment() {
     }
 
     private fun leaveChannel() {
+        if (role == Constants.CLIENT_ROLE_BROADCASTER) {
+            RtcEngineInstance.stopAudioMixing()
+        }
         RtcEngineInstance.leaveChannel()
         RtcEngineInstance.leaveChannelEx(lowStreamConnection)
     }
