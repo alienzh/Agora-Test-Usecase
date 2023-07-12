@@ -67,6 +67,11 @@ object AgoraRtcEngineInstance {
                         LogTool.d(TAG, "onRtmpStreamingStateChanged:$url state:$state, errCode:$errCode")
                     }
 
+                    override fun onRtmpStreamingEvent(url: String?, event: Int) {
+                        super.onRtmpStreamingEvent(url, event)
+                        LogTool.d(TAG, "onRtmpStreamingEvent:$url event:$event")
+                    }
+
                     override fun onChannelMediaRelayStateChanged(state: Int, code: Int) {
                         super.onChannelMediaRelayStateChanged(state, code)
                         eventListener?.onChannelMediaRelayStateChanged?.invoke(state, code)

@@ -60,7 +60,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private var isInPk: Boolean = false
 
     @Volatile
-    private var isCdnAudience: Boolean = false
+    private var isCdnAudience: Boolean = true
 
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
@@ -210,7 +210,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     private val eventListener = IAgoraRtcClient.IChannelEventListener(
         onChannelJoined = {
-            if (isCdnAudience) return@IChannelEventListener
             runOnMainThread {
                 if (isBroadcast()) {
                     setRtmpStreamEnable(true)
@@ -218,7 +217,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             }
         },
         onUserJoined = {
-            if (isCdnAudience) return@IChannelEventListener
             runOnMainThread {
                 if (isBroadcast()) {
                     // 除了主播外,有其他用户加入就认为是pk
@@ -241,7 +239,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             }
         },
         onUserOffline = {
-            if (isCdnAudience) return@IChannelEventListener
             runOnMainThread {
                 if (remotePkUid == it) { // pk 用户离开
                     remotePkUid = -1
@@ -273,8 +270,16 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private fun initRtcEngine() {
         checkRequirePerms {
             AgoraRtcEngineInstance.eventListener = eventListener
-            initVideoView()
-            joinChannel()
+            if (isBroadcast()){
+                initVideoView()
+                joinChannel()
+            }else{
+                if (isCdnAudience){
+                    switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
+                }else{
+                    switchRtcAudience()
+                }
+            }
         }
     }
 

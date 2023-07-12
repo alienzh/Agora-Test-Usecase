@@ -58,7 +58,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     // rtc
-    implementation 'io.agora.rtc:full-sdk:4.1.1'
+    implementation 'io.agora.rtc:full-sdk:4.2.0'
     implementation 'io.agora:authentication:1.6.1'
     implementation 'commons-codec:commons-codec:1.15'
 }
