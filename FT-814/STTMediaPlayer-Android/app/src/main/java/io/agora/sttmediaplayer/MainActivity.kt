@@ -53,11 +53,11 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
 
     private val mVideoList: List<VideoModel> by lazy {
         mutableListOf(
-            VideoModel("东风破"),
-            VideoModel("夜曲"),
-            VideoModel("稻香"),
-            VideoModel("千里之外"),
-            VideoModel("最长的电影")
+            VideoModel("dongfengpo","东风破"),
+            VideoModel("yequ","夜曲"),
+            VideoModel("daoxiang","稻香"),
+            VideoModel("qilizhiwai","千里之外"),
+            VideoModel("zuichangdedianying","最长的电影")
         )
     }
 
@@ -113,7 +113,13 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
                 finish()
             }
         })
-        mBinding.recyclerVideoName.adapter = ActionAdapter(this, mVideoList)
+        val adapter = ActionAdapter(this, mVideoList)
+        // only test
+//        adapter.onClickItemListener = {
+//            updateRecycler(it)
+//            mMediaPlayer?.playPreloadedSrc(it.localPath)
+//        }
+        mBinding.recyclerVideoName.adapter = adapter
         initData()
         initRtc()
         initMediaPlayer()
@@ -158,7 +164,7 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
 
     private fun initData() {
         mVideoList.forEach {
-            val fileName = it.name + ".mp4"
+            val fileName = it.fileName + ".mp4"
             initFile(fileName)
             val path = filesDir.absolutePath + File.separator + fileName
             it.localPath = path
@@ -258,6 +264,7 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
                 }
             } else if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED) {
                 mHandler.post {
+                    // 预加载视频
                     for (i in mVideoList.indices) {
                         val localPath = mVideoList[i].localPath
                         mMediaPlayer?.preloadSrc(localPath, 0L)
@@ -266,8 +273,7 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
             }
         }
 
-        override fun onPositionChanged(position_ms: Long) {
-
+        override fun onPositionChanged(positionMs: Long, timestampMs: Long) {
         }
 
         override fun onPlayerEvent(
@@ -392,13 +398,14 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
                     mMediaPlayer?.playPreloadedSrc(videoModel.localPath)
                     mCurrentPlayPreloadSrc = videoModel.localPath
                     updateRecycler(videoModel)
-                    Log.d(TAG, "playPreloadedSrc ${videoModel.localPath}")
+                    Log.d(TAG, "playPreloadedSrc ${videoModel.localPath} playoutVolume:${mMediaPlayer?.playoutVolume}")
                     break
                 }
             }
         }
     }
 
+    //高亮当前播放的视频
     private fun updateRecycler(videoModel: VideoModel?) {
         mVideoList.forEach {
             it.isSelected = false
@@ -500,6 +507,20 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
         return false
     }
 
+    override fun onPublishAudioFrame(
+        channelId: String?,
+        type: Int,
+        samplesPerChannel: Int,
+        bytesPerSample: Int,
+        channels: Int,
+        samplesPerSec: Int,
+        buffer: ByteBuffer?,
+        renderTimeMs: Long,
+        avsync_type: Int
+    ): Boolean {
+        return false
+    }
+
     override fun getObservedAudioFramePosition(): Int {
         return 0
     }
@@ -519,10 +540,17 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
     override fun getEarMonitoringAudioParams(): AudioParams? {
         return null
     }
+
+    override fun getPublishAudioParams(): AudioParams? {
+        return null
+    }
 }
 
 class ActionAdapter constructor(private val mContext: Context, private val dataList: List<VideoModel>) :
     RecyclerView.Adapter<ActionViewHolder>() {
+
+    var onClickItemListener: ((VideoModel) -> Unit)? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActionViewHolder {
         val view = LayoutInflater.from(mContext).inflate(R.layout.stt_main_item, parent, false)
         return ActionViewHolder(view)
@@ -540,10 +568,14 @@ class ActionAdapter constructor(private val mContext: Context, private val dataL
             holder.tvAction.setBackgroundColor(ResourcesCompat.getColor(mContext.resources, R.color.white_a8, null))
         }
         holder.tvAction.text = actionData.name
+        holder.tvAction.setOnClickListener {
+            onClickItemListener?.invoke(actionData)
+        }
     }
 }
 
 data class VideoModel constructor(
+    val fileName: String,
     val name: String,
     var localPath: String = "",
     var isSelected: Boolean = false,
