@@ -37,7 +37,6 @@ import io.agora.rtc2.audio.AudioParams
 import io.agora.sttmediaplayer.databinding.SttMainActivityBinding
 import java.io.File
 import java.io.FileOutputStream
-import java.io.IOException
 import java.io.OutputStream
 import java.nio.ByteBuffer
 
@@ -52,7 +51,7 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
     private var mRtcEngine: RtcEngine? = null
     private var mMediaPlayer: IMediaPlayer? = null
 
-    private val mActionList: List<VideoModel> by lazy {
+    private val mVideoList: List<VideoModel> by lazy {
         mutableListOf(
             VideoModel("东风破"),
             VideoModel("夜曲"),
@@ -62,9 +61,13 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
         )
     }
 
-    private val mVideoPathList = mutableListOf<String>()
+    private val mSpeechQueue: ArrayDeque<String> = ArrayDeque()
 
-    private val mPreloadComplete = mutableMapOf<String, Boolean>()
+    @Volatile
+    private var isSpeaking = false
+
+    @Volatile
+    private var isPlaying = false
 
     private val mHandler by lazy {
         Handler(Looper.getMainLooper())
@@ -85,18 +88,49 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
         mBinding = SttMainActivityBinding.inflate(layoutInflater)
         setContentView(mBinding.root)
         handlePermission()
+        mBinding.btnStart.isEnabled = false
+        mBinding.btnStart.alpha = 0.6f
+        mBinding.btnStart.setOnClickListener(object : OnClickListener {
+            override fun onClick(v: View?) {
+
+                if (isSpeaking) {
+                    updateRoleSpeak(false)
+                    updateRecycler(null)
+                    STTServiceManager.instance.aIGCService?.stop()
+                    mSpeechQueue.clear()
+                    mBinding.btnStart.text = "开始"
+                    mBinding.tvSpeech.text = ""
+                } else {
+                    updateRoleSpeak(true)
+                    STTServiceManager.instance.aIGCService?.start()
+                    mBinding.btnStart.text = "停止"
+                }
+                isSpeaking = !isSpeaking
+            }
+        })
         mBinding.btnExit.setOnClickListener(object : OnClickListener {
             override fun onClick(v: View?) {
                 finish()
             }
         })
-        val adapter = ActionAdapter(this, mActionList)
-        mBinding.recyclerAction.adapter = adapter
+        mBinding.recyclerVideoName.adapter = ActionAdapter(this, mVideoList)
         initData()
         initRtc()
         initMediaPlayer()
         initAIGCService()
     }
+
+    private fun updateRoleSpeak(isSpeak: Boolean): Boolean {
+        var ret = Constants.ERR_OK
+        ret += mRtcEngine?.updateChannelMediaOptions(object : ChannelMediaOptions() {
+            init {
+                publishMicrophoneTrack = isSpeak
+//                publishCustomAudioTrack = isSpeak
+            }
+        }) ?: Constants.ERR_FAILED
+        return ret == Constants.ERR_OK
+    }
+
 
     private fun handlePermission() {
         // 需要动态申请的权限
@@ -123,15 +157,11 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
     }
 
     private fun initData() {
-        mPreloadComplete.clear()
-        mVideoPathList.clear()
-
-        mActionList.forEach {
+        mVideoList.forEach {
             val fileName = it.name + ".mp4"
             initFile(fileName)
             val path = filesDir.absolutePath + File.separator + fileName
-            mPreloadComplete[path] = false
-            mVideoPathList.add(path)
+            it.localPath = path
         }
     }
 
@@ -152,18 +182,6 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    @Synchronized
-    private fun checkPreload(): Boolean {
-        var allPreload = true
-        mPreloadComplete.forEach { path, preload ->
-            if (!preload) {
-                allPreload = false
-                return@forEach
-            }
-        }
-        return allPreload
     }
 
     private fun initRtc(): Boolean {
@@ -203,17 +221,17 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
                     setPlaybackAudioFrameParameters(16000, 1, Constants.RAW_AUDIO_FRAME_OP_MODE_READ_WRITE, 640)
                     setRecordingAudioFrameParameters(16000, 1, Constants.RAW_AUDIO_FRAME_OP_MODE_READ_WRITE, 640)
                     val token = KeyCenter.getRtcToken(CHANNEL_ID, KeyCenter.getUserUid())
-                    Log.d(TAG,"joinChannel CHANNEL_ID:$CHANNEL_ID,uid:${KeyCenter.getUserUid()},token:$token")
                     val ret = joinChannel(
                         token,
                         CHANNEL_ID,
                         KeyCenter.getUserUid(),
                         ChannelMediaOptions().apply {
-                            publishMicrophoneTrack = true
-                            publishCustomAudioTrack = true
+                            publishMicrophoneTrack = false
+                            publishCustomAudioTrack = false
                             autoSubscribeAudio = true
                             clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
                         })
+                    Log.d(TAG, "joinChannel ret:$ret,channelId:$CHANNEL_ID,uid:${KeyCenter.getUserUid()},token:$token")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -228,7 +246,24 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
             state: io.agora.mediaplayer.Constants.MediaPlayerState?,
             error: io.agora.mediaplayer.Constants.MediaPlayerError?
         ) {
-
+            Log.d(TAG, "onPlayerStateChanged:$state,$error")
+            if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYBACK_ALL_LOOPS_COMPLETED) {
+                mHandler.post {
+                    isPlaying = false
+                    playFirstVideo()
+                }
+            } else if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING) {
+                mHandler.post {
+                    isPlaying = true
+                }
+            } else if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED) {
+                mHandler.post {
+                    for (i in mVideoList.indices) {
+                        val localPath = mVideoList[i].localPath
+                        mMediaPlayer?.preloadSrc(localPath, 0L)
+                    }
+                }
+            }
         }
 
         override fun onPositionChanged(position_ms: Long) {
@@ -255,8 +290,13 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
             Log.d(TAG, "onPreloadEvent:$src,$event")
             when (event) {
                 io.agora.mediaplayer.Constants.MediaPlayerPreloadEvent.PLAYER_PRELOAD_EVENT_COMPLETE -> {
-                    mPreloadComplete[src] = true
-                    checkPreload()
+                    for (i in 0 until mVideoList.size) {
+                        val videoModel = mVideoList[i]
+                        if (videoModel.localPath == src) {
+                            videoModel.preloaded = true
+                            break
+                        }
+                    }
                 }
 
                 io.agora.mediaplayer.Constants.MediaPlayerPreloadEvent.PLAYER_PRELOAD_EVENT_ERROR -> {
@@ -289,13 +329,9 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
             mMediaPlayer = mRtcEngine?.createMediaPlayer()
         }
         mMediaPlayer?.registerPlayerObserver(mMediaPlayerObserver)
-        mMediaPlayer?.preloadSrc("", 0L)
-        mMediaPlayer?.preloadSrc("", 0L)
-        for (i in 0 until mVideoPathList.size) {
-            val path = mVideoPathList[i]
-            mMediaPlayer?.preloadSrc(path, 0L)
-        }
         mMediaPlayer?.setView(mBinding.mediaPlayer)
+        // TODO: sdk 限制，需要先 open 一个
+        mMediaPlayer?.open("/assets/test.mp3", 0L)
     }
 
     private fun initAIGCService() {
@@ -310,8 +346,11 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
 
     override fun onEventResult(event: ServiceEvent, code: ServiceCode, msg: String?) {
         Log.i(TAG, "onEventResult event:$event code:$code msg:$msg")
-        if (event ==ServiceEvent.INITIALIZE && code ==ServiceCode.SUCCESS){
-            STTServiceManager.instance.aIGCService?.start()
+        if (event == ServiceEvent.INITIALIZE && code == ServiceCode.SUCCESS) {
+            mHandler.post {
+                mBinding.btnStart.isEnabled = true
+                mBinding.btnStart.alpha = 1.0f
+            }
         }
     }
 
@@ -323,11 +362,53 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
         Log.i(
             TAG, "onSpeech2TextResult roundId:$roundId result:$result isRecognizedSpeech:$isRecognizedSpeech"
         )
-        if (isRecognizedSpeech){
+        if (isRecognizedSpeech) {
             // 一句话结束
-            // TODO:  
+            mHandler.post {
+                for (i in 0 until mVideoList.size) {
+                    val videoModel = mVideoList[i]
+                    if (videoModel.name == result.data) {
+                        mSpeechQueue.add(videoModel.name)
+                        mBinding.tvSpeech.append(videoModel.name)
+                        mBinding.tvSpeech.append("\n")
+                        break
+                    }
+                }
+                playFirstVideo()
+            }
         }
         return HandleResult.CONTINUE
+    }
+
+    @Volatile
+    private var mCurrentPlayPreloadSrc = ""
+    private fun playFirstVideo() {
+        if (isPlaying) return
+        mSpeechQueue.removeFirstOrNull()?.let { speech ->
+            for (i in 0 until mVideoList.size) {
+                val videoModel = mVideoList[i]
+                if (videoModel.preloaded && videoModel.name == speech) {
+                    if (videoModel.localPath == mCurrentPlayPreloadSrc) return
+                    mMediaPlayer?.playPreloadedSrc(videoModel.localPath)
+                    mCurrentPlayPreloadSrc = videoModel.localPath
+                    updateRecycler(videoModel)
+                    Log.d(TAG, "playPreloadedSrc ${videoModel.localPath}")
+                    break
+                }
+            }
+        }
+    }
+
+    private fun updateRecycler(videoModel: VideoModel?) {
+        mVideoList.forEach {
+            it.isSelected = false
+        }
+        mVideoList.forEach {
+            if (it.name == videoModel?.name) {
+                it.isSelected = true
+            }
+        }
+        mBinding.recyclerVideoName.adapter?.notifyDataSetChanged()
     }
 
     override fun onLLMResult(roundId: String?, answer: Data<String>?): HandleResult {
@@ -399,7 +480,7 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
         samplesPerSec: Int,
         buffer: ByteBuffer?,
         renderTimeMs: Long,
-        avsync_type: Int
+        avsyncType: Int
     ): Boolean {
         return false
     }
@@ -464,7 +545,9 @@ class ActionAdapter constructor(private val mContext: Context, private val dataL
 
 data class VideoModel constructor(
     val name: String,
-    var isSelected: Boolean = false
+    var localPath: String = "",
+    var isSelected: Boolean = false,
+    var preloaded: Boolean = false
 )
 
 class ActionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
