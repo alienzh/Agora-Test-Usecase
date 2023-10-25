@@ -18,6 +18,10 @@ object KeyCenter {
         return USER_RTC_UID
     }
 
+    fun getChannel():String{
+        return "STT_${getUserUid()}"
+    }
+
 
     fun getRtcToken(channelId: String?, uid: Int): String? {
         return RtcTokenBuilder().buildTokenWithUid(

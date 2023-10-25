@@ -45,7 +45,6 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
 
     companion object {
         private val TAG = "Agora-" + MainActivity::class.java.simpleName
-        private const val CHANNEL_ID = "TestAgoraSTT"
     }
 
     private lateinit var mBinding: SttMainActivityBinding
@@ -227,18 +226,20 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
                     setDefaultAudioRoutetoSpeakerphone(true)
                     setPlaybackAudioFrameParameters(16000, 1, Constants.RAW_AUDIO_FRAME_OP_MODE_READ_WRITE, 640)
                     setRecordingAudioFrameParameters(16000, 1, Constants.RAW_AUDIO_FRAME_OP_MODE_READ_WRITE, 640)
-                    val token = KeyCenter.getRtcToken(CHANNEL_ID, KeyCenter.getUserUid())
+                    val uid = KeyCenter.getUserUid()
+                    val channelId = KeyCenter.getChannel()
+                    val token = KeyCenter.getRtcToken(channelId, uid)
                     val ret = joinChannel(
                         token,
-                        CHANNEL_ID,
-                        KeyCenter.getUserUid(),
+                        channelId,
+                        uid,
                         ChannelMediaOptions().apply {
                             publishMicrophoneTrack = false
                             publishCustomAudioTrack = false
                             autoSubscribeAudio = true
                             clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
                         })
-                    Log.d(TAG, "joinChannel ret:$ret,channelId:$CHANNEL_ID,uid:${KeyCenter.getUserUid()},token:$token")
+                    Log.d(TAG, "joinChannel ret:$ret,channelId:$channelId,uid:$uid,token:$token")
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -375,7 +376,7 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
             mHandler.post {
                 for (i in 0 until mVideoList.size) {
                     val videoModel = mVideoList[i]
-                    if (videoModel.name == result.data) {
+                    if (result.data?.contains(videoModel.name) == true) {
                         mSpeechQueue.add(videoModel.name)
                         mBinding.tvSpeech.append(videoModel.name)
                         mBinding.tvSpeech.append("\n")

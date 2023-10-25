@@ -35,16 +35,17 @@ class STTServiceManager private constructor() {
             mAIGCService = AIGCService.create()
         }
         mAIGCService?.initialize(AIGCServiceConfig().apply {
-            val rtmToken = KeyCenter.getRtmToken(KeyCenter.getUserUid())
-            Log.d(TAG,"initialize uid:${KeyCenter.getUserUid()},rtm token:$rtmToken")
+            val uid = KeyCenter.getUserUid()
+            val rtmToken = KeyCenter.getRtmToken(uid)
+            Log.d(TAG,"initialize uid:$uid,rtm token:$rtmToken")
             this.context = onContext
             this.callback = serviceCallback
             this.enableLog = true
             this.enableSaveLogToFile = true
             this.userName = "AI"
             this.appId = KeyCenter.APP_ID
-            this.rtmToken = KeyCenter.getRtmToken(KeyCenter.getUserUid())
-            this.userId = KeyCenter.getUserUid().toString()
+            this.rtmToken = rtmToken
+            this.userId = uid.toString()
             this.enableMultiTurnShortTermMemory = false
             this.speechRecognitionFiltersLength = 0
             this.input = SceneMode().apply {
