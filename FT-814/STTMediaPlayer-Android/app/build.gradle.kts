@@ -1,4 +1,7 @@
 import org.jetbrains.kotlin.konan.properties.Properties
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Date
 
 plugins {
     id("com.android.application")
@@ -27,10 +30,19 @@ android {
         buildConfigField("String", "APP_CERTIFICATE", "\"${properties.getProperty("APP_CERTIFICATE", "")}\"")
     }
 
+    signingConfigs {
+        register("release") {
+            keyAlias = "key0"
+            keyPassword = "123456"
+            storeFile = file("./keystore/testkey.jks")
+            storePassword = "123456"
+        }
+    }
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -48,6 +60,17 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    android.applicationVariants.all {
+        // 编译类型
+        val buildType = this.buildType.name
+        outputs.all {
+            // 判断是否是输出 apk 类型
+            if (this is com.android.build.gradle.internal.api.ApkVariantOutputImpl) {
+                this.outputFileName =
+                    "Agora_STTMediaPlayer_V${defaultConfig.versionName}_${buildType}_${releaseTime()}.apk"
+            }
+        }
+    }
 }
 
 dependencies {
@@ -62,4 +85,8 @@ dependencies {
     implementation("io.agora:authentication:1.6.1")
     implementation("commons-codec:commons-codec:1.15")
     implementation("com.google.android.flexbox:flexbox:3.0.0")
+}
+
+fun releaseTime(): String {
+    return SimpleDateFormat("MMdd_HHmm", Locale.getDefault()).format(Date())
 }

@@ -39,6 +39,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.nio.ByteBuffer
+import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserver {
 
@@ -110,7 +111,7 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
         })
         mBinding.btnExit.setOnClickListener(object : OnClickListener {
             override fun onClick(v: View?) {
-                finish()
+                exitProcess(0)
             }
         })
         val adapter = ActionAdapter(this, mVideoList)
@@ -273,7 +274,8 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
             }
         }
 
-        override fun onPositionChanged(positionMs: Long, timestampMs: Long) {
+        override fun onPositionChanged(position_ms: Long) {
+
         }
 
         override fun onPlayerEvent(
@@ -507,20 +509,6 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
         return false
     }
 
-    override fun onPublishAudioFrame(
-        channelId: String?,
-        type: Int,
-        samplesPerChannel: Int,
-        bytesPerSample: Int,
-        channels: Int,
-        samplesPerSec: Int,
-        buffer: ByteBuffer?,
-        renderTimeMs: Long,
-        avsync_type: Int
-    ): Boolean {
-        return false
-    }
-
     override fun getObservedAudioFramePosition(): Int {
         return 0
     }
@@ -538,10 +526,6 @@ class MainActivity : AppCompatActivity(), AIGCServiceCallback, IAudioFrameObserv
     }
 
     override fun getEarMonitoringAudioParams(): AudioParams? {
-        return null
-    }
-
-    override fun getPublishAudioParams(): AudioParams? {
         return null
     }
 }
