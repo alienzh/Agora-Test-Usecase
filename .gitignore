@@ -1,3 +1,48 @@
+**/libs/*
+**/pods/**
+# Xcode
+*.pbxuser
+*.xcuserdatad
+*.xcworkspace
+xcuserdata/
+project.xcworkspace/
+.DS_Store
+
+# Pods
+Pods/
+Podfile.lock
+*.podspec
+!README.md
+
+# Carthage
+Carthage/Build
+Carthage/Checkouts
+Carthage/*.xcodeproj
+
+# Swift
+*.swp
+*.xccheckout
+*.playground
+*.crafter
+*.modulmap
+*.xcscmblueprint
+*.llbuild
+*.pbxproj
+*.build/
+*_build/
+*.xcodeproj/
+*.xcode/ 
+
+#Various
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xcplugindata
+/coverage/
+fastlane/report.xml
+fastlane/Preview.html
+derived_data
 **/android/.gradle
 .DS_Store
 local.properties
