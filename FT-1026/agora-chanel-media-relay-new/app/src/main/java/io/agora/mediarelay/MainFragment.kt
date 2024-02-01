@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
-import androidx.core.widget.doAfterTextChanged
 import androidx.navigation.fragment.findNavController
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentMainBinding
@@ -31,6 +30,28 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         super.onViewCreated(view, savedInstanceState)
         binding.enterRoom.setOnClickListener {
             checkGoLivePage()
+        }
+        binding.etPushUrl.setText(KeyCenter.pushUrl)
+        binding.etPullUrl.setText(KeyCenter.pullUrl)
+        if (KeyCenter.isAgoraCdn()) {
+            binding.groupCdn.check(R.id.cdn_agora)
+        } else {
+            binding.groupCdn.check(R.id.cdn_custom)
+        }
+        binding.groupCdn.setOnCheckedChangeListener { radioGroup, checkedId ->
+            when (checkedId) {
+                R.id.cdn_agora -> {
+                    KeyCenter.setupAgoraCdn(true)
+                    binding.etPushUrl.setText(KeyCenter.pushUrl)
+                    binding.etPullUrl.setText(KeyCenter.pullUrl)
+                }
+
+                R.id.cdn_custom -> {
+                    KeyCenter.setupAgoraCdn(false)
+                    binding.etPushUrl.setText(KeyCenter.pushUrl)
+                    binding.etPullUrl.setText(KeyCenter.pullUrl)
+                }
+            }
         }
         // role
         binding.groupRole.setOnCheckedChangeListener { radioGroup, checkedId ->
@@ -85,9 +106,6 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 else -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24
             }
         }
-        binding.etPushUrl.setText(KeyCenter.pushUrl)
-        binding.etPullUrl.setText(KeyCenter.pullUrl)
-
         // bitrate
         binding.etBitrate.setText("${RtcSettings.mBitRate}")
     }
@@ -96,14 +114,10 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         val inputPushUrl = binding.etPushUrl.text?.trim().toString()
         if (inputPushUrl.startsWith("rtmp")) {
             KeyCenter.pushUrl = inputPushUrl
-        } else {
-            KeyCenter.resetPushurl()
         }
         val inputPullUrl = binding.etPullUrl.text?.trim().toString()
         if (inputPullUrl.startsWith("http")) {
             KeyCenter.pullUrl = inputPullUrl
-        } else {
-            KeyCenter.resetPullhurl()
         }
         val channelId = binding.etChannel.text.toString()
         if (channelId.isEmpty()) {

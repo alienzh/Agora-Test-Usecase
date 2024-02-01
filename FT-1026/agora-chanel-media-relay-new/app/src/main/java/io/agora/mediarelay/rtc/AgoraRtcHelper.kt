@@ -13,24 +13,10 @@ object AgoraRtcHelper {
         val config = LiveTranscoding().apply {
             videoFramerate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value
             videoCodecType = LiveTranscoding.VideoCodecType.H265
-        }
-        when (uids.size) {
-            1 -> {
-                config.width = VideoEncoderConfiguration.VD_1920x1080.height
-                config.height = VideoEncoderConfiguration.VD_1920x1080.width
-            }
-
-            2 -> {
-                config.width = VideoEncoderConfiguration.VD_1920x1080.height
-                config.height = VideoEncoderConfiguration.VD_1920x1080.width
-
-//                config.width = VideoEncoderConfiguration.VD_960x540.height * 2
-//                config.height = VideoEncoderConfiguration.VD_960x540.width
-            }
-
-            else -> {
-                LogTool.e("liveTranscoding error! uids size:${uids.size}")
-            }
+            videoBitrate = 3072
+            videoGop = 48
+            width = VideoEncoderConfiguration.VD_1920x1080.height
+            height = VideoEncoderConfiguration.VD_1920x1080.width
         }
 
         // 分配主播的画面布局。

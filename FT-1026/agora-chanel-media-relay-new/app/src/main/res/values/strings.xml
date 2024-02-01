@@ -24,4 +24,7 @@
     <string name="frame_rate_24fps">24fps</string>
     <string name="frame_rate_15fps">15fps</string>
     <string name="bitrate">Bitrate(kbps)</string>
+    <string name="select_cdn">CDN:</string>
+    <string name="cdn_agora">Agora</string>
+    <string name="cdn_custom">Custom</string>
 </resources>
