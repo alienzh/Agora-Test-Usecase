@@ -19,10 +19,15 @@ object AgoraRtcHelper {
                 config.width = VideoEncoderConfiguration.VD_1920x1080.height
                 config.height = VideoEncoderConfiguration.VD_1920x1080.width
             }
+
             2 -> {
-                config.width = VideoEncoderConfiguration.VD_960x540.height * 2
-                config.height = VideoEncoderConfiguration.VD_960x540.width
+                config.width = VideoEncoderConfiguration.VD_1920x1080.height
+                config.height = VideoEncoderConfiguration.VD_1920x1080.width
+
+//                config.width = VideoEncoderConfiguration.VD_960x540.height * 2
+//                config.height = VideoEncoderConfiguration.VD_960x540.width
             }
+
             else -> {
                 LogTool.e("liveTranscoding error! uids size:${uids.size}")
             }
@@ -31,6 +36,9 @@ object AgoraRtcHelper {
         // 分配主播的画面布局。
         var totalX = 0
         var totalY = 0
+        if (uids.size > 1) {
+            totalY = config.height / (uids.size * uids.size)
+        }
         uids.forEach {
             val user: LiveTranscoding.TranscodingUser = LiveTranscoding.TranscodingUser().apply {
                 uid = it
@@ -39,7 +47,7 @@ object AgoraRtcHelper {
                 audioChannel = 0
             }
             user.width = config.width / uids.size
-            user.height = config.height
+            user.height = config.height / uids.size
             totalX += config.width / uids.size
             config.addUser(user)
         }
