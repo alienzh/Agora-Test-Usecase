@@ -41,10 +41,13 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         }
 
         // video dimensions
-        when (RtcSettings.mVideoDimensions) {
-            VideoEncoderConfiguration.VD_1920x1080 -> binding.groupResolution.check(R.id.resolution_1080p)
-            VideoEncoderConfiguration.VD_1280x720 -> binding.groupResolution.check(R.id.resolution_720p)
-            else -> binding.groupResolution.check(R.id.resolution_auto)
+        if (RtcSettings.mVideoDimensionsAuto) {
+            RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080
+            binding.groupResolution.check(R.id.resolution_auto)
+        } else if (RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_1920x1080) {
+            binding.groupResolution.check(R.id.resolution_1080p)
+        } else if (RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_1280x720) {
+            binding.groupResolution.check(R.id.resolution_720p)
         }
         binding.groupResolution.setOnCheckedChangeListener { radioGroup, checkedId ->
             when (checkedId) {
@@ -58,7 +61,10 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                     RtcSettings.mVideoDimensionsAuto = false
                 }
 
-                else -> RtcSettings.mVideoDimensionsAuto = true
+                else -> {
+                    RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080
+                    RtcSettings.mVideoDimensionsAuto = true
+                }
             }
         }
 

@@ -87,19 +87,20 @@ object AgoraRtcEngineInstance {
                     override fun onLocalVideoStats(source: Constants.VideoSourceType?, stats: LocalVideoStats?) {
                         super.onLocalVideoStats(source, stats)
                         stats ?: return
-                        LogTool.d(
-                            TAG, "onLocalVideoStats uid: ${stats.uid}，${stats.encodedBitrate}kbps，" +
-                                    "${stats.encoderOutputFrameRate}fps，${stats.encodedFrameWidth}*${stats.encodedFrameHeight}"
-                        )
+//                        LogTool.d(
+//                            TAG, "onLocalVideoStats uid: ${stats.uid}，${stats.encodedBitrate}kbps，" +
+//                                    "${stats.encoderOutputFrameRate}fps，${stats.encodedFrameWidth}*${stats.encodedFrameHeight}," +
+//                                    "${stats.codecType}"
+//                        )
                     }
 
                     override fun onRemoteVideoStats(stats: RemoteVideoStats?) {
                         super.onRemoteVideoStats(stats)
                         stats ?: return
-                        LogTool.d(
-                            TAG, "onRemoteVideoStats uid: ${stats.uid}，${stats.receivedBitrate}kbps，" +
-                                    "${stats.decoderOutputFrameRate}fps，${stats.width}*${stats.height}"
-                        )
+//                        LogTool.d(
+//                            TAG, "onRemoteVideoStats uid: ${stats.uid}，${stats.receivedBitrate}kbps，" +
+//                                    "${stats.decoderOutputFrameRate}fps，${stats.width}*${stats.height}"
+//                        )
 
                     }
                 }

@@ -12,6 +12,7 @@ object AgoraRtcHelper {
         // 旁路推流，默认1080p24fps分辨率。
         val config = LiveTranscoding().apply {
             videoFramerate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value
+            videoCodecType = LiveTranscoding.VideoCodecType.H265
         }
         when (uids.size) {
             1 -> {

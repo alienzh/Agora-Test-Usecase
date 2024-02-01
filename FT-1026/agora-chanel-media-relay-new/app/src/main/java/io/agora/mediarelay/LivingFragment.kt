@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.*
 import androidx.annotation.Size
 import androidx.core.view.WindowCompat
@@ -163,6 +164,15 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     ToastTool.showToast("$error")
                 }
             }
+            if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING) {
+                mediaPlayer?.let {
+                    val streamCount = it.streamCount
+                    Log.d(TAG, "streamInfo: $streamCount")
+                    for (i in 0 until streamCount) {
+                        Log.d(TAG, "streamInfo: ${it.getStreamInfo(i)}")
+                    }
+                }
+            }
         }
     }
 
@@ -221,6 +231,11 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             runOnMainThread {
                 if (isBroadcast()) {
                     setRtmpStreamEnable(true)
+                } else {
+                    //超级画质
+                    val ret1 = rtcEngine.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}}")
+                    val ret2 = rtcEngine.setParameters("{\"rtc.video.sr_type\":20}")
+                    Log.d(TAG, "enable_sr ret：$ret1, sr_type ret：$ret2")
                 }
             }
         },
@@ -488,16 +503,16 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 //            rtcEngine.setAudioScenario(Constants.AUDIO_SCENARIO_DEFAULT) // scenario ：default
             updateVideoEncoder(false)
         } else {
-            //超级画质
-            rtcEngine.setParameters("\"rtc.video.enable_sr\": {\"enabled\":true, \"mode\":2} \"rtc.video.sr_type\":20")
 //            rtcEngine.setParameters("\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}")
 //            rtcEngine.setParameters("\"rtc.video.sr_type\":20")
         }
 //        rtcEngine.setParameters("{\"engine.video.enable_hw_encoder\":\"true\"}") // 硬编 （加入频道前调用）
 //        rtcEngine.setParameters("{\"rtc.enable_early_data_for_vos\":\"false\"}") // 针对弱网链接优化（加入频道前调用）
 
+        val score = rtcEngine.queryDeviceScore()
+        Log.d(TAG, "queryDeviceScore $score")
         // 265
-        rtcEngine.setParameters("\"che.video.videoCodecIndex\":2")
+        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
     }
 
@@ -508,14 +523,23 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 frameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value
                 mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_AUTO
             }
-            rtcEngine.setParameters("\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}")
+            val ret =
+                rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")
+            Log.d(TAG, "auto_adjust_resolution close $ret")
             rtcEngine.setVideoEncoderConfiguration(videoEncoderConfiguration)
         } else {
             if (RtcSettings.mVideoDimensionsAuto) {
+                val ret =
+                    rtcEngine.setParameters(
+                        "{\"che.video" +
+                                ".auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":1,\"resolution_list\":\"1920x1080, 1280x720\", \"resolution_score\":\"90, 1\"}}"
+                    )
                 rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
-                rtcEngine.setParameters("\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":1,\"resolution_list\":\"1920x1080, 1280x720\", \"resolution_score\" \"90, 1\"}")
+                Log.d(TAG, "auto_adjust_resolution $ret")
             } else {
-                rtcEngine.setParameters("\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}")
+                val ret =
+                    rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")
+                Log.d(TAG, "auto_adjust_resolution close $ret")
                 rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
             }
         }
