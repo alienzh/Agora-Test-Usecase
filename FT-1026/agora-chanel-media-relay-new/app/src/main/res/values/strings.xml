@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">MediaRelay</string>
+    <string name="channel_name">Channel ID</string>
+    <string name="enter_room">Enter Room</string>
+    <string name="select_role">Role:</string>
+    <string name="role_broadcaster">Broadcaster</string>
+    <string name="role_audience">Audience</string>
+    <string name="enter_pk_channel_id">Enter PK Channel Id</string>
+    <string name="confirm">Confirm</string>
+    <string name="pk">PK</string>
+    <string name="start_pk">Start PK</string>
+    <string name="stop_pk">Stop PK</string>
+    <string name="rtc_audience">switch Rtc Audience</string>
+    <string name="cdn_audience">switch CDN Audience</string>
+    <string name="select_resolution">Resolution:</string>
+    <string name="resolution_1080p">1080p</string>
+    <string name="resolution_720p">720p</string>
+    <string name="resolution_auto">Auto</string>
+    <string name="resolution">Resolution</string>
+    <string name="push_url">Push url</string>
+    <string name="pull_url">Pull url</string>
+    <string name="select_frame">Frame Rate:</string>
+    <string name="frame_rate_30fps">30fps</string>
+    <string name="frame_rate_24fps">24fps</string>
+    <string name="frame_rate_15fps">15fps</string>
+    <string name="bitrate">Bitrate(kbps)</string>
+</resources>

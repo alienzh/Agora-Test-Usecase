@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="title_view">
+        <attr name="ctv_leftImageSrc" format="reference" />
+        <attr name="ctv_hideLeftImage" format="boolean" />
+        <attr name="ctv_leftText" format="string" />
+        <attr name="ctv_centerText" format="string" />
+        <attr name="ctv_centerTextColor" format="color" />
+        <attr name="ctv_rightText" format="string" />
+        <attr name="ctv_rightImageSrc" format="reference" />
+        <attr name="ctv_hideRightImage" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="FullscreenAttrs">
+        <attr name="fullscreenBackgroundColor" format="color" />
+        <attr name="fullscreenTextColor" format="color" />
+    </declare-styleable>
+</resources>
