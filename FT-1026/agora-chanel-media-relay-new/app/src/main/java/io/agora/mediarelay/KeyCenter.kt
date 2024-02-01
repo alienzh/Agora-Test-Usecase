@@ -10,9 +10,18 @@ import java.util.*
 object KeyCenter {
     private const val AGORA_PUSH_URL = "rtmp://examplepush.agoramdn.com/live/"
     private const val AGORA_PULL_URL = "http://examplepull.agoramdn.com/live/"
+    private const val urlPre = "agdemo"
 
     var pushUrl = AGORA_PUSH_URL
     var pullUrl = AGORA_PULL_URL
+
+    public fun resetPushurl(){
+        pushUrl = AGORA_PUSH_URL
+    }
+
+    public fun resetPullhurl(){
+        pullUrl = AGORA_PULL_URL
+    }
 
     var rtcAudienceUid: Int = 0
 
@@ -24,10 +33,10 @@ object KeyCenter {
     }
 
     /**cdn push url*/
-    fun getRtmpPushUrl(channelId: String): String = "$pushUrl$channelId"
+    fun getRtmpPushUrl(channelId: String): String = "$pushUrl$urlPre$channelId"
 
     /**cdn pull url*/
-    fun getRtmpPullUrl(channelId: String): String = "$pullUrl$channelId.flv"
+    fun getRtmpPullUrl(channelId: String): String = "$pullUrl$urlPre$channelId.flv"
 
     fun getRtcToken(channelId: String, uid: Int): String {
         var rtcToken: String = ""

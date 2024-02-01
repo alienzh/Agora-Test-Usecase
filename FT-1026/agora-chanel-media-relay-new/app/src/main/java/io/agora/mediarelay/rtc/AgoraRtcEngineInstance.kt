@@ -3,6 +3,7 @@ package io.agora.mediarelay.rtc
 import io.agora.mediarelay.BuildConfig
 import io.agora.mediarelay.MApp
 import io.agora.mediarelay.tools.LogTool
+import io.agora.rtc2.Constants
 
 import io.agora.rtc2.IRtcEngineEventHandler
 import io.agora.rtc2.RtcEngine
@@ -16,6 +17,9 @@ object AgoraRtcEngineInstance {
     val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
         orientationMode = VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE
         mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_DISABLED
+        dimensions = RtcSettings.mVideoDimensions
+        frameRate = RtcSettings.mFrameRate.value
+        bitrate = RtcSettings.mBitRate
     }
 
     private val workingExecutor = Executors.newSingleThreadExecutor()
@@ -79,6 +83,25 @@ object AgoraRtcEngineInstance {
                         eventListener?.onChannelMediaRelayStateChanged?.invoke(state, code)
                         LogTool.d(TAG, "onChannelMediaRelayStateChanged state: $state, code: $code")
                     }
+
+                    override fun onLocalVideoStats(source: Constants.VideoSourceType?, stats: LocalVideoStats?) {
+                        super.onLocalVideoStats(source, stats)
+                        stats ?: return
+                        LogTool.d(
+                            TAG, "onLocalVideoStats uid: ${stats.uid}，${stats.encodedBitrate}kbps，" +
+                                    "${stats.encoderOutputFrameRate}fps，${stats.encodedFrameWidth}*${stats.encodedFrameHeight}"
+                        )
+                    }
+
+                    override fun onRemoteVideoStats(stats: RemoteVideoStats?) {
+                        super.onRemoteVideoStats(stats)
+                        stats ?: return
+                        LogTool.d(
+                            TAG, "onRemoteVideoStats uid: ${stats.uid}，${stats.receivedBitrate}kbps，" +
+                                    "${stats.decoderOutputFrameRate}fps，${stats.width}*${stats.height}"
+                        )
+
+                    }
                 }
                 innerRtcEngine = (RtcEngine.create(config) as RtcEngineEx).apply {
                     enableVideo()
@@ -86,7 +109,6 @@ object AgoraRtcEngineInstance {
             }
             return innerRtcEngine!!
         }
-
 
 
     fun destroy() {

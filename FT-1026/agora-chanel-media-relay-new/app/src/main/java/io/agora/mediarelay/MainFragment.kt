@@ -30,17 +30,7 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.enterRoom.setOnClickListener {
-            val channelId = binding.etChannel.text.toString()
-            if (checkChannelId(channelId)) return@setOnClickListener
-            val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
-            val args = Bundle().apply {
-                putString(LivingFragment.KEY_CHANNEL_ID, channelId)
-                putInt(
-                    LivingFragment.KEY_ROLE,
-                    if (isBroadcaster) Constants.CLIENT_ROLE_BROADCASTER else Constants.CLIENT_ROLE_AUDIENCE
-                )
-            }
-            findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
+            checkGoLivePage()
         }
         // role
         binding.groupRole.setOnCheckedChangeListener { radioGroup, checkedId ->
@@ -76,31 +66,17 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         when (RtcSettings.mFrameRate) {
             VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_30 ->
                 binding.groupFrameRate.check(R.id.frame_rate_30fps)
+
             VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15 ->
                 binding.groupFrameRate.check(R.id.frame_rate_15fps)
-            else ->  binding.groupFrameRate.check(R.id.frame_rate_24fps)
+
+            else -> binding.groupFrameRate.check(R.id.frame_rate_24fps)
         }
         binding.groupFrameRate.setOnCheckedChangeListener { radioGroup, checkedId ->
             when (checkedId) {
                 R.id.frame_rate_30fps -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_30
                 R.id.frame_rate_15fps -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15
                 else -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24
-            }
-        }
-
-        // push/pull url
-        binding.etPushUrl.doAfterTextChanged { editable ->
-            editable?.trim()?.let {
-                if (it.startsWith("rtmp")) {
-                    KeyCenter.pushUrl = it.toString()
-                }
-            }
-        }
-        binding.etPullUrl.doAfterTextChanged { editable ->
-            editable?.trim()?.let {
-                if (it.startsWith("http")) {
-                    KeyCenter.pullUrl = it.toString()
-                }
             }
         }
         binding.etPushUrl.setText(KeyCenter.pushUrl)
@@ -110,14 +86,34 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         binding.etBitrate.setText("${RtcSettings.mBitRate}")
     }
 
-    private fun checkChannelId(channelId: String): Boolean {
+    private fun checkGoLivePage() {
+        val inputPushUrl = binding.etPushUrl.text?.trim().toString()
+        if (inputPushUrl.startsWith("rtmp")) {
+            KeyCenter.pushUrl = inputPushUrl
+        } else {
+            KeyCenter.resetPushurl()
+        }
+        val inputPullUrl = binding.etPullUrl.text?.trim().toString()
+        if (inputPullUrl.startsWith("http")) {
+            KeyCenter.pullUrl = inputPullUrl
+        } else {
+            KeyCenter.resetPullhurl()
+        }
+        val channelId = binding.etChannel.text.toString()
         if (channelId.isEmpty()) {
             ToastTool.showToast("Please enter channel id")
-            return true
+            return
         }
-        return false
+        val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
+        val args = Bundle().apply {
+            putString(LivingFragment.KEY_CHANNEL_ID, channelId)
+            putInt(
+                LivingFragment.KEY_ROLE,
+                if (isBroadcaster) Constants.CLIENT_ROLE_BROADCASTER else Constants.CLIENT_ROLE_AUDIENCE
+            )
+        }
+        findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
     }
-
 
     override fun onResume() {
         activity?.let {

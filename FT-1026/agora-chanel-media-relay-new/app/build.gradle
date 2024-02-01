@@ -63,6 +63,16 @@ android {
     buildFeatures {
         viewBinding  = true
     }
+
+    applicationVariants.all {
+        variant ->
+            variant.outputs.all { output ->
+                outputFileName = new File("AGDemo_Media_Relay_" +
+                        "v" + defaultConfig.versionName + "_" +
+                        new Date().format("yyyyMMddHHmm") + "_" +
+                        buildType.name + ".apk")
+            }
+    }
 }
 
 dependencies {
