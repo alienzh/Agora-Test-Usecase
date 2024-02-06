@@ -418,7 +418,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 VideoCanvas(
                     remoteTexture,
                     Constants.RENDER_MODE_FIT,
-                    Constants.VIDEO_MIRROR_MODE_ENABLED,
                     remotePkUid
                 )
             )
@@ -431,7 +430,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     VideoCanvas(
                         remoteTextureA,
                         Constants.RENDER_MODE_FIT,
-                        Constants.VIDEO_MIRROR_MODE_ENABLED,
                         ownerUid
                     )
                 )
@@ -442,7 +440,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     VideoCanvas(
                         remoteTextureB,
                         Constants.RENDER_MODE_FIT,
-                        Constants.VIDEO_MIRROR_MODE_ENABLED,
                         remotePkUid
                     )
                 )
@@ -481,7 +478,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 VideoCanvas(
                     remoteTexture,
                     Constants.RENDER_MODE_FIT,
-                    Constants.VIDEO_MIRROR_MODE_ENABLED,
                     ownerUid
                 )
             )

@@ -13,7 +13,7 @@ object KeyCenter {
     private const val AGORA_PULL_URL = "http://examplepull.agoramdn.com/live/"
 
     private const val CUSTOM_PUSH_URL =
-        "rtmp://81.208.167.203:1935/2058423337/4996705886455113_obs?zgToken=80c3b3918d991dc59330db748e4bbd3dad29294783b8b99bb739b2352fe52ac0&zgExpired=1706963780&zgNonce=1706790980776&zgVer=v1"
+        "rtmp://193.122.93.11:1935/2058423337/4996731320601635_obs?zgToken=db71ff614d41372383390c8b0e4f8d27d042c9e4d852dec21b9e03ee92d84c66&zgExpired=1706969844&zgNonce=1706797044862&zgVer=v1"
     private const val CUSTOM_PULL_URL = ""
 
     private const val urlPre = "agdemo"
