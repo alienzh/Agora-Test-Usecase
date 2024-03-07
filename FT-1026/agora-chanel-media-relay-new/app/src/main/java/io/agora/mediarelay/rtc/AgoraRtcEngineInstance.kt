@@ -3,6 +3,7 @@ package io.agora.mediarelay.rtc
 import io.agora.mediarelay.BuildConfig
 import io.agora.mediarelay.MApp
 import io.agora.mediarelay.tools.LogTool
+import io.agora.rtc2.ClientRoleOptions
 import io.agora.rtc2.Constants
 
 import io.agora.rtc2.IRtcEngineEventHandler
@@ -45,14 +46,14 @@ object AgoraRtcEngineInstance {
 
                     override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
                         super.onJoinChannelSuccess(channel, uid, elapsed)
-                        eventListener?.onChannelJoined?.invoke(true)
-                        LogTool.d(TAG, "join channel $channel")
+                        eventListener?.onChannelJoined?.invoke()
+                        LogTool.d(TAG, "onJoinChannelSuccess channelId $channel")
                     }
 
                     override fun onLeaveChannel(stats: RtcStats?) {
                         super.onLeaveChannel(stats)
-                        eventListener?.onChannelJoined?.invoke(false)
-                        LogTool.d(TAG, "leave channel")
+                        eventListener?.onLeaveChannel?.invoke()
+                        LogTool.d(TAG, "onLeaveChannel")
                     }
 
                     override fun onUserJoined(uid: Int, elapsed: Int) {
@@ -102,6 +103,17 @@ object AgoraRtcEngineInstance {
 //                                    "${stats.decoderOutputFrameRate}fps，${stats.width}*${stats.height}"
 //                        )
 
+                    }
+
+                    override fun onClientRoleChanged(oldRole: Int, newRole: Int, newRoleOptions: ClientRoleOptions?) {
+                        super.onClientRoleChanged(oldRole, newRole, newRoleOptions)
+                        eventListener?.onClientRoleChanged?.invoke(oldRole, newRole, newRoleOptions)
+                        LogTool.d(TAG, "onClientRoleChanged: oldRole:$oldRole,newRole:$newRole")
+                    }
+
+                    override fun onClientRoleChangeFailed(reason: Int, currentRole: Int) {
+                        super.onClientRoleChangeFailed(reason, currentRole)
+                        LogTool.d(TAG, "onClientRoleChangeFailed: reason:$reason,currentRole:$currentRole")
                     }
                 }
                 innerRtcEngine = (RtcEngine.create(config) as RtcEngineEx).apply {

@@ -41,7 +41,7 @@ object KeyCenter {
     fun rtcUid(isBroadcast: Boolean, channelId: String): Int {
         if (isBroadcast) return channelId.toIntOrNull() ?: 123
         if (rtcAudienceUid == 0) rtcAudienceUid = UUID.randomUUID().hashCode()
-        return rtcAudienceUid
+        return Math.abs(rtcAudienceUid)
     }
 
     /**cdn push url*/
