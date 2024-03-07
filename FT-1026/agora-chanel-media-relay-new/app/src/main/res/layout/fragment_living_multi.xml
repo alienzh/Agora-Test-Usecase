@@ -12,14 +12,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <include
-        android:id="@+id/videoPKLayout"
-        layout="@layout/view_video_pk"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/btn_back"
         android:layout_width="wrap_content"
@@ -58,37 +50,8 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.7" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/layout_channel"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:hint="@string/enter_pk_channel_id"
-        android:textColorHint="#FFD34D"
-        app:boxBackgroundColor="#33A0C5FF"
-        app:boxBackgroundMode="outline"
-        app:boxCornerRadiusBottomEnd="12dp"
-        app:boxCornerRadiusBottomStart="12dp"
-        app:boxCornerRadiusTopEnd="12dp"
-        app:boxCornerRadiusTopStart="12dp"
-        app:boxStrokeColor="#FFD34D"
-        app:hintTextColor="#FFD34D"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/horizontal70">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_pk_channel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:maxLength="7"
-            android:textColor="@color/white"
-            android:textCursorDrawable="@drawable/bg_edit_cursor"
-            tools:text="123" />
-    </com.google.android.material.textfield.TextInputLayout>
-
     <TextView
-        android:id="@+id/bt_submit_pk"
+        android:id="@+id/bt_linking"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:layout_centerHorizontal="true"
@@ -97,13 +60,13 @@
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
         android:paddingHorizontal="12dp"
-        android:text="@string/start_pk"
+        android:text="@string/start_linking"
         android:textColor="#282828"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/layout_channel"
-        app:layout_constraintStart_toEndOf="@id/layout_channel"
-        app:layout_constraintTop_toTopOf="@id/layout_channel" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="15dp"
+        app:layout_constraintTop_toTopOf="@id/horizontal70" />
 
     <TextView
         android:id="@+id/bt_switch_stream"

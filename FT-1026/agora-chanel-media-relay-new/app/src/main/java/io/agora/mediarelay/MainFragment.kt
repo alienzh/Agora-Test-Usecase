@@ -54,6 +54,8 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             }
         }
         // role
+        val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
+        binding.groupVideoSettings.isVisible = isBroadcaster
         binding.groupRole.setOnCheckedChangeListener { radioGroup, checkedId ->
             when (checkedId) {
                 R.id.role_broadcaster -> binding.groupVideoSettings.isVisible = true
@@ -132,7 +134,13 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 if (isBroadcaster) Constants.CLIENT_ROLE_BROADCASTER else Constants.CLIENT_ROLE_AUDIENCE
             )
         }
-        findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
+        // scene
+        val isSingle = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
+        if (isSingle){
+            findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
+        }else{
+            findNavController().navigate(R.id.action_mainFragment_to_livingMultiFragment, args)
+        }
     }
 
     override fun onResume() {

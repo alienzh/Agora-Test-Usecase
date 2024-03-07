@@ -12,7 +12,7 @@ import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import io.agora.mediaplayer.IMediaPlayer
 import io.agora.mediarelay.baseui.BaseUiFragment
-import io.agora.mediarelay.databinding.FragmentLivingBinding
+import io.agora.mediarelay.databinding.FragmentLivingMultiBinding
 import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.AgoraRtcHelper
 import io.agora.mediarelay.rtc.IAgoraRtcClient
@@ -22,15 +22,13 @@ import io.agora.mediarelay.tools.PermissionHelp
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
-import io.agora.rtc2.video.ChannelMediaInfo
 import io.agora.rtc2.video.ChannelMediaRelayConfiguration
 import io.agora.rtc2.video.VideoCanvas
-import io.agora.rtc2.video.VideoEncoderConfiguration
 
 /**
  * @author create by zhangwei03
  */
-class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
+class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     companion object {
         private const val TAG = "LivingFragment"
 
@@ -63,14 +61,12 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private var mediaPlayer: IMediaPlayer? = null
 
     @Volatile
-    private var isInPk: Boolean = false
+    private var isInLinking: Boolean = false
 
     @Volatile
     private var isCdnAudience: Boolean = true
 
     private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
-
-    private var remotePkUid: Int = -1
 
     private val ownerUid by lazy { channelName.toIntOrNull() ?: 123 }
 
@@ -86,8 +82,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
     }
 
-    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLivingBinding {
-        return FragmentLivingBinding.inflate(inflater)
+    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLivingMultiBinding {
+        return FragmentLivingMultiBinding.inflate(inflater)
     }
 
     override fun onAttach(context: Context) {
@@ -105,13 +101,11 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     private fun initView() {
         if (isBroadcast()) {
-            binding.layoutChannel.isVisible = true
-            binding.btSubmitPk.isVisible = true
+            binding.btLinking.isVisible = false
             binding.btSwitchStream.isVisible = false
             binding.btSwitchCarma.isVisible = true
         } else {
-            binding.layoutChannel.isVisible = false
-            binding.btSubmitPk.isVisible = false
+            binding.btLinking.isVisible = true
             binding.btSwitchStream.isVisible = true
             binding.btSwitchCarma.isVisible = false
         }
@@ -119,28 +113,20 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.btnBack.setOnClickListener {
             goBack()
         }
-        binding.btSubmitPk.setOnClickListener {
-            if (isInPk) {
-                binding.btSubmitPk.text = getString(R.string.start_pk)
-                binding.etPkChannel.setText("")
-                remotePkUid = -1
-                isInPk = false
-                stopChannelMediaRelay()
+        binding.btLinking.setOnClickListener {
+            if (isInLinking) {
+                binding.btLinking.text = getString(R.string.start_linking)
+                isInLinking = false
                 updateRtmpStreamEnable(ownerUid)
                 updateIdleMode()
             } else {
-                val channelId = binding.etPkChannel.text.toString()
-                if (checkChannelId(channelId)) return@setOnClickListener
-                remotePkUid = channelId.toIntOrNull() ?: -1
-                binding.btSubmitPk.text = getString(R.string.stop_pk)
-                isInPk = true
-                startChannelMediaRelay(remotePkUid.toString())
-                val uids = intArrayOf(ownerUid, remotePkUid)
-                updateRtmpStreamEnable(*uids)
-                updatePkMode(remotePkUid)
+                binding.btLinking.text = getString(R.string.stop_linking)
+                isInLinking = true
+//                val uids = intArrayOf(ownerUid, remotePkUid)
+//                updateRtmpStreamEnable(*uids)
             }
 
-            updateVideoEncoder(isInPk)
+            updateVideoEncoder()
         }
         binding.btSwitchStream.setOnClickListener {
             if (isCdnAudience) {
@@ -184,11 +170,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private fun switchCdnAudience(rtmpPullUrl: String) {
         val act = activity ?: return
         rtcEngine.leaveChannel()
-        remotePkUid = -1
-        isInPk = false
+        isInLinking = false
         binding.btSwitchStream.text = getString(R.string.rtc_audience)
-        binding.layoutVideoContainer.isVisible = true
-        binding.videoPKLayout.videoContainer.isVisible = false
 
         val textureView = TextureView(act)
         binding.layoutVideoContainer.removeAllViews()
@@ -212,8 +195,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
 
         binding.btSwitchStream.text = getString(R.string.cdn_audience)
-        binding.layoutVideoContainer.isVisible = true
-        binding.videoPKLayout.videoContainer.isVisible = false
 
         initVideoView()
         joinChannel()
@@ -247,36 +228,15 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         onUserJoined = {
             runOnMainThread {
                 if (isBroadcast()) {
-                    // 除了主播外,有其他用户加入就认为是pk
-                    if (remotePkUid == -1) {
-                        remotePkUid = it
-                        isInPk = true
-                        updatePkMode(it)
-                        startChannelMediaRelay(it.toString())
-                        val uids = intArrayOf(ownerUid, it)
-                        // 主播合流转cdn
-                        updateRtmpStreamEnable(*uids)
-                    }
+                    // TODO:
                 } else {
-                    if (remotePkUid == -1 && channelName != it.toString()) {
-                        remotePkUid = it
-                        isInPk = true
-                        updatePkMode(it)
-                    }
+                    // TODO:
                 }
             }
         },
         onUserOffline = {
             runOnMainThread {
-                if (remotePkUid == it) { // pk 用户离开
-                    remotePkUid = -1
-                    isInPk = false
-                    updateIdleMode()
-                    if (isBroadcast()) {
-                        stopChannelMediaRelay()
-                        updateRtmpStreamEnable(ownerUid)
-                    }
-                }
+                // TODO:
             }
         },
 
@@ -375,90 +335,10 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
     }
 
-    /**跨频道媒体流转发*/
-    private fun startChannelMediaRelay(remoteChannelId: String) {
-        // 配置源频道信息，其中 channelName 使用用户填入的源频道名，myUid 需要填为 0
-        // 注意 sourceChannelToken 和用户加入源频道时的 Token 不一致，需要用 uid = 0 和源频道名重新生成
-        val srcChannelInfo = ChannelMediaInfo(channelName, null, 0)
-        mediaRelayConfiguration.setSrcChannelInfo(srcChannelInfo)
-
-        // 配置目标频道信息，其中 destChannelName 使用用户填入的目标频道名，myUid 填入用户在目标频道内的用户名
-        val destChannelInfo = ChannelMediaInfo(remoteChannelId, null, ownerUid)
-        mediaRelayConfiguration.setDestChannelInfo(remoteChannelId, destChannelInfo)
-        // 调用 startChannelMediaRelay 开始跨频道媒体流转发
-        val result = rtcEngine.startChannelMediaRelay(mediaRelayConfiguration)
-        if (result == Constants.ERR_OK) {
-        } else {
-            ToastTool.showToast("channel media relay error:$result！")
-        }
-    }
-
-    private fun stopChannelMediaRelay() {
-        rtcEngine.stopChannelMediaRelay()
-    }
-
-    /**pk 模式,*/
-    private fun updatePkMode(remotePkUid: Int) {
-        val act = activity ?: return
-        binding.videoPKLayout.videoContainer.isVisible = true
-        binding.layoutVideoContainer.isVisible = false
-        binding.btSubmitPk.text = getString(R.string.stop_pk)
-        if (isBroadcast()) { // 主播
-            val localTexture = TextureView(act)
-            binding.videoPKLayout.iBroadcasterAView.removeAllViews()
-            binding.videoPKLayout.iBroadcasterAView.addView(localTexture)
-            rtcEngine.setupLocalVideo(
-                VideoCanvas(
-                    localTexture,
-                    Constants.RENDER_MODE_ADAPTIVE,
-                    Constants.VIDEO_MIRROR_MODE_ENABLED,
-                    curUid
-                )
-            )
-
-            val remoteTexture = TextureView(act)
-            binding.videoPKLayout.iBroadcasterBView.removeAllViews()
-            binding.videoPKLayout.iBroadcasterBView.addView(remoteTexture)
-            rtcEngine.setupRemoteVideo(
-                VideoCanvas(
-                    remoteTexture,
-                    Constants.RENDER_MODE_FIT,
-                    remotePkUid
-                )
-            )
-        } else {
-            if (!isCdnAudience) {  // rtc 观众
-                val remoteTextureA = TextureView(act)
-                binding.videoPKLayout.iBroadcasterAView.removeAllViews()
-                binding.videoPKLayout.iBroadcasterAView.addView(remoteTextureA)
-                rtcEngine.setupRemoteVideo(
-                    VideoCanvas(
-                        remoteTextureA,
-                        Constants.RENDER_MODE_FIT,
-                        ownerUid
-                    )
-                )
-                val remoteTextureB = TextureView(act)
-                binding.videoPKLayout.iBroadcasterBView.removeAllViews()
-                binding.videoPKLayout.iBroadcasterBView.addView(remoteTextureB)
-                rtcEngine.setupRemoteVideo(
-                    VideoCanvas(
-                        remoteTextureB,
-                        Constants.RENDER_MODE_FIT,
-                        remotePkUid
-                    )
-                )
-            }
-        }
-    }
-
-    /**单主播模式*/
     private fun updateIdleMode() {
-        binding.videoPKLayout.videoContainer.isVisible = false
-        binding.layoutVideoContainer.isVisible = true
-        binding.btSubmitPk.text = getString(R.string.start_pk)
+        binding.btLinking.text = getString(R.string.start_linking)
         initVideoView()
-        updateVideoEncoder(isInPk)
+        updateVideoEncoder()
     }
 
     private fun initVideoView() {
@@ -498,18 +378,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         channelMediaOptions.publishMicrophoneTrack = isBroadcast()
         if (isBroadcast()) {
             rtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING)
-//            rtcEngine.enableInstantMediaRendering() // 加速出图(加入频道前调用)
-//            rtcEngine.setCameraAutoFocusFaceModeEnabled(true) // 开启人脸自动对焦(加入频道前调用)
-//            rtcEngine.setAudioProfile(Constants.AUDIO_PROFILE_DEFAULT) // audio profile ：default
-//            rtcEngine.setAudioScenario(Constants.AUDIO_SCENARIO_DEFAULT) // scenario ：default
-            updateVideoEncoder(false)
-        } else {
-//            rtcEngine.setParameters("\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}")
-//            rtcEngine.setParameters("\"rtc.video.sr_type\":20")
+            updateVideoEncoder()
         }
-//        rtcEngine.setParameters("{\"engine.video.enable_hw_encoder\":\"true\"}") // 硬编 （加入频道前调用）
-//        rtcEngine.setParameters("{\"rtc.enable_early_data_for_vos\":\"false\"}") // 针对弱网链接优化（加入频道前调用）
-
         val score = rtcEngine.queryDeviceScore()
         Log.d(TAG, "queryDeviceScore $score")
         // 265
@@ -517,32 +387,20 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
     }
 
-    private fun updateVideoEncoder(isInPk: Boolean) {
-        if (isInPk) {
-            val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
-                dimensions = VideoEncoderConfiguration.VD_1280x720
-                frameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value
-                mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_AUTO
-            }
+    private fun updateVideoEncoder() {
+        if (RtcSettings.mVideoDimensionsAuto) {
+            val ret =
+                rtcEngine.setParameters(
+                    "{\"che.video" +
+                            ".auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":1,\"resolution_list\":\"1920x1080, 1280x720\", \"resolution_score\":\"90, 1\"}}"
+                )
+            rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
+            Log.d(TAG, "auto_adjust_resolution $ret")
+        } else {
             val ret =
                 rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")
             Log.d(TAG, "auto_adjust_resolution close $ret")
-            rtcEngine.setVideoEncoderConfiguration(videoEncoderConfiguration)
-        } else {
-            if (RtcSettings.mVideoDimensionsAuto) {
-                val ret =
-                    rtcEngine.setParameters(
-                        "{\"che.video" +
-                                ".auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":1,\"resolution_list\":\"1920x1080, 1280x720\", \"resolution_score\":\"90, 1\"}}"
-                    )
-                rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
-                Log.d(TAG, "auto_adjust_resolution $ret")
-            } else {
-                val ret =
-                    rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")
-                Log.d(TAG, "auto_adjust_resolution close $ret")
-                rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
-            }
+            rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
         }
     }
 
