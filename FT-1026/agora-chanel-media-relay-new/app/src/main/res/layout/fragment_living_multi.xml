@@ -75,7 +75,7 @@
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
         android:paddingHorizontal="12dp"
-        android:text="@string/start_linking"
+        android:text="@string/calling"
         android:textColor="#282828"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -112,5 +112,15 @@
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/btn_back"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_back" />
+
+    <ImageView
+        android:id="@+id/bt_mute"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="15dp"
+        android:src="@drawable/ic_mic_on"
+        app:layout_constraintBottom_toBottomOf="@id/btn_back"
+        app:layout_constraintEnd_toStartOf="@+id/bt_switch_carma"
         app:layout_constraintTop_toTopOf="@id/btn_back" />
 </androidx.constraintlayout.widget.ConstraintLayout>

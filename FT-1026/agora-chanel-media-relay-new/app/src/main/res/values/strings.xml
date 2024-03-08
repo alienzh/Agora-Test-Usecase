@@ -31,6 +31,6 @@
     <string name="scenes">Scenes:</string>
     <string name="scene_single">Single anchor</string>
     <string name="scene_multi">multi-anchor</string>
-    <string name="start_linking">Start Linking</string>
-    <string name="stop_linking">Stop Linking</string>
+    <string name="calling">Calling</string>
+    <string name="hang_up">Hang Up</string>
 </resources>

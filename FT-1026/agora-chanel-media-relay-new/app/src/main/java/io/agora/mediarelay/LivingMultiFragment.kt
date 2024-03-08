@@ -7,7 +7,6 @@ import android.os.Looper
 import android.util.Log
 import android.util.SparseIntArray
 import android.view.*
-import androidx.annotation.Size
 import androidx.core.util.forEach
 import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
@@ -120,12 +119,15 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             binding.btLinking.isVisible = false
             binding.btSwitchStream.isVisible = false
             binding.btSwitchCarma.isVisible = true
+            binding.btMute.isVisible = true
+            binding.btMute.setImageResource(R.drawable.ic_mic_on)
             binding.recyclerVideo.isVisible = true
             binding.layoutCdnContainer.isVisible = false
         } else {
             binding.btLinking.isVisible = true
             binding.btSwitchStream.isVisible = true
             binding.btSwitchCarma.isVisible = false
+            binding.btMute.isVisible = false
             // 默认 cdn 观众
             binding.recyclerVideo.isVisible = false
             binding.layoutCdnContainer.isVisible = true
@@ -141,8 +143,9 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     audienceStatus = AudienceStatus.RTC_Broadcaster
                     switchRtc(Constants.CLIENT_ROLE_BROADCASTER)
                     binding.btSwitchCarma.isVisible = true
+                    binding.btMute.isVisible = true
                     binding.btSwitchStream.isVisible = false
-                    binding.btLinking.text = getString(R.string.stop_linking)
+                    binding.btLinking.text = getString(R.string.hang_up)
                 }
 
                 AudienceStatus.RTC_Audience -> { // rtc 观众--> rtc 主播
@@ -151,10 +154,11 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     channelMediaOptions.publishCameraTrack = true
                     channelMediaOptions.publishMicrophoneTrack = true
                     val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
-                    Log.d("alien","rtc 观众--> rtc 主播 ret:$ret")
+                    Log.d("alien", "rtc 观众--> rtc 主播 ret:$ret")
                     binding.btSwitchCarma.isVisible = true
+                    binding.btMute.isVisible = true
                     binding.btSwitchStream.isVisible = false
-                    binding.btLinking.text = getString(R.string.stop_linking)
+                    binding.btLinking.text = getString(R.string.hang_up)
                 }
 
                 AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> rtc 观众
@@ -163,10 +167,11 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     channelMediaOptions.publishCameraTrack = false
                     channelMediaOptions.publishMicrophoneTrack = false
                     val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
-                    Log.d("alien","rtc 主播--> rtc 观众 ret:$ret")
+                    Log.d("alien", "rtc 主播--> rtc 观众 ret:$ret")
                     binding.btSwitchCarma.isVisible = false
+                    binding.btMute.isVisible = false
                     binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.start_linking)
+                    binding.btLinking.text = getString(R.string.calling)
                 }
             }
         }
@@ -176,31 +181,47 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     audienceStatus = AudienceStatus.RTC_Audience
                     switchRtc(Constants.CLIENT_ROLE_AUDIENCE)
                     binding.btSwitchCarma.isVisible = false
+                    binding.btMute.isVisible = false
                     binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.start_linking)
+                    binding.btLinking.text = getString(R.string.calling)
                 }
 
                 AudienceStatus.RTC_Audience -> { // rtc 观众--> cdn 观众
                     audienceStatus = AudienceStatus.CDN_Audience
                     switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
                     binding.btSwitchCarma.isVisible = false
+                    binding.btMute.isVisible = false
                     binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.start_linking)
+                    binding.btLinking.text = getString(R.string.calling)
                 }
 
                 AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> cdn 观众
                     audienceStatus = AudienceStatus.CDN_Audience
                     switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
                     binding.btSwitchCarma.isVisible = false
+                    binding.btMute.isVisible = false
                     binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.start_linking)
+                    binding.btLinking.text = getString(R.string.calling)
                 }
             }
         }
         binding.btSwitchCarma.setOnClickListener {
             rtcEngine.switchCamera()
         }
+        binding.btMute.setOnClickListener {
+            if (muteLocalAudio) {
+                muteLocalAudio = false
+                binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                rtcEngine.muteLocalAudioStream(false)
+            } else {
+                muteLocalAudio = true
+                binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                rtcEngine.muteLocalAudioStream(true)
+            }
+        }
     }
+
+    private var muteLocalAudio = false
 
     private val mediaPlayerObserver = object : MPObserverAdapter() {
         override fun onPlayerStateChanged(
@@ -297,7 +318,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 }
             }
         },
-        onUserJoined = { uid->
+        onUserJoined = { uid ->
             runOnMainThread {
                 videoAdapter?.apply {
                     val existIndex = mVideoList.indexOfValue(uid)
@@ -339,7 +360,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                         mVideoList.put(emptyIndex, curUid)
                         notifyItemChanged(emptyIndex)
                     }
-                }else{
+                } else {
                     videoAdapter?.apply {
                         // 是否已经在麦位上
                         val existIndex = mVideoList.indexOfValue(curUid)
