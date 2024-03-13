@@ -483,11 +483,10 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         channelMediaOptions.publishCameraTrack = role == Constants.CLIENT_ROLE_BROADCASTER
         channelMediaOptions.publishMicrophoneTrack = role == Constants.CLIENT_ROLE_BROADCASTER
         rtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING)
-        if (isOwner) {
-            updateVideoEncoder()
-        }
-        val score = rtcEngine.queryDeviceScore()
-        Log.d(TAG, "queryDeviceScore $score")
+
+        updateVideoEncoder()
+//        val score = rtcEngine.queryDeviceScore()
+//        Log.d(TAG, "queryDeviceScore $score")
         // 265
         rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
@@ -496,16 +495,16 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     private fun updateVideoEncoder() {
         if (RtcSettings.mVideoDimensionsAuto) {
             val ret =
-                rtcEngine.setParameters(
-                    "{\"che.video" +
-                            ".auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":1,\"resolution_list\":\"1920x1080, 1280x720\", \"resolution_score\":\"90, 1\"}}"
-                )
+//                rtcEngine.setParameters(
+//                    "{\"che.video" +
+//                            ".auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":1,\"resolution_list\":\"1920x1080, 1280x720\", \"resolution_score\":\"90, 1\"}}"
+//                )
             rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
             Log.d(TAG, "auto_adjust_resolution $ret")
         } else {
-            val ret =
-                rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")
-            Log.d(TAG, "auto_adjust_resolution close $ret")
+//            val ret =
+//                rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")
+//            Log.d(TAG, "auto_adjust_resolution close $ret")
             rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
         }
     }

@@ -43,9 +43,9 @@ object AgoraRtcHelper {
 
     /**旁路推流转码*/
     fun liveTranscodingMulti(videoUids: SparseIntArray): LiveTranscoding {
-        // 旁路推流，默认1080p24fps分辨率。
+        // 旁路推流，默认1080p15fps分辨率。
         val config = LiveTranscoding().apply {
-            videoFramerate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value
+            videoFramerate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15.value
             videoCodecType = LiveTranscoding.VideoCodecType.H265
             videoBitrate = 3072
             videoGop = 48
@@ -54,21 +54,23 @@ object AgoraRtcHelper {
         }
 
         // 分配主播的画面布局。
+        val startY = ((config.height - config.width) * 0.5).toInt()
+        val singleSize = config.width / 4
         var transcodingX = 0
         var transcodingY = 0
         for (i in 0 until videoUids.size()) {
             val videoUid = videoUids[i]
             if (videoUid ==-1) continue
-            transcodingX = (config.width / 4) * (i % 4)
-            transcodingY = (config.height / 4) * (i / 4)
+            transcodingX = singleSize * (i % 4)
+            transcodingY = startY + singleSize * (i / 4)
             val user: LiveTranscoding.TranscodingUser = LiveTranscoding.TranscodingUser().apply {
                 uid = videoUid
                 x = transcodingX
                 y = transcodingY
                 audioChannel = 0
             }
-            user.width = config.width / 4
-            user.height = config.height / 4
+            user.width = singleSize
+            user.height = singleSize
             config.addUser(user)
         }
         return config

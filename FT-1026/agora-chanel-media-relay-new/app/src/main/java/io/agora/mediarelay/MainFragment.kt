@@ -53,14 +53,14 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 }
             }
         }
+        checkVideoSettingsVisible()
+        // mode
+        binding.groupAnchor.setOnCheckedChangeListener { _, _ ->
+            checkVideoSettingsVisible()
+        }
         // role
-        val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
-        binding.groupVideoSettings.isVisible = isBroadcaster
-        binding.groupRole.setOnCheckedChangeListener { radioGroup, checkedId ->
-            when (checkedId) {
-                R.id.role_broadcaster -> binding.groupVideoSettings.isVisible = true
-                else -> binding.groupVideoSettings.isVisible = false
-            }
+        binding.groupRole.setOnCheckedChangeListener { _, _ ->
+            checkVideoSettingsVisible()
         }
 
         // video dimensions
@@ -112,6 +112,12 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         binding.etBitrate.setText("${RtcSettings.mBitRate}")
     }
 
+    private fun checkVideoSettingsVisible() {
+        val single = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
+        val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
+        binding.groupVideoSettings.isVisible = single && isBroadcaster
+    }
+
     private fun checkGoLivePage() {
         val inputPushUrl = binding.etPushUrl.text?.trim().toString()
         if (inputPushUrl.startsWith("rtmp")) {
@@ -139,6 +145,9 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         if (isSingle){
             findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
         }else{
+            // multiple anchor setup default config
+            RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VideoDimensions(270, 270)
+            RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15
             findNavController().navigate(R.id.action_mainFragment_to_livingMultiFragment, args)
         }
     }
