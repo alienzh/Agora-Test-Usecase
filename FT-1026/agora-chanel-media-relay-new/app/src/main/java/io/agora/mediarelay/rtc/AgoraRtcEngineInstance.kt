@@ -17,7 +17,7 @@ object AgoraRtcEngineInstance {
 
     val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
         orientationMode = VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE
-        mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_DISABLED
+        mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_ENABLED
         dimensions = RtcSettings.mVideoDimensions
         frameRate = RtcSettings.mFrameRate.value
         bitrate = RtcSettings.mBitRate

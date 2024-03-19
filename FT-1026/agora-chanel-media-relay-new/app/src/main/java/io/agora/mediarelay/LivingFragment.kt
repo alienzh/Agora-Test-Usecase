@@ -109,11 +109,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             binding.btSubmitPk.isVisible = true
             binding.btSwitchStream.isVisible = false
             binding.btSwitchCarma.isVisible = true
+            binding.btMute.isVisible = true
+            binding.btMute.setImageResource(R.drawable.ic_mic_on)
         } else {
             binding.layoutChannel.isVisible = false
             binding.btSubmitPk.isVisible = false
             binding.btSwitchStream.isVisible = true
             binding.btSwitchCarma.isVisible = false
+            binding.btMute.isVisible = false
         }
         binding.tvChannelId.text = "ChannelId:$channelName"
         binding.btnBack.setOnClickListener {
@@ -153,7 +156,20 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.btSwitchCarma.setOnClickListener {
             rtcEngine.switchCamera()
         }
+        binding.btMute.setOnClickListener {
+            if (muteLocalAudio) {
+                muteLocalAudio = false
+                binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                rtcEngine.muteLocalAudioStream(false)
+            } else {
+                muteLocalAudio = true
+                binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                rtcEngine.muteLocalAudioStream(true)
+            }
+        }
     }
+
+    private var muteLocalAudio = false
 
     private val mediaPlayerObserver = object : MPObserverAdapter() {
         override fun onPlayerStateChanged(
@@ -525,7 +541,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
                 dimensions = VideoEncoderConfiguration.VD_1280x720
                 frameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value
-                mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_AUTO
+                mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_ENABLED
             }
             val ret =
                 rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")

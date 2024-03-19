@@ -577,7 +577,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             if (uid == -1) {
                 mTextureVideos.remove(position)
                 rtcEngine.setupRemoteVideo(
-                    VideoCanvas(null, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_ENABLED, uid)
+                    VideoCanvas(null, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
                 )
                 if (holder.binding.flVideo.childCount > 0) holder.binding.flVideo.removeAllViews()
             } else {
@@ -591,11 +591,11 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 }
                 if (uid == curUid) {
                     rtcEngine.setupLocalVideo(
-                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_ENABLED, uid)
+                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_AUTO, uid)
                     )
                 } else {
                     rtcEngine.setupRemoteVideo(
-                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_ENABLED, uid)
+                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
                     )
                 }
                 if (holder.binding.flVideo.childCount > 0) holder.binding.flVideo.removeAllViews()
