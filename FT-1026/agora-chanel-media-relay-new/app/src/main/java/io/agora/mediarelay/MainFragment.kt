@@ -72,8 +72,35 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         } else if (RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_1280x720) {
             binding.groupResolution.check(R.id.resolution_720p)
         }
-        binding.groupResolution.setOnCheckedChangeListener { radioGroup, checkedId ->
-            when (checkedId) {
+        binding.groupResolution.setOnCheckedChangeListener { _, _ ->
+        }
+
+        // frame rate
+        when (RtcSettings.mFrameRate) {
+            VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_30 ->
+                binding.groupFrameRate.check(R.id.frame_rate_30fps)
+
+            VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15 ->
+                binding.groupFrameRate.check(R.id.frame_rate_15fps)
+
+            else -> binding.groupFrameRate.check(R.id.frame_rate_24fps)
+        }
+        binding.groupFrameRate.setOnCheckedChangeListener { radioGroup, checkedId ->
+        }
+        // bitrate
+        binding.etBitrate.setText("${RtcSettings.mBitRate}")
+    }
+
+    private fun checkVideoSettingsVisible() {
+        val single = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
+        val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
+        binding.groupVideoSettings.isVisible = single && isBroadcaster
+    }
+
+    private fun setupVideoSettings() {
+        val isSingle = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
+        if (isSingle){
+            when (binding.groupResolution.checkedRadioButtonId) {
                 R.id.resolution_1080p -> {
                     RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080
                     RtcSettings.mVideoDimensionsAuto = false
@@ -89,33 +116,17 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                     RtcSettings.mVideoDimensionsAuto = true
                 }
             }
-        }
-
-        // frame rate
-        when (RtcSettings.mFrameRate) {
-            VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_30 ->
-                binding.groupFrameRate.check(R.id.frame_rate_30fps)
-
-            VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15 ->
-                binding.groupFrameRate.check(R.id.frame_rate_15fps)
-
-            else -> binding.groupFrameRate.check(R.id.frame_rate_24fps)
-        }
-        binding.groupFrameRate.setOnCheckedChangeListener { radioGroup, checkedId ->
-            when (checkedId) {
+            when (binding.groupFrameRate.checkedRadioButtonId) {
                 R.id.frame_rate_30fps -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_30
                 R.id.frame_rate_15fps -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15
                 else -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24
             }
+        }else{
+            // multiple anchor setup default config
+            RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VideoDimensions(270, 270)
+            RtcSettings.mVideoDimensionsAuto = false
+            RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15
         }
-        // bitrate
-        binding.etBitrate.setText("${RtcSettings.mBitRate}")
-    }
-
-    private fun checkVideoSettingsVisible() {
-        val single = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
-        val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
-        binding.groupVideoSettings.isVisible = single && isBroadcaster
     }
 
     private fun checkGoLivePage() {
@@ -140,14 +151,12 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 if (isBroadcaster) Constants.CLIENT_ROLE_BROADCASTER else Constants.CLIENT_ROLE_AUDIENCE
             )
         }
+        setupVideoSettings()
         // scene
         val isSingle = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
         if (isSingle){
             findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
         }else{
-            // multiple anchor setup default config
-            RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VideoDimensions(270, 270)
-            RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15
             findNavController().navigate(R.id.action_mainFragment_to_livingMultiFragment, args)
         }
     }

@@ -509,11 +509,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
 //        rtcEngine.setParameters("{\"engine.video.enable_hw_encoder\":\"true\"}") // 硬编 （加入频道前调用）
 //        rtcEngine.setParameters("{\"rtc.enable_early_data_for_vos\":\"false\"}") // 针对弱网链接优化（加入频道前调用）
+        val ret1 = rtcEngine.setParameters("{\"engine.video.enable_hw_decoder\":\"true\"}")
+        val ret2 = rtcEngine.setParameters("{\"engine.video.decoder_out_byte_frame\":\"true\"}")
 
         val score = rtcEngine.queryDeviceScore()
         Log.d(TAG, "queryDeviceScore $score")
         // 265
         rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
+        rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
     }
 

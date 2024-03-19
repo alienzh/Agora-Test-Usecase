@@ -146,6 +146,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     binding.btMute.isVisible = true
                     binding.btSwitchStream.isVisible = false
                     binding.btLinking.text = getString(R.string.hang_up)
+                    rtcEngine.setEnableSpeakerphone(false)
+                    rtcEngine.setEnableSpeakerphone(true)
                 }
 
                 AudienceStatus.RTC_Audience -> { // rtc 观众--> rtc 主播
@@ -159,6 +161,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     binding.btMute.isVisible = true
                     binding.btSwitchStream.isVisible = false
                     binding.btLinking.text = getString(R.string.hang_up)
+                    rtcEngine.setEnableSpeakerphone(false)
+                    rtcEngine.setEnableSpeakerphone(true)
                 }
 
                 AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> rtc 观众
@@ -489,18 +493,18 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
 //        Log.d(TAG, "queryDeviceScore $score")
         // 265
         rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
+        rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
     }
 
     private fun updateVideoEncoder() {
         if (RtcSettings.mVideoDimensionsAuto) {
-            val ret =
+//            val ret =
 //                rtcEngine.setParameters(
 //                    "{\"che.video" +
 //                            ".auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":1,\"resolution_list\":\"1920x1080, 1280x720\", \"resolution_score\":\"90, 1\"}}"
 //                )
             rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
-            Log.d(TAG, "auto_adjust_resolution $ret")
         } else {
 //            val ret =
 //                rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")
