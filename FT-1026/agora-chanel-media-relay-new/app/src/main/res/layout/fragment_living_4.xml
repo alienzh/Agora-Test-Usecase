@@ -7,18 +7,11 @@
     android:background="@color/black"
     tools:context=".LivingFragment">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_video"
+    <include
+        android:id="@+id/videosLayout"
+        layout="@layout/view_video_4"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintTop_toTopOf="parent"
-        app:spanCount="4"
-        tools:itemCount="16"
-        android:visibility="invisible"
-        tools:listitem="@layout/view_video_item" />
+        android:layout_height="match_parent"/>
 
     <FrameLayout
         android:id="@+id/layout_cdn_container"
@@ -100,20 +93,6 @@
         app:layout_constraintTop_toTopOf="@id/btn_back"
         tools:visibility="invisible" />
 
-    <TextView
-        android:id="@+id/bt_switch_carma"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="15dp"
-        android:drawableTop="@drawable/ic_camera"
-        android:paddingHorizontal="12dp"
-        android:text="@string/switch_camera"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@id/btn_back"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btn_back" />
-
     <ImageView
         android:id="@+id/bt_mute"
         android:layout_width="wrap_content"
@@ -121,7 +100,7 @@
         android:layout_marginEnd="15dp"
         android:src="@drawable/ic_mic_on"
         app:layout_constraintBottom_toBottomOf="@id/btn_back"
-        app:layout_constraintEnd_toStartOf="@+id/bt_switch_carma"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/btn_back" />
 
     <ImageView

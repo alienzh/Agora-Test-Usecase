@@ -20,6 +20,7 @@ import io.agora.mediarelay.rtc.MPObserverAdapter
 import io.agora.mediarelay.rtc.RtcSettings
 import io.agora.mediarelay.tools.PermissionHelp
 import io.agora.mediarelay.tools.ToastTool
+import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
 import io.agora.rtc2.video.ChannelMediaInfo
@@ -143,7 +144,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 updatePkMode(remotePkUid)
             }
 
-            updateVideoEncoder(isInPk)
+            updateVideoEncoder()
         }
         binding.btSwitchStream.setOnClickListener {
             if (isCdnAudience) {
@@ -166,6 +167,15 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 binding.btMute.setImageResource(R.drawable.ic_mic_off)
                 rtcEngine.muteLocalAudioStream(true)
             }
+        }
+        val dashboardFragment = DashboardFragment()
+        childFragmentManager.beginTransaction()
+            .replace(R.id.fl_dashboard, dashboardFragment)
+            .commit()
+        binding.btDashboard.setOnClickListener {
+            it.isSelected = !it.isSelected
+            dashboardFragment.setOn(it.isSelected)
+            binding.flDashboard.isVisible = it.isSelected
         }
     }
 
@@ -211,6 +221,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.layoutVideoContainer.addView(textureView)
         mediaPlayer = rtcEngine.createMediaPlayer()
         mediaPlayer?.apply {
+            setPlayerOption("play_speed_down_cache_duration", 0)
             registerPlayerObserver(mediaPlayerObserver)
             setView(textureView)
             open(rtmpPullUrl, 0)
@@ -267,6 +278,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     if (remotePkUid == -1) {
                         remotePkUid = it
                         isInPk = true
+                        updateVideoEncoder()
                         updatePkMode(it)
                         startChannelMediaRelay(it.toString())
                         val uids = intArrayOf(ownerUid, it)
@@ -277,6 +289,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     if (remotePkUid == -1 && channelName != it.toString()) {
                         remotePkUid = it
                         isInPk = true
+                        updateVideoEncoder()
                         updatePkMode(it)
                     }
                 }
@@ -287,6 +300,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 if (remotePkUid == it) { // pk 用户离开
                     remotePkUid = -1
                     isInPk = false
+                    updateVideoEncoder()
                     updateIdleMode()
                     if (isBroadcast()) {
                         stopChannelMediaRelay()
@@ -474,7 +488,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.layoutVideoContainer.isVisible = true
         binding.btSubmitPk.text = getString(R.string.start_pk)
         initVideoView()
-        updateVideoEncoder(isInPk)
     }
 
     private fun initVideoView() {
@@ -518,7 +531,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 //            rtcEngine.setCameraAutoFocusFaceModeEnabled(true) // 开启人脸自动对焦(加入频道前调用)
 //            rtcEngine.setAudioProfile(Constants.AUDIO_PROFILE_DEFAULT) // audio profile ：default
 //            rtcEngine.setAudioScenario(Constants.AUDIO_SCENARIO_DEFAULT) // scenario ：default
-            updateVideoEncoder(false)
+            updateVideoEncoder()
         } else {
 //            rtcEngine.setParameters("\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}")
 //            rtcEngine.setParameters("\"rtc.video.sr_type\":20")
@@ -536,8 +549,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
     }
 
-    private fun updateVideoEncoder(isInPk: Boolean) {
-        if (isInPk) {
+    private fun updateVideoEncoder() {
+        if (isInPk && RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_1920x1080) {
             val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
                 dimensions = VideoEncoderConfiguration.VD_1280x720
                 frameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value

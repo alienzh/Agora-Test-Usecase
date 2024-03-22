@@ -19,7 +19,7 @@ object AgoraRtcEngineInstance {
         orientationMode = VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE
         mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_ENABLED
         dimensions = RtcSettings.mVideoDimensions
-        frameRate = RtcSettings.mFrameRate.value
+        frameRate = RtcSettings.mFrameRate
         bitrate = RtcSettings.mBitRate
     }
 
@@ -27,16 +27,28 @@ object AgoraRtcEngineInstance {
 
     private var innerRtcEngine: RtcEngineEx? = null
 
+    private var mAppId: String = BuildConfig.RTC_APP_ID
+
+    private var mVideoInfoListener: IVideoInfoListener? = null
+
     const val TAG = "AgoraRtcImpl"
 
     var eventListener: IAgoraRtcClient.IChannelEventListener? = null
+
+    fun setAppId(str: String) {
+        mAppId = str
+    }
+
+    fun setVideoInfoListener(listener: IVideoInfoListener?) {
+        mVideoInfoListener = listener
+    }
 
     val rtcEngine: RtcEngineEx
         get() {
             if (innerRtcEngine == null) {
                 val config = RtcEngineConfig()
                 config.mContext = MApp.instance()
-                config.mAppId = BuildConfig.RTC_APP_ID
+                config.mAppId = mAppId
                 config.mEventHandler = object : IRtcEngineEventHandler() {
 
                     override fun onError(err: Int) {
@@ -90,21 +102,23 @@ object AgoraRtcEngineInstance {
                     override fun onLocalVideoStats(source: Constants.VideoSourceType?, stats: LocalVideoStats?) {
                         super.onLocalVideoStats(source, stats)
                         stats ?: return
-//                        LogTool.d(
-//                            TAG, "onLocalVideoStats uid: ${stats.uid}，${stats.encodedBitrate}kbps，" +
-//                                    "${stats.encoderOutputFrameRate}fps，${stats.encodedFrameWidth}*${stats.encodedFrameHeight}," +
-//                                    "${stats.codecType}"
-//                        )
+                        mVideoInfoListener?.onLocalVideoStats(source, stats)
                     }
 
                     override fun onRemoteVideoStats(stats: RemoteVideoStats?) {
                         super.onRemoteVideoStats(stats)
                         stats ?: return
-//                        LogTool.d(
-//                            TAG, "onRemoteVideoStats uid: ${stats.uid}，${stats.receivedBitrate}kbps，" +
-//                                    "${stats.decoderOutputFrameRate}fps，${stats.width}*${stats.height}"
-//                        )
+                        mVideoInfoListener?.onRemoteVideoStats(stats)
+                    }
 
+                    override fun onUplinkNetworkInfoUpdated(info: UplinkNetworkInfo?) {
+                        super.onUplinkNetworkInfoUpdated(info)
+                        mVideoInfoListener?.onUplinkNetworkInfoUpdated(info)
+                    }
+
+                    override fun onDownlinkNetworkInfoUpdated(info: DownlinkNetworkInfo?) {
+                        super.onDownlinkNetworkInfoUpdated(info)
+                        mVideoInfoListener?.onDownlinkNetworkInfoUpdated(info)
                     }
 
                     override fun onClientRoleChanged(oldRole: Int, newRole: Int, newRoleOptions: ClientRoleOptions?) {

@@ -24,10 +24,10 @@ object RtcSettings {
     /**
      * 编码帧率
      */
-    var mFrameRate: VideoEncoderConfiguration.FRAME_RATE = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24
+    var mFrameRate: Int = 24
         set(newValue) {
             field = newValue
-            AgoraRtcEngineInstance.videoEncoderConfiguration.frameRate = newValue.value
+            AgoraRtcEngineInstance.videoEncoderConfiguration.frameRate = newValue
             LogTool.d("RtcSetting FrameRate：$newValue")
         }
 
@@ -44,7 +44,7 @@ object RtcSettings {
     fun reset() {
         mVideoDimensionsAuto = false
         mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080
-        mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24
+        mFrameRate = 24
         mBitRate = 0
     }
 }

@@ -25,6 +25,12 @@
             app:exitAnim="@anim/anim_slide_out_left"
             app:popEnterAnim="@anim/anim_slide_in_left"
             app:popExitAnim="@anim/anim_slide_out_right" />
+        <action
+            android:id="@+id/action_mainFragment_to_living3Fragment"
+            app:destination="@id/living3Fragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_living4Fragment"
+            app:destination="@id/living4Fragment" />
     </fragment>
 
     <fragment
@@ -55,5 +61,21 @@
             app:exitAnim="@anim/anim_slide_out_left"
             app:popEnterAnim="@anim/anim_slide_in_left"
             app:popExitAnim="@anim/anim_slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/living3Fragment"
+        android:name="io.agora.mediarelay.Living3Fragment"
+        android:label="Living3Fragment" >
+        <action
+            android:id="@+id/action_living3Fragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/living4Fragment"
+        android:name="io.agora.mediarelay.Living4Fragment"
+        android:label="Living4Fragment" >
+        <action
+            android:id="@+id/action_living4Fragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
     </fragment>
 </navigation>

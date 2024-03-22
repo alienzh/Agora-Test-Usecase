@@ -9,6 +9,7 @@ import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentMainBinding
+import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.RtcSettings
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.rtc2.Constants
@@ -31,6 +32,9 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         binding.enterRoom.setOnClickListener {
             checkGoLivePage()
         }
+        binding.appIdCustom.text = if (BuildConfig.CUSTOM_APP_ID.isNotEmpty()) {
+            BuildConfig.CUSTOM_APP_ID.substring(0, 9) + "***"
+        } else "Empty"
         binding.etPushUrl.setText(KeyCenter.pushUrl)
         binding.etPullUrl.setText(KeyCenter.pullUrl)
         if (KeyCenter.isAgoraCdn()) {
@@ -76,17 +80,7 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         }
 
         // frame rate
-        when (RtcSettings.mFrameRate) {
-            VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_30 ->
-                binding.groupFrameRate.check(R.id.frame_rate_30fps)
-
-            VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15 ->
-                binding.groupFrameRate.check(R.id.frame_rate_15fps)
-
-            else -> binding.groupFrameRate.check(R.id.frame_rate_24fps)
-        }
-        binding.groupFrameRate.setOnCheckedChangeListener { radioGroup, checkedId ->
-        }
+        binding.etFps.setText("${RtcSettings.mFrameRate}")
         // bitrate
         binding.etBitrate.setText("${RtcSettings.mBitRate}")
     }
@@ -94,12 +88,19 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
     private fun checkVideoSettingsVisible() {
         val single = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
         val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
-        binding.groupVideoSettings.isVisible = single && isBroadcaster
+        if (single && isBroadcaster) {
+            binding.layoutResolution.isVisible = true
+            binding.layoutFps.isVisible = true
+            binding.layoutBitrate.isVisible = true
+        } else {
+            binding.layoutResolution.isVisible = false
+            binding.layoutFps.isVisible = false
+            binding.layoutBitrate.isVisible = false
+        }
     }
 
     private fun setupVideoSettings() {
-        val isSingle = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
-        if (isSingle){
+        if (binding.groupAnchor.checkedRadioButtonId == R.id.scene_single){
             when (binding.groupResolution.checkedRadioButtonId) {
                 R.id.resolution_1080p -> {
                     RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080
@@ -111,21 +112,33 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                     RtcSettings.mVideoDimensionsAuto = false
                 }
 
+                R.id.resolution_540p -> {
+                    RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_960x540
+                    RtcSettings.mVideoDimensionsAuto = false
+                }
+
                 else -> {
                     RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080
                     RtcSettings.mVideoDimensionsAuto = true
                 }
             }
-            when (binding.groupFrameRate.checkedRadioButtonId) {
-                R.id.frame_rate_30fps -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_30
-                R.id.frame_rate_15fps -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15
-                else -> RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24
-            }
-        }else{
+            RtcSettings.mFrameRate = binding.etFps.text.toString().toIntOrNull() ?: 24
+            RtcSettings.mBitRate = binding.etBitrate.text.toString().toIntOrNull() ?: 0
+        } else if (binding.groupAnchor.checkedRadioButtonId == R.id.scene_3) {
+            // multiple anchor setup default config
+            RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_960x540
+            RtcSettings.mVideoDimensionsAuto = false
+            RtcSettings.mFrameRate = 24
+        } else if (binding.groupAnchor.checkedRadioButtonId == R.id.scene_4) {
+            // multiple anchor setup default config
+            RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VideoDimensions(540, 540)
+            RtcSettings.mVideoDimensionsAuto = false
+            RtcSettings.mFrameRate = 24
+        } else if (binding.groupAnchor.checkedRadioButtonId == R.id.scene_multi) {
             // multiple anchor setup default config
             RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VideoDimensions(270, 270)
             RtcSettings.mVideoDimensionsAuto = false
-            RtcSettings.mFrameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15
+            RtcSettings.mFrameRate = 15
         }
     }
 
@@ -143,6 +156,9 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             ToastTool.showToast("Please enter channel id")
             return
         }
+        val appId = if (binding.groupAppId.checkedRadioButtonId == R.id.app_id_agora) BuildConfig.RTC_APP_ID else BuildConfig.CUSTOM_APP_ID
+        AgoraRtcEngineInstance.setAppId(appId)
+        setupVideoSettings()
         val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
         val args = Bundle().apply {
             putString(LivingFragment.KEY_CHANNEL_ID, channelId)
@@ -151,13 +167,20 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 if (isBroadcaster) Constants.CLIENT_ROLE_BROADCASTER else Constants.CLIENT_ROLE_AUDIENCE
             )
         }
-        setupVideoSettings()
         // scene
-        val isSingle = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
-        if (isSingle){
-            findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
-        }else{
-            findNavController().navigate(R.id.action_mainFragment_to_livingMultiFragment, args)
+        when(binding.groupAnchor.checkedRadioButtonId) {
+            R.id.scene_single -> {
+                findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
+            }
+            R.id.scene_3 -> {
+                findNavController().navigate(R.id.action_mainFragment_to_living3Fragment, args)
+            }
+            R.id.scene_4 -> {
+                findNavController().navigate(R.id.action_mainFragment_to_living4Fragment, args)
+            }
+            R.id.scene_multi -> {
+                findNavController().navigate(R.id.action_mainFragment_to_livingMultiFragment, args)
+            }
         }
     }
 

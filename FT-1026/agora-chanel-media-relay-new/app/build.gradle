@@ -21,6 +21,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "RTC_APP_ID", "\"${properties.getProperty("APP_ID", "")}\"")
+        buildConfigField("String", "CUSTOM_APP_ID", "\"${properties.getProperty("CUSTOM_APP_ID", "")}\"")
         buildConfigField("String", "RTC_APP_CERT", "\"${properties.getProperty("APP_CERTIFICATE", "")}\"")
 
         ndk {

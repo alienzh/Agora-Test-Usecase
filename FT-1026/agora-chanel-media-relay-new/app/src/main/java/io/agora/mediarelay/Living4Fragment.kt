@@ -11,16 +11,13 @@ import androidx.core.util.forEach
 import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.RecyclerView
 import io.agora.mediaplayer.IMediaPlayer
 import io.agora.mediarelay.baseui.BaseUiFragment
-import io.agora.mediarelay.databinding.FragmentLivingMultiBinding
-import io.agora.mediarelay.databinding.ViewVideoItemBinding
+import io.agora.mediarelay.databinding.FragmentLiving4Binding
 import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.AgoraRtcHelper
 import io.agora.mediarelay.rtc.IAgoraRtcClient
 import io.agora.mediarelay.rtc.MPObserverAdapter
-import io.agora.mediarelay.rtc.RtcSettings
 import io.agora.mediarelay.tools.PermissionHelp
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
@@ -28,18 +25,12 @@ import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
 import io.agora.rtc2.video.VideoCanvas
 
-enum class AudienceStatus {
-    CDN_Audience,
-    RTC_Audience,
-    RTC_Broadcaster
-}
-
 /**
  * @author create by zhangwei03
  */
-class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
+class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
     companion object {
-        private const val TAG = "LivingFragment"
+        private const val TAG = "Living3Fragment"
 
         const val KEY_CHANNEL_ID: String = "key_channel_id"
         const val KEY_ROLE: String = "key_role"
@@ -73,8 +64,6 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     @Volatile
     private var audienceStatus: AudienceStatus = AudienceStatus.CDN_Audience
 
-    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
-
     private val ownerUid by lazy { channelName.toIntOrNull() ?: 123 }
 
     private val curUid by lazy {
@@ -87,18 +76,10 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             return role == Constants.CLIENT_ROLE_BROADCASTER
         }
 
-    private var videoAdapter: VideoAdapter? = null
+    private val mVideoList: SparseIntArray = SparseIntArray()
 
-    private fun runOnMainThread(runnable: Runnable) {
-        if (Thread.currentThread() === mainHandler.looper.thread) {
-            runnable.run()
-        } else {
-            mainHandler.post(runnable)
-        }
-    }
-
-    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLivingMultiBinding {
-        return FragmentLivingMultiBinding.inflate(inflater)
+    override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLiving4Binding {
+        return FragmentLiving4Binding.inflate(inflater)
     }
 
     override fun onAttach(context: Context) {
@@ -119,18 +100,16 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         if (isOwner) {
             binding.btLinking.isVisible = false
             binding.btSwitchStream.isVisible = false
-            binding.btSwitchCarma.isVisible = true
             binding.btMute.isVisible = true
             binding.btMute.setImageResource(R.drawable.ic_mic_on)
-            binding.recyclerVideo.isVisible = true
+            binding.videosLayout.videoContainer.isVisible = true
             binding.layoutCdnContainer.isVisible = false
         } else {
             binding.btLinking.isVisible = true
             binding.btSwitchStream.isVisible = true
-            binding.btSwitchCarma.isVisible = false
             binding.btMute.isVisible = false
             // 默认 cdn 观众
-            binding.recyclerVideo.isVisible = false
+            binding.videosLayout.videoContainer.isVisible = false
             binding.layoutCdnContainer.isVisible = true
         }
         binding.tvChannelId.text = "ChannelId:$channelName"
@@ -143,7 +122,6 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 主播
                     audienceStatus = AudienceStatus.RTC_Broadcaster
                     switchRtc(Constants.CLIENT_ROLE_BROADCASTER)
-                    binding.btSwitchCarma.isVisible = true
                     binding.btMute.isVisible = true
                     binding.btSwitchStream.isVisible = false
                     binding.btLinking.text = getString(R.string.hang_up)
@@ -158,7 +136,6 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     channelMediaOptions.publishMicrophoneTrack = true
                     val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
                     Log.d("alien", "rtc 观众--> rtc 主播 ret:$ret")
-                    binding.btSwitchCarma.isVisible = true
                     binding.btMute.isVisible = true
                     binding.btSwitchStream.isVisible = false
                     binding.btLinking.text = getString(R.string.hang_up)
@@ -173,7 +150,6 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     channelMediaOptions.publishMicrophoneTrack = false
                     val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
                     Log.d("alien", "rtc 主播--> rtc 观众 ret:$ret")
-                    binding.btSwitchCarma.isVisible = false
                     binding.btMute.isVisible = false
                     binding.btSwitchStream.isVisible = true
                     binding.btLinking.text = getString(R.string.calling)
@@ -185,7 +161,6 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 观众
                     audienceStatus = AudienceStatus.RTC_Audience
                     switchRtc(Constants.CLIENT_ROLE_AUDIENCE)
-                    binding.btSwitchCarma.isVisible = false
                     binding.btMute.isVisible = false
                     binding.btSwitchStream.isVisible = true
                     binding.btLinking.text = getString(R.string.calling)
@@ -194,7 +169,6 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 AudienceStatus.RTC_Audience -> { // rtc 观众--> cdn 观众
                     audienceStatus = AudienceStatus.CDN_Audience
                     switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
-                    binding.btSwitchCarma.isVisible = false
                     binding.btMute.isVisible = false
                     binding.btSwitchStream.isVisible = true
                     binding.btLinking.text = getString(R.string.calling)
@@ -203,15 +177,11 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> cdn 观众
                     audienceStatus = AudienceStatus.CDN_Audience
                     switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
-                    binding.btSwitchCarma.isVisible = false
                     binding.btMute.isVisible = false
                     binding.btSwitchStream.isVisible = true
                     binding.btLinking.text = getString(R.string.calling)
                 }
             }
-        }
-        binding.btSwitchCarma.setOnClickListener {
-            rtcEngine.switchCamera()
         }
         binding.btMute.setOnClickListener {
             if (muteLocalAudio) {
@@ -273,7 +243,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         binding.layoutCdnContainer.removeAllViews()
         binding.layoutCdnContainer.addView(textureView)
         binding.layoutCdnContainer.isVisible = true
-        binding.recyclerVideo.isVisible = false
+        binding.videosLayout.videoContainer.isVisible = false
         mediaPlayer = rtcEngine.createMediaPlayer()
         mediaPlayer?.apply {
             setPlayerOption("play_speed_down_cache_duration", 0)
@@ -294,7 +264,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         binding.btSwitchStream.text = getString(R.string.cdn_audience)
         binding.layoutCdnContainer.removeAllViews()
         binding.layoutCdnContainer.isVisible = false
-        binding.recyclerVideo.isVisible = true
+        binding.videosLayout.videoContainer.isVisible = true
         joinChannel(role)
     }
 
@@ -302,14 +272,12 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         onChannelJoined = {
             runOnMainThread {
                 if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
-                    videoAdapter?.apply {
-                        val existIndex = mVideoList.indexOfValue(curUid)
-                        if (existIndex != -1) return@runOnMainThread
-                        val emptyIndex = mVideoList.indexOfValue(-1)
-                        if (emptyIndex == -1) return@runOnMainThread
-                        mVideoList.put(emptyIndex, curUid)
-                        notifyItemChanged(emptyIndex)
-                    }
+                    val existIndex = mVideoList.indexOfValue(curUid)
+                    if (existIndex != -1) return@runOnMainThread
+                    val emptyIndex = fetchValidIndex(curUid)
+                    if (emptyIndex == -1) return@runOnMainThread
+                    mVideoList.put(emptyIndex, curUid)
+                    notifyItemChanged(emptyIndex)
                 }
                 if (isOwner) {
                     setRtmpStreamEnable(true)
@@ -325,39 +293,33 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         },
         onLeaveChannel = {
             if (!isOwner) { // 非房主加入空位置
-                videoAdapter?.apply {
-                    mVideoList.forEach(action = { key, value ->
-                        mVideoList.put(key, -1)
-                    })
-                    notifyDataSetChanged()
-                }
+                mVideoList.forEach(action = { key, value ->
+                    mVideoList.put(key, -1)
+                })
+                notifyDataSetChanged()
             }
         },
         onUserJoined = { uid ->
             runOnMainThread {
-                videoAdapter?.apply {
-                    val existIndex = mVideoList.indexOfValue(uid)
-                    if (existIndex != -1) return@runOnMainThread
-                    val emptyIndex = mVideoList.indexOfValue(-1)
-                    if (emptyIndex == -1) return@runOnMainThread
-                    mVideoList.put(emptyIndex, uid)
-                    notifyItemChanged(emptyIndex)
-                    if (isOwner) {
-                        updateRtmpStreamEnable()
-                    }
+                val existIndex = mVideoList.indexOfValue(uid)
+                if (existIndex != -1) return@runOnMainThread
+                val emptyIndex = fetchValidIndex(uid)
+                if (emptyIndex == -1) return@runOnMainThread
+                mVideoList.put(emptyIndex, uid)
+                notifyItemChanged(emptyIndex)
+                if (isOwner) {
+                    updateRtmpStreamEnable()
                 }
             }
         },
         onUserOffline = {
             runOnMainThread {
-                videoAdapter?.apply {
-                    val index = mVideoList.indexOfValue(it)
-                    if (index == -1) return@runOnMainThread
-                    mVideoList.put(index, -1)
-                    notifyItemChanged(index)
-                    if (isOwner) {
-                        updateRtmpStreamEnable()
-                    }
+                val index = mVideoList.indexOfValue(it)
+                if (index == -1) return@runOnMainThread
+                mVideoList.put(index, -1)
+                notifyItemChanged(index)
+                if (isOwner) {
+                    updateRtmpStreamEnable()
                 }
             }
         },
@@ -367,28 +329,23 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             if (isOwner) return@IChannelEventListener
             runOnMainThread {
                 if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
-                    videoAdapter?.apply {
-                        val existIndex = mVideoList.indexOfValue(curUid)
-                        if (existIndex != -1) return@runOnMainThread
-                        val emptyIndex = mVideoList.indexOfValue(-1)
-                        if (emptyIndex == -1) return@runOnMainThread
-                        mVideoList.put(emptyIndex, curUid)
-                        notifyItemChanged(emptyIndex)
-                    }
+                    val existIndex = mVideoList.indexOfValue(curUid)
+                    if (existIndex != -1) return@runOnMainThread
+                    val emptyIndex = fetchValidIndex(curUid)
+                    if (emptyIndex == -1) return@runOnMainThread
+                    mVideoList.put(emptyIndex, curUid)
+                    notifyItemChanged(emptyIndex)
                 } else {
-                    videoAdapter?.apply {
-                        // 是否已经在麦位上
-                        val existIndex = mVideoList.indexOfValue(curUid)
-                        if (existIndex == -1) return@runOnMainThread
-                        mVideoList.put(existIndex, -1)
-                        notifyItemChanged(existIndex)
-                    }
+                    // 是否已经在麦位上
+                    val existIndex = mVideoList.indexOfValue(curUid)
+                    if (existIndex == -1) return@runOnMainThread
+                    mVideoList.put(existIndex, -1)
+                    notifyItemChanged(existIndex)
                 }
             }
         },
 
         onRtmpStreamingStateChanged = { url, state, code ->
-            Log.d(TAG, "onRtmpStreamingStateChanged $state  code: $code url: $url")
             runOnMainThread {
                 when (state) {
                     Constants.RTMP_STREAM_PUBLISH_STATE_RUNNING -> {
@@ -436,17 +393,13 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 // 默认 cdn 观众
                 switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
             }
-
-            val act = activity ?: return@checkRequirePerms
-            val videoItem = SparseIntArray()
-            for (i in 0 until 16) {
-                videoItem.put(i, -1)
+            for (i in 0 until 4) {
+                mVideoList.put(i, -1)
             }
             if (isOwner) {
-                videoItem.put(0, ownerUid)
+                mVideoList.put(0, ownerUid)
+                notifyItemChanged(0)
             }
-            videoAdapter = VideoAdapter(act, videoItem)
-            binding.recyclerVideo.adapter = videoAdapter
         }
     }
 
@@ -459,12 +412,10 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 rtcEngine.stopRtmpStream(KeyCenter.getRtmpPushUrl(channelName))
                 publishedRtmp = false
             }
-            val adapter = videoAdapter ?: return
             val result = rtcEngine.startRtmpStreamWithTranscoding(
                 pushUrl,
-                AgoraRtcHelper.liveTranscodingMulti(adapter.mVideoList),
+                AgoraRtcHelper.liveTranscoding4(mVideoList),
             )
-            Log.d(TAG, "startRtmpStreamWithTranscoding ret = $result")
             if (result == Constants.RTMP_STREAM_PUBLISH_ERROR_OK) {
                 publishedRtmp = true
             } else {
@@ -484,8 +435,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     /**新主播进来，更新CDN推流*/
     private fun updateRtmpStreamEnable() {
         // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
-        val videoUids = videoAdapter?.mVideoList ?: return
-        val result = rtcEngine.updateRtmpTranscoding(AgoraRtcHelper.liveTranscodingMulti(videoUids))
+        val result = rtcEngine.updateRtmpTranscoding(AgoraRtcHelper.liveTranscoding4(mVideoList))
         if (result == Constants.RTMP_STREAM_PUBLISH_ERROR_OK) {
             publishedRtmp = true
         } else {
@@ -512,6 +462,19 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
 
     private fun updateVideoEncoder() {
         rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
+    }
+
+    private fun fetchValidIndex(uid: Int): Int {
+        if (uid == channelName.toInt()) {
+            return 0
+        } else {
+            for (i in 1 until mVideoList.size()) {
+                if (mVideoList.valueAt(i) == -1) {
+                    return i
+                }
+            }
+        }
+        return -1
     }
 
     private fun checkRequirePerms(
@@ -554,54 +517,58 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         super.onDestroy()
     }
 
-
-    inner class VideoAdapter constructor(
-        private val mContext: Context,
-        val mVideoList: SparseIntArray
-    ) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
-
-        private val mTextureVideos = mutableMapOf<Int, TextureView>()
-
-        inner class VideoViewHolder(val binding: ViewVideoItemBinding) :
-            RecyclerView.ViewHolder(binding.root)
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
-            return VideoViewHolder(ViewVideoItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+    private fun notifyDataSetChanged() {
+        mVideoList.forEach { key, value ->
+            notifyItemChanged(key)
         }
+    }
 
-        override fun getItemCount(): Int {
-            return mVideoList.size()
+    private val mTextureVideos = mutableMapOf<Int, TextureView>()
+    private fun notifyItemChanged(position: Int) {
+        val videoContainer = when (position) {
+            0 -> binding.videosLayout.iBroadcasterAView
+            1 -> binding.videosLayout.iBroadcasterBView
+            2 -> binding.videosLayout.iBroadcasterCView
+            3 -> binding.videosLayout.iBroadcasterDView
+            else -> binding.videosLayout.iBroadcasterAView
         }
-
-        override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
-            val uid = mVideoList[position]
-            if (uid == -1) {
-                mTextureVideos.remove(position)
-                rtcEngine.setupRemoteVideo(
-                    VideoCanvas(null, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
-                )
-                if (holder.binding.flVideo.childCount > 0) holder.binding.flVideo.removeAllViews()
+        val uid = mVideoList[position]
+        if (uid == -1) {
+            mTextureVideos.remove(position)
+            rtcEngine.setupRemoteVideo(
+                VideoCanvas(null, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
+            )
+            if (videoContainer.childCount > 0) videoContainer.removeAllViews()
+        } else {
+            var textureView = mTextureVideos[position]
+            if (textureView == null) {
+                val act = activity ?: return
+                textureView = TextureView(act).apply {
+                    mTextureVideos[position] = this
+                }
             } else {
-                var textureView = mTextureVideos[position]
-                if (textureView == null) {
-                    textureView = TextureView(mContext).apply {
-                        mTextureVideos[position] = this
-                    }
-                } else {
-                    ((textureView.parent) as ViewGroup).removeAllViews()
-                }
-                if (uid == curUid) {
-                    rtcEngine.setupLocalVideo(
-                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_AUTO, uid)
-                    )
-                } else {
-                    rtcEngine.setupRemoteVideo(
-                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
-                    )
-                }
-                if (holder.binding.flVideo.childCount > 0) holder.binding.flVideo.removeAllViews()
-                holder.binding.flVideo.addView(textureView)
+                ((textureView.parent) as ViewGroup).removeAllViews()
             }
+            if (uid == curUid) {
+                rtcEngine.setupLocalVideo(
+                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_AUTO, uid)
+                )
+            } else {
+                rtcEngine.setupRemoteVideo(
+                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
+                )
+            }
+            if (videoContainer.childCount > 0) videoContainer.removeAllViews()
+            videoContainer.addView(textureView)
+        }
+    }
+
+    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+    private fun runOnMainThread(runnable: Runnable) {
+        if (Thread.currentThread() === mainHandler.looper.thread) {
+            runnable.run()
+        } else {
+            mainHandler.post(runnable)
         }
     }
 }
