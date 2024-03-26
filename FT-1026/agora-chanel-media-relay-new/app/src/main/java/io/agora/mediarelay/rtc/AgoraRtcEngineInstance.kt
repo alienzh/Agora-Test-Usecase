@@ -2,6 +2,7 @@ package io.agora.mediarelay.rtc
 
 import io.agora.mediarelay.BuildConfig
 import io.agora.mediarelay.MApp
+import io.agora.mediarelay.rtc.transcoder.RestfulTranscoder
 import io.agora.mediarelay.tools.LogTool
 import io.agora.rtc2.ClientRoleOptions
 import io.agora.rtc2.Constants
@@ -27,7 +28,11 @@ object AgoraRtcEngineInstance {
 
     private var innerRtcEngine: RtcEngineEx? = null
 
-    private var mAppId: String = BuildConfig.RTC_APP_ID
+    private var innerTranscoder: RestfulTranscoder? = null
+
+    private var mAppId: String = BuildConfig.AGORA_APP_ID
+    private var mCustomerKey: String = BuildConfig.AGORA_APP_ID
+    private var mSecret: String = BuildConfig.AGORA_APP_ID
 
     private var mVideoInfoListener: IVideoInfoListener? = null
 
@@ -35,13 +40,23 @@ object AgoraRtcEngineInstance {
 
     var eventListener: IAgoraRtcClient.IChannelEventListener? = null
 
-    fun setAppId(str: String) {
-        mAppId = str
+    fun setAppKeys(appId: String, customerKey: String, secret: String) {
+        mAppId = appId
+        mCustomerKey = customerKey
+        mSecret = secret
     }
 
     fun setVideoInfoListener(listener: IVideoInfoListener?) {
         mVideoInfoListener = listener
     }
+
+    val transcoder: RestfulTranscoder
+        get() {
+            if (innerTranscoder == null) {
+                innerTranscoder = RestfulTranscoder(mAppId, mCustomerKey, mSecret)
+            }
+            return innerTranscoder!!
+        }
 
     val rtcEngine: RtcEngineEx
         get() {
@@ -144,6 +159,7 @@ object AgoraRtcEngineInstance {
         innerRtcEngine?.let {
             workingExecutor.execute { RtcEngine.destroy() }
             innerRtcEngine = null
+            innerTranscoder = null
         }
     }
 }

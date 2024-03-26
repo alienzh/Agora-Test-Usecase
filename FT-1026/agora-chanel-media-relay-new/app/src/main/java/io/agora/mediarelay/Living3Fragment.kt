@@ -18,6 +18,7 @@ import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.AgoraRtcHelper
 import io.agora.mediarelay.rtc.IAgoraRtcClient
 import io.agora.mediarelay.rtc.MPObserverAdapter
+import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.PermissionHelp
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
@@ -409,25 +410,24 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
             val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
             if (publishedRtmp) {
-                rtcEngine.stopRtmpStream(KeyCenter.getRtmpPushUrl(channelName))
+                AgoraRtcEngineInstance.transcoder.stopRtmpStream(null)
                 publishedRtmp = false
             }
-            val result = rtcEngine.startRtmpStreamWithTranscoding(
-                pushUrl,
-                AgoraRtcHelper.liveTranscoding3(mVideoList),
-            )
-            if (result == Constants.RTMP_STREAM_PUBLISH_ERROR_OK) {
-                publishedRtmp = true
-            } else {
-                ToastTool.showToast("push rtmp stream error:$result！")
+            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(TranscodeSetting.liveTranscoding3(channelName, pushUrl, mVideoList)) { succeed ->
+                if (succeed) {
+                    publishedRtmp = true
+                } else {
+                    ToastTool.showToast("push rtmp stream error ！")
+                }
             }
         } else {
             // 删除一个推流地址。
-            val result = rtcEngine.stopRtmpStream(KeyCenter.getRtmpPushUrl(channelName))
-            if (result == Constants.RTMP_STREAM_UNPUBLISH_ERROR_OK) {
-                publishedRtmp = false
-            } else {
-                ToastTool.showToast("stop rtmp stream error！:$result")
+            AgoraRtcEngineInstance.transcoder.stopRtmpStream { succeed ->
+                if (succeed) {
+                    publishedRtmp = false
+                } else {
+                    ToastTool.showToast("stop rtmp stream error ！")
+                }
             }
         }
     }
@@ -435,11 +435,13 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
     /**新主播进来，更新CDN推流*/
     private fun updateRtmpStreamEnable() {
         // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
-        val result = rtcEngine.updateRtmpTranscoding(AgoraRtcHelper.liveTranscoding3(mVideoList))
-        if (result == Constants.RTMP_STREAM_PUBLISH_ERROR_OK) {
-            publishedRtmp = true
-        } else {
-            ToastTool.showToast("update push rtmp stream error:$result！")
+        val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
+        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(TranscodeSetting.liveTranscoding3(channelName, pushUrl, mVideoList)) { succeed ->
+            if (succeed) {
+                publishedRtmp = true
+            } else {
+                ToastTool.showToast("push rtmp stream error ！")
+            }
         }
     }
 

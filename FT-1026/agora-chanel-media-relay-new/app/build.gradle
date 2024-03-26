@@ -20,9 +20,13 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "RTC_APP_ID", "\"${properties.getProperty("APP_ID", "")}\"")
+        buildConfigField("String", "AGORA_APP_ID", "\"${properties.getProperty("AGORA_APP_ID", "")}\"")
+        buildConfigField("String", "AGORA_CUSTOMER_KEY", "\"${properties.getProperty("AGORA_CUSTOMER_KEY", "")}\"")
+        buildConfigField("String", "AGORA_CUSTOMER_SECRET", "\"${properties.getProperty("AGORA_CUSTOMER_SECRET", "")}\"")
+
         buildConfigField("String", "CUSTOM_APP_ID", "\"${properties.getProperty("CUSTOM_APP_ID", "")}\"")
-        buildConfigField("String", "RTC_APP_CERT", "\"${properties.getProperty("APP_CERTIFICATE", "")}\"")
+        buildConfigField("String", "CUSTOM_CUSTOMER_KEY", "\"${properties.getProperty("CUSTOM_CUSTOMER_KEY", "")}\"")
+        buildConfigField("String", "CUSTOM_CUSTOMER_SECRET", "\"${properties.getProperty("CUSTOM_CUSTOMER_SECRET", "")}\"")
 
         ndk {
             abiFilters 'arm64-v8a'
@@ -89,7 +93,8 @@ dependencies {
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.6.0'
-
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.google.code.gson:gson:2.8.8'
     // rtc
 //    implementation 'io.agora.rtc:full-sdk:4.2.6'
     // http://10.80.1.174:8090/agora_sdk/4.1.1.26/official_build/2024-01-30/android/full/Agora_Native_SDK_for_Android_rel.v4.1.1.26_57277_FULL_20240130_1218_292068.zip

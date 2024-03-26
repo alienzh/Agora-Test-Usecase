@@ -66,7 +66,7 @@ object KeyCenter {
         var rtcToken: String = ""
         try {
             rtcToken = RtcTokenBuilder().buildTokenWithUid(
-                BuildConfig.RTC_APP_ID, BuildConfig.RTC_APP_CERT, channelId, uid,
+                BuildConfig.AGORA_APP_ID, BuildConfig.AGORA_CUSTOMER_SECRET, channelId, uid,
                 RtcTokenBuilder.Role.Role_Publisher, 0
             )
         } catch (e: Exception) {

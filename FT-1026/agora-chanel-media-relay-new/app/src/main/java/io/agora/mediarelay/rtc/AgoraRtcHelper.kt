@@ -2,7 +2,6 @@ package io.agora.mediarelay.rtc
 
 import android.util.SparseIntArray
 import androidx.annotation.Size
-import io.agora.mediarelay.tools.LogTool
 import io.agora.rtc2.live.LiveTranscoding
 import io.agora.rtc2.video.VideoEncoderConfiguration
 

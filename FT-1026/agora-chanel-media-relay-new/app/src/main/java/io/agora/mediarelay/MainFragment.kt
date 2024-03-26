@@ -156,8 +156,11 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             ToastTool.showToast("Please enter channel id")
             return
         }
-        val appId = if (binding.groupAppId.checkedRadioButtonId == R.id.app_id_agora) BuildConfig.RTC_APP_ID else BuildConfig.CUSTOM_APP_ID
-        AgoraRtcEngineInstance.setAppId(appId)
+        if (binding.groupAppId.checkedRadioButtonId == R.id.app_id_agora) {
+            AgoraRtcEngineInstance.setAppKeys(BuildConfig.AGORA_APP_ID, BuildConfig.AGORA_CUSTOMER_KEY, BuildConfig.AGORA_CUSTOMER_SECRET)
+        } else {
+            AgoraRtcEngineInstance.setAppKeys(BuildConfig.CUSTOM_APP_ID, BuildConfig.CUSTOM_CUSTOMER_KEY, BuildConfig.CUSTOM_CUSTOMER_SECRET)
+        }
         setupVideoSettings()
         val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
         val args = Bundle().apply {
