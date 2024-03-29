@@ -416,6 +416,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(TranscodeSetting.liveTranscoding3(channelName, pushUrl, mVideoList)) { succeed ->
                 if (succeed) {
                     publishedRtmp = true
+                    ToastTool.showToast("rtmp stream publish state running")
                 } else {
                     ToastTool.showToast("push rtmp stream error ！")
                 }

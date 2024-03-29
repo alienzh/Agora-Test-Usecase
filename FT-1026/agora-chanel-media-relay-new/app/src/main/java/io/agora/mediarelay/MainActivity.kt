@@ -12,7 +12,7 @@ import io.agora.mediarelay.tools.PermissionHelp
  */
 class MainActivity : BaseUiActivity<ActivityMainBinding>() {
 
-    internal lateinit var permissionHelp: PermissionHelp
+    val permissionHelp: PermissionHelp = PermissionHelp(this)
 
     override fun getViewBinding(inflater: LayoutInflater): ActivityMainBinding {
         return ActivityMainBinding.inflate(inflater)
@@ -21,6 +21,5 @@ class MainActivity : BaseUiActivity<ActivityMainBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        permissionHelp = PermissionHelp(this)
     }
 }

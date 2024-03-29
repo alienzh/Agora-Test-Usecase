@@ -465,6 +465,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 Log.d(TAG, "startRtmpStreamWithTranscoding ret = $succeed")
                 if (succeed) {
                     publishedRtmp = true
+                    ToastTool.showToast("rtmp stream publish state running")
                 } else {
                     ToastTool.showToast("push rtmp stream error！")
                 }
