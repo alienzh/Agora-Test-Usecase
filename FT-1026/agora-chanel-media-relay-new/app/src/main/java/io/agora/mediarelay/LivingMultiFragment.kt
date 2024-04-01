@@ -268,6 +268,15 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     private fun switchCdnAudience(rtmpPullUrl: String) {
         val act = activity ?: return
         rtcEngine.leaveChannel()
+        videoAdapter?.mVideoList?.forEach { key, value ->
+            if (value == curUid) {
+                rtcEngine.setupLocalVideo(null);
+            } else {
+                rtcEngine.setupRemoteVideo(
+                    VideoCanvas(null, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, value)
+                )
+            }
+        }
         binding.btSwitchStream.text = getString(R.string.rtc_audience)
 
         val textureView = TextureView(act)
@@ -289,6 +298,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         mediaPlayer?.let {
             it.unRegisterPlayerObserver(mediaPlayerObserver)
             it.stop()
+            it.setView(null)
             it.destroy()
             mediaPlayer = null
         }
