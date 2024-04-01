@@ -10,7 +10,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 
-class RestfulTranscoder(
+class RestfulTranscoder constructor(
     private val appId: String,
     customerKey: String,
     secret: String
@@ -35,7 +35,7 @@ class RestfulTranscoder(
     private var updateSequenceId: Int = 0
 
     private fun mayAcquire(completion: ((tokenName: String?)->Unit)?) {
-        if (builderToken != null) {
+        if (!builderToken.isNullOrEmpty()) {
             completion?.invoke(builderToken)
             return
         }
@@ -73,6 +73,8 @@ class RestfulTranscoder(
     }
 
     fun startRtmpStreamWithTranscoding(setting: TranscodeSetting, completion: ((succeed: Boolean)->Unit)?) {
+        // reset builderToken
+        builderToken = null
         mayAcquire { tokenName ->
             if (tokenName != null) {
                 val api = "/rtsc/cloud-transcoder/tasks?builderToken=$tokenName"
@@ -192,6 +194,7 @@ class RestfulTranscoder(
                 client.newCall(request).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
                         if (response.code == 200) {
+                            this@RestfulTranscoder.taskId = null
                             completion?.invoke(true)
                         } else {
                             completion?.invoke(false)
