@@ -2,13 +2,17 @@ package io.agora.mediarelay.rtc.transcoder
 
 import android.util.Log
 import com.google.gson.Gson
+import com.moczul.ok2curl.CurlInterceptor
+import com.moczul.ok2curl.logger.Logger
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class RestfulTranscoder constructor(
     private val appId: String,
@@ -16,7 +20,18 @@ class RestfulTranscoder constructor(
     secret: String
 ) {
 
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
+        .addInterceptor(CurlInterceptor(logger = object :Logger{
+            override fun log(message: String) {
+                Log.d("curl",message)
+            }
+        }))
+//        .addInterceptor()
+        .build()
 
     private val instanceId = UUID.randomUUID().toString()
 
@@ -113,6 +128,10 @@ class RestfulTranscoder constructor(
     }
 
     private fun queryRtmpTranscoding(completion: ((succeed: Boolean)->Unit)?) {
+        val taskId = this.taskId ?: run {
+            completion?.invoke(true)
+            return
+        }
         mayAcquire { tokenName ->
             if (tokenName != null) {
                 val api = "/rtsc/cloud-transcoder/tasks/$taskId"
@@ -141,6 +160,10 @@ class RestfulTranscoder constructor(
     }
 
     fun updateRtmpTranscoding(setting: TranscodeSetting, completion: ((succeed: Boolean)->Unit)?) {
+        val taskId = this.taskId ?: run {
+            completion?.invoke(false)
+            return
+        }
         mayAcquire { tokenName ->
             if (tokenName != null) {
                 updateSequenceId++
@@ -178,7 +201,7 @@ class RestfulTranscoder constructor(
     }
 
     fun stopRtmpStream(completion: ((succeed: Boolean)->Unit)?) {
-        val taskId = taskId ?: run {
+        val taskId = this.taskId ?: run {
             completion?.invoke(true)
             return
         }

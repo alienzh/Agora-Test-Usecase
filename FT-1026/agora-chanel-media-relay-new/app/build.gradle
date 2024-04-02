@@ -94,6 +94,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.6.0'
     implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
+    implementation 'com.github.mrmike:ok2curl:0.8.0'
     implementation 'com.google.code.gson:gson:2.8.8'
     // rtc
 //    implementation 'io.agora.rtc:full-sdk:4.2.6'

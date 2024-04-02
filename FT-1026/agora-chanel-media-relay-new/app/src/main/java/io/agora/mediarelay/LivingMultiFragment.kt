@@ -25,6 +25,7 @@ import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.PermissionHelp
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
+import io.agora.mediarelay.widget.OnFastClickListener
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
 import io.agora.rtc2.video.VideoCanvas
@@ -139,81 +140,90 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             findNavController().popBackStack()
         }
         // 观众连麦
-        binding.btLinking.setOnClickListener {
-            when (audienceStatus) {
-                AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 主播
-                    audienceStatus = AudienceStatus.RTC_Broadcaster
-                    switchRtc(Constants.CLIENT_ROLE_BROADCASTER)
-                    binding.btSwitchCarma.isVisible = true
-                    binding.btMute.isVisible = true
-                    binding.btSwitchStream.isVisible = false
-                    binding.btLinking.text = getString(R.string.hang_up)
-                    rtcEngine.setEnableSpeakerphone(false)
-                    rtcEngine.setEnableSpeakerphone(true)
-                }
+        binding.btLinking.setOnClickListener(object : OnFastClickListener() {
+            override fun onClickJacking(view: View) {
+                ToastTool.showToast(R.string.changing_roles)
+                when (audienceStatus) {
+                    AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 主播
+                        audienceStatus = AudienceStatus.RTC_Broadcaster
+                        switchRtc(Constants.CLIENT_ROLE_BROADCASTER)
+                        binding.btSwitchCarma.isVisible = true
+                        binding.btMute.isVisible = true
+                        binding.btSwitchStream.isVisible = false
+                        binding.btLinking.text = getString(R.string.hang_up)
+                        rtcEngine.setEnableSpeakerphone(false)
+                        rtcEngine.setEnableSpeakerphone(true)
+                    }
 
-                AudienceStatus.RTC_Audience -> { // rtc 观众--> rtc 主播
-                    audienceStatus = AudienceStatus.RTC_Broadcaster
-                    channelMediaOptions.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
-                    channelMediaOptions.publishCameraTrack = true
-                    channelMediaOptions.publishMicrophoneTrack = true
-                    val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
-                    Log.d("alien", "rtc 观众--> rtc 主播 ret:$ret")
-                    binding.btSwitchCarma.isVisible = true
-                    binding.btMute.isVisible = true
-                    binding.btSwitchStream.isVisible = false
-                    binding.btLinking.text = getString(R.string.hang_up)
-                    rtcEngine.setEnableSpeakerphone(false)
-                    rtcEngine.setEnableSpeakerphone(true)
-                }
+                    AudienceStatus.RTC_Audience -> { // rtc 观众--> rtc 主播
+                        audienceStatus = AudienceStatus.RTC_Broadcaster
+                        channelMediaOptions.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
+                        channelMediaOptions.publishCameraTrack = true
+                        channelMediaOptions.publishMicrophoneTrack = true
+                        val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
+                        Log.d("alien", "rtc 观众--> rtc 主播 ret:$ret")
+                        binding.btSwitchCarma.isVisible = true
+                        binding.btMute.isVisible = true
+                        binding.btSwitchStream.isVisible = false
+                        binding.btLinking.text = getString(R.string.hang_up)
+                        rtcEngine.setEnableSpeakerphone(false)
+                        rtcEngine.setEnableSpeakerphone(true)
+                    }
 
-                AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> rtc 观众
-                    audienceStatus = AudienceStatus.RTC_Audience
-                    channelMediaOptions.clientRoleType = Constants.CLIENT_ROLE_AUDIENCE
-                    channelMediaOptions.publishCameraTrack = false
-                    channelMediaOptions.publishMicrophoneTrack = false
-                    val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
-                    Log.d("alien", "rtc 主播--> rtc 观众 ret:$ret")
-                    binding.btSwitchCarma.isVisible = false
-                    binding.btMute.isVisible = false
-                    binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.calling)
+                    AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> rtc 观众
+                        audienceStatus = AudienceStatus.RTC_Audience
+                        channelMediaOptions.clientRoleType = Constants.CLIENT_ROLE_AUDIENCE
+                        channelMediaOptions.publishCameraTrack = false
+                        channelMediaOptions.publishMicrophoneTrack = false
+                        val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
+                        Log.d("alien", "rtc 主播--> rtc 观众 ret:$ret")
+                        binding.btSwitchCarma.isVisible = false
+                        binding.btMute.isVisible = false
+                        binding.btSwitchStream.isVisible = true
+                        binding.btLinking.text = getString(R.string.calling)
+                    }
                 }
             }
-        }
-        binding.btSwitchStream.setOnClickListener {
-            when (audienceStatus) {
-                AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 观众
-                    audienceStatus = AudienceStatus.RTC_Audience
-                    switchRtc(Constants.CLIENT_ROLE_AUDIENCE)
-                    binding.btSwitchCarma.isVisible = false
-                    binding.btMute.isVisible = false
-                    binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.calling)
-                }
+        })
+        binding.btSwitchStream.setOnClickListener(object :
+            OnFastClickListener(1000, getString(R.string.click_too_fast)) {
+            override fun onClickJacking(view: View) {
+                when (audienceStatus) {
+                    AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 观众
+                        audienceStatus = AudienceStatus.RTC_Audience
+                        switchRtc(Constants.CLIENT_ROLE_AUDIENCE)
+                        binding.btSwitchCarma.isVisible = false
+                        binding.btMute.isVisible = false
+                        binding.btSwitchStream.isVisible = true
+                        binding.btLinking.text = getString(R.string.calling)
+                    }
 
-                AudienceStatus.RTC_Audience -> { // rtc 观众--> cdn 观众
-                    audienceStatus = AudienceStatus.CDN_Audience
-                    switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
-                    binding.btSwitchCarma.isVisible = false
-                    binding.btMute.isVisible = false
-                    binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.calling)
-                }
+                    AudienceStatus.RTC_Audience -> { // rtc 观众--> cdn 观众
+                        audienceStatus = AudienceStatus.CDN_Audience
+                        switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
+                        binding.btSwitchCarma.isVisible = false
+                        binding.btMute.isVisible = false
+                        binding.btSwitchStream.isVisible = true
+                        binding.btLinking.text = getString(R.string.calling)
+                    }
 
-                AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> cdn 观众
-                    audienceStatus = AudienceStatus.CDN_Audience
-                    switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
-                    binding.btSwitchCarma.isVisible = false
-                    binding.btMute.isVisible = false
-                    binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.calling)
+                    AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> cdn 观众
+                        audienceStatus = AudienceStatus.CDN_Audience
+                        switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
+                        binding.btSwitchCarma.isVisible = false
+                        binding.btMute.isVisible = false
+                        binding.btSwitchStream.isVisible = true
+                        binding.btLinking.text = getString(R.string.calling)
+                    }
                 }
             }
-        }
-        binding.btSwitchCarma.setOnClickListener {
-            rtcEngine.switchCamera()
-        }
+        })
+        binding.btSwitchCarma.setOnClickListener(object :
+            OnFastClickListener(1000, getString(R.string.click_too_fast)) {
+            override fun onClickJacking(view: View) {
+                rtcEngine.switchCamera()
+            }
+        })
         binding.btMute.setOnClickListener {
             if (muteLocalAudio) {
                 muteLocalAudio = false
@@ -265,6 +275,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         }
     }
 
+    var mpkTextureView: TextureView? = null
+
     private fun switchCdnAudience(rtmpPullUrl: String) {
         val act = activity ?: return
         rtcEngine.leaveChannel()
@@ -279,16 +291,17 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         }
         binding.btSwitchStream.text = getString(R.string.rtc_audience)
 
-        val textureView = TextureView(act)
+        mpkTextureView = TextureView(act)
         binding.layoutCdnContainer.removeAllViews()
-        binding.layoutCdnContainer.addView(textureView)
+        binding.layoutCdnContainer.addView(mpkTextureView)
         binding.layoutCdnContainer.isVisible = true
         binding.recyclerVideo.isVisible = false
         mediaPlayer = rtcEngine.createMediaPlayer()
         mediaPlayer?.apply {
             setPlayerOption("play_speed_down_cache_duration", 0)
+            setPlayerOption("is_live_source", 1)
             registerPlayerObserver(mediaPlayerObserver)
-            setView(textureView)
+            setView(mpkTextureView)
             open(rtmpPullUrl, 0)
         }
     }
@@ -301,6 +314,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             it.setView(null)
             it.destroy()
             mediaPlayer = null
+            mpkTextureView = null
         }
         binding.btSwitchStream.text = getString(R.string.cdn_audience)
         binding.layoutCdnContainer.removeAllViews()
@@ -313,6 +327,13 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         onChannelJoined = {
             runOnMainThread {
                 if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
+                    if (muteLocalAudio) {
+                        binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                        rtcEngine.muteLocalAudioStream(true)
+                    } else {
+                        binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                        rtcEngine.muteLocalAudioStream(false)
+                    }
                     videoAdapter?.apply {
                         val existIndex = mVideoList.indexOfValue(curUid)
                         if (existIndex != -1) return@runOnMainThread
@@ -335,12 +356,14 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             }
         },
         onLeaveChannel = {
-            if (!isOwner) { // 非房主加入空位置
-                videoAdapter?.apply {
-                    mVideoList.forEach(action = { key, value ->
-                        mVideoList.put(key, -1)
-                    })
-                    notifyDataSetChanged()
+            runOnMainThread{
+                if (!isOwner) { // 非房主加入空位置
+                    videoAdapter?.apply {
+                        mVideoList.forEach(action = { key, value ->
+                            mVideoList.put(key, -1)
+                        })
+                        notifyDataSetChanged()
+                    }
                 }
             }
         },
@@ -471,7 +494,13 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 publishedRtmp = false
             }
             val adapter = videoAdapter ?: return
-            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(TranscodeSetting.liveTranscodingMulti(channelName, pushUrl, adapter.mVideoList)) { succeed ->
+            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(
+                TranscodeSetting.liveTranscodingMulti(
+                    channelName,
+                    pushUrl,
+                    adapter.mVideoList
+                )
+            ) { succeed ->
                 Log.d(TAG, "startRtmpStreamWithTranscoding ret = $succeed")
                 if (succeed) {
                     publishedRtmp = true
@@ -497,7 +526,13 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
         val videoUids = videoAdapter?.mVideoList ?: return
         val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
-        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(TranscodeSetting.liveTranscodingMulti(channelName, pushUrl, videoUids)) { succeed ->
+        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(
+            TranscodeSetting.liveTranscodingMulti(
+                channelName,
+                pushUrl,
+                videoUids
+            )
+        ) { succeed ->
             Log.d(TAG, "startRtmpStreamWithTranscoding ret = $succeed")
             if (succeed) {
                 publishedRtmp = true

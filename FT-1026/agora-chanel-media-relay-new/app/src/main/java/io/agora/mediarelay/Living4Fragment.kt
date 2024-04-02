@@ -21,6 +21,7 @@ import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.PermissionHelp
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
+import io.agora.mediarelay.widget.OnFastClickListener
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
 import io.agora.rtc2.video.VideoCanvas
@@ -117,72 +118,78 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             findNavController().popBackStack()
         }
         // 观众连麦
-        binding.btLinking.setOnClickListener {
-            when (audienceStatus) {
-                AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 主播
-                    audienceStatus = AudienceStatus.RTC_Broadcaster
-                    switchRtc(Constants.CLIENT_ROLE_BROADCASTER)
-                    binding.btMute.isVisible = true
-                    binding.btSwitchStream.isVisible = false
-                    binding.btLinking.text = getString(R.string.hang_up)
-                    rtcEngine.setEnableSpeakerphone(false)
-                    rtcEngine.setEnableSpeakerphone(true)
-                }
+        binding.btLinking.setOnClickListener(object : OnFastClickListener() {
+            override fun onClickJacking(view: View) {
+                ToastTool.showToast(R.string.changing_roles)
+                when (audienceStatus) {
+                    AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 主播
+                        audienceStatus = AudienceStatus.RTC_Broadcaster
+                        switchRtc(Constants.CLIENT_ROLE_BROADCASTER)
+                        binding.btMute.isVisible = true
+                        binding.btSwitchStream.isVisible = false
+                        binding.btLinking.text = getString(R.string.hang_up)
+                        rtcEngine.setEnableSpeakerphone(false)
+                        rtcEngine.setEnableSpeakerphone(true)
+                    }
 
-                AudienceStatus.RTC_Audience -> { // rtc 观众--> rtc 主播
-                    audienceStatus = AudienceStatus.RTC_Broadcaster
-                    channelMediaOptions.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
-                    channelMediaOptions.publishCameraTrack = true
-                    channelMediaOptions.publishMicrophoneTrack = true
-                    val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
-                    Log.d("alien", "rtc 观众--> rtc 主播 ret:$ret")
-                    binding.btMute.isVisible = true
-                    binding.btSwitchStream.isVisible = false
-                    binding.btLinking.text = getString(R.string.hang_up)
-                    rtcEngine.setEnableSpeakerphone(false)
-                    rtcEngine.setEnableSpeakerphone(true)
-                }
+                    AudienceStatus.RTC_Audience -> { // rtc 观众--> rtc 主播
+                        audienceStatus = AudienceStatus.RTC_Broadcaster
+                        channelMediaOptions.clientRoleType = Constants.CLIENT_ROLE_BROADCASTER
+                        channelMediaOptions.publishCameraTrack = true
+                        channelMediaOptions.publishMicrophoneTrack = true
+                        val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
+                        Log.d("alien", "rtc 观众--> rtc 主播 ret:$ret")
+                        binding.btMute.isVisible = true
+                        binding.btSwitchStream.isVisible = false
+                        binding.btLinking.text = getString(R.string.hang_up)
+                        rtcEngine.setEnableSpeakerphone(false)
+                        rtcEngine.setEnableSpeakerphone(true)
+                    }
 
-                AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> rtc 观众
-                    audienceStatus = AudienceStatus.RTC_Audience
-                    channelMediaOptions.clientRoleType = Constants.CLIENT_ROLE_AUDIENCE
-                    channelMediaOptions.publishCameraTrack = false
-                    channelMediaOptions.publishMicrophoneTrack = false
-                    val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
-                    Log.d("alien", "rtc 主播--> rtc 观众 ret:$ret")
-                    binding.btMute.isVisible = false
-                    binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.calling)
+                    AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> rtc 观众
+                        audienceStatus = AudienceStatus.RTC_Audience
+                        channelMediaOptions.clientRoleType = Constants.CLIENT_ROLE_AUDIENCE
+                        channelMediaOptions.publishCameraTrack = false
+                        channelMediaOptions.publishMicrophoneTrack = false
+                        val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
+                        Log.d("alien", "rtc 主播--> rtc 观众 ret:$ret")
+                        binding.btMute.isVisible = false
+                        binding.btSwitchStream.isVisible = true
+                        binding.btLinking.text = getString(R.string.calling)
+                    }
                 }
             }
-        }
-        binding.btSwitchStream.setOnClickListener {
-            when (audienceStatus) {
-                AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 观众
-                    audienceStatus = AudienceStatus.RTC_Audience
-                    switchRtc(Constants.CLIENT_ROLE_AUDIENCE)
-                    binding.btMute.isVisible = false
-                    binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.calling)
-                }
+        })
+        binding.btSwitchStream.setOnClickListener(object :
+            OnFastClickListener(1000, getString(R.string.click_too_fast)) {
+            override fun onClickJacking(view: View) {
+                when (audienceStatus) {
+                    AudienceStatus.CDN_Audience -> { // cdn 观众--> rtc 观众
+                        audienceStatus = AudienceStatus.RTC_Audience
+                        switchRtc(Constants.CLIENT_ROLE_AUDIENCE)
+                        binding.btMute.isVisible = false
+                        binding.btSwitchStream.isVisible = true
+                        binding.btLinking.text = getString(R.string.calling)
+                    }
 
-                AudienceStatus.RTC_Audience -> { // rtc 观众--> cdn 观众
-                    audienceStatus = AudienceStatus.CDN_Audience
-                    switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
-                    binding.btMute.isVisible = false
-                    binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.calling)
-                }
+                    AudienceStatus.RTC_Audience -> { // rtc 观众--> cdn 观众
+                        audienceStatus = AudienceStatus.CDN_Audience
+                        switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
+                        binding.btMute.isVisible = false
+                        binding.btSwitchStream.isVisible = true
+                        binding.btLinking.text = getString(R.string.calling)
+                    }
 
-                AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> cdn 观众
-                    audienceStatus = AudienceStatus.CDN_Audience
-                    switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
-                    binding.btMute.isVisible = false
-                    binding.btSwitchStream.isVisible = true
-                    binding.btLinking.text = getString(R.string.calling)
+                    AudienceStatus.RTC_Broadcaster -> { // rtc 主播--> cdn 观众
+                        audienceStatus = AudienceStatus.CDN_Audience
+                        switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
+                        binding.btMute.isVisible = false
+                        binding.btSwitchStream.isVisible = true
+                        binding.btLinking.text = getString(R.string.calling)
+                    }
                 }
             }
-        }
+        })
         binding.btMute.setOnClickListener {
             if (muteLocalAudio) {
                 muteLocalAudio = false
@@ -303,11 +310,13 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             }
         },
         onLeaveChannel = {
-            if (!isOwner) { // 非房主加入空位置
-                mVideoList.forEach(action = { key, value ->
-                    mVideoList.put(key, -1)
-                })
-                notifyDataSetChanged()
+            runOnMainThread {
+                if (!isOwner) { // 非房主加入空位置
+                    mVideoList.forEach(action = { key, value ->
+                        mVideoList.put(key, -1)
+                    })
+                    notifyDataSetChanged()
+                }
             }
         },
         onUserJoined = { uid ->
@@ -423,7 +432,13 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
                 AgoraRtcEngineInstance.transcoder.stopRtmpStream(null)
                 publishedRtmp = false
             }
-            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(TranscodeSetting.liveTranscoding4(channelName, pushUrl, mVideoList)) { succeed ->
+            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(
+                TranscodeSetting.liveTranscoding4(
+                    channelName,
+                    pushUrl,
+                    mVideoList
+                )
+            ) { succeed ->
                 if (succeed) {
                     publishedRtmp = true
                     ToastTool.showToast("rtmp stream publish state running")
@@ -447,7 +462,13 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
     private fun updateRtmpStreamEnable() {
         // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
         val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
-        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(TranscodeSetting.liveTranscoding4(channelName, pushUrl, mVideoList)) { succeed ->
+        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(
+            TranscodeSetting.liveTranscoding4(
+                channelName,
+                pushUrl,
+                mVideoList
+            )
+        ) { succeed ->
             if (succeed) {
                 publishedRtmp = true
             } else {

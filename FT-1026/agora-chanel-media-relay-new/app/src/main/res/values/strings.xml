@@ -34,6 +34,8 @@
     <string name="scene_multi">multi-anchor</string>
     <string name="calling">Calling</string>
     <string name="hang_up">Hang Up</string>
+    <string name="changing_roles">Changing roles</string>
+    <string name="click_too_fast">Click too fast</string>
 
     <string name="dashboard_bitrate">Bitrate: %s kbps</string>
     <string name="dashboard_up_bitrate">Send Bitrate: %s kbps</string>
