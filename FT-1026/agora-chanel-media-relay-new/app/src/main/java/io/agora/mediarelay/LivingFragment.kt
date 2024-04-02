@@ -234,6 +234,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         mediaPlayer?.let {
             it.unRegisterPlayerObserver(mediaPlayerObserver)
             it.stop()
+            it.setView(null)
             it.destroy()
             mediaPlayer = null
         }
