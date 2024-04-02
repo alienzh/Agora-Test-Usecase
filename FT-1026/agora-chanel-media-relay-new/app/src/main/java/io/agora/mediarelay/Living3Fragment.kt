@@ -292,6 +292,13 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
         onChannelJoined = {
             runOnMainThread {
                 if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
+                    if (muteLocalAudio) {
+                        binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                        rtcEngine.muteLocalAudioStream(true)
+                    } else {
+                        binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                        rtcEngine.muteLocalAudioStream(false)
+                    }
                     val existIndex = mVideoList.indexOfValue(curUid)
                     if (existIndex != -1) return@runOnMainThread
                     var emptyIndex = fetchValidIndex(curUid)
@@ -351,6 +358,13 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             if (isOwner) return@IChannelEventListener
             runOnMainThread {
                 if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
+                    if (muteLocalAudio) {
+                        binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                        rtcEngine.muteLocalAudioStream(true)
+                    } else {
+                        binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                        rtcEngine.muteLocalAudioStream(false)
+                    }
                     val existIndex = mVideoList.indexOfValue(curUid)
                     if (existIndex != -1) return@runOnMainThread
                     val emptyIndex = fetchValidIndex(curUid)
