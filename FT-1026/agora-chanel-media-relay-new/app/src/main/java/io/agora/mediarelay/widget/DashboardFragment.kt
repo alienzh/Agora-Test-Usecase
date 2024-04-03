@@ -9,6 +9,7 @@ import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentDashboardBinding
 import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.IVideoInfoListener
+import io.agora.mediarelay.tools.ToastTool
 import io.agora.rtc2.Constants
 import io.agora.rtc2.IRtcEngineEventHandler
 
@@ -23,6 +24,10 @@ class DashboardFragment : BaseUiFragment<FragmentDashboardBinding>(), IVideoInfo
     private var upInfo: IRtcEngineEventHandler.UplinkNetworkInfo? = null
 
     private var downInfo: IRtcEngineEventHandler.DownlinkNetworkInfo? = null
+
+    private val score by lazy {
+        AgoraRtcEngineInstance.rtcEngine.queryDeviceScore()
+    }
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentDashboardBinding {
         return FragmentDashboardBinding.inflate(inflater)
@@ -45,6 +50,7 @@ class DashboardFragment : BaseUiFragment<FragmentDashboardBinding>(), IVideoInfo
 
     private fun updateView() {
         if (!mIsOn) return
+        binding.tvDeviceScore.text = getString(R.string.dashboard_device_score, score.toString())
         localStats?.let { stats ->
             binding.tvStatisticUpBitrate.text = getString(R.string.dashboard_up_bitrate, stats.sentBitrate.toString())
             binding.tvStatisticEncodeFPS.text = getString(R.string.dashboard_encode_fps, stats.encoderOutputFrameRate.toString())

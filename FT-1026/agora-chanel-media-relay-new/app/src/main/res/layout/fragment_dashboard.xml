@@ -66,5 +66,14 @@
                 tools:text="@string/dashboard_up_net_speech" />
         </TableRow>
 
+        <TableRow android:paddingVertical="3dp">
+            <TextView
+                android:id="@+id/tvDeviceScore"
+                android:layout_weight="1"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                tools:text="@string/dashboard_device_score" />
+        </TableRow>
+
     </TableLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
