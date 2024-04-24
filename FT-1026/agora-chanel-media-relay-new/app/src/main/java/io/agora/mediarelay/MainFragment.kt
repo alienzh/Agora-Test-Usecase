@@ -100,7 +100,7 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
     }
 
     private fun setupVideoSettings() {
-        if (binding.groupAnchor.checkedRadioButtonId == R.id.scene_single){
+        if (binding.groupAnchor.checkedRadioButtonId == R.id.scene_single) {
             when (binding.groupResolution.checkedRadioButtonId) {
                 R.id.resolution_1080p -> {
                     RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080
@@ -157,9 +157,17 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             return
         }
         if (binding.groupAppId.checkedRadioButtonId == R.id.app_id_agora) {
-            AgoraRtcEngineInstance.setAppKeys(BuildConfig.AGORA_APP_ID, BuildConfig.AGORA_CUSTOMER_KEY, BuildConfig.AGORA_CUSTOMER_SECRET)
+            AgoraRtcEngineInstance.setAppKeys(
+                BuildConfig.AGORA_APP_ID,
+                BuildConfig.AGORA_CUSTOMER_KEY,
+                BuildConfig.AGORA_CUSTOMER_SECRET
+            )
         } else {
-            AgoraRtcEngineInstance.setAppKeys(BuildConfig.CUSTOM_APP_ID, BuildConfig.CUSTOM_CUSTOMER_KEY, BuildConfig.CUSTOM_CUSTOMER_SECRET)
+            AgoraRtcEngineInstance.setAppKeys(
+                BuildConfig.CUSTOM_APP_ID,
+                BuildConfig.CUSTOM_CUSTOMER_KEY,
+                BuildConfig.CUSTOM_CUSTOMER_SECRET
+            )
         }
         setupVideoSettings()
         val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
@@ -171,16 +179,19 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             )
         }
         // scene
-        when(binding.groupAnchor.checkedRadioButtonId) {
+        when (binding.groupAnchor.checkedRadioButtonId) {
             R.id.scene_single -> {
                 findNavController().navigate(R.id.action_mainFragment_to_livingFragment, args)
             }
+
             R.id.scene_3 -> {
                 findNavController().navigate(R.id.action_mainFragment_to_living3Fragment, args)
             }
+
             R.id.scene_4 -> {
                 findNavController().navigate(R.id.action_mainFragment_to_living4Fragment, args)
             }
+
             R.id.scene_multi -> {
                 findNavController().navigate(R.id.action_mainFragment_to_livingMultiFragment, args)
             }

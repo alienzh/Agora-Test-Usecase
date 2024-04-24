@@ -10,6 +10,7 @@ class MApp : Application() {
     companion object {
         private lateinit var app: Application
 
+        @JvmStatic
         fun instance(): Application {
             return app
         }

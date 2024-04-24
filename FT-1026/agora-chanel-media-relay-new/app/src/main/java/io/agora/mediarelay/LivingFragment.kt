@@ -17,16 +17,30 @@ import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.IAgoraRtcClient
 import io.agora.mediarelay.rtc.MPObserverAdapter
 import io.agora.mediarelay.rtc.RtcSettings
+import io.agora.mediarelay.rtc.SeiHelper
 import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
+import io.agora.mediarelay.tools.FileUtils
+import io.agora.mediarelay.tools.GsonTools
 import io.agora.mediarelay.tools.PermissionHelp
+import io.agora.mediarelay.tools.ThreadTool
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
+import io.agora.mediarelay.widget.PopAdapter.OnItemClickListener
+import io.agora.mediarelay.widget.ViewTool
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
+import io.agora.rtc2.DataStreamConfig
+import io.agora.rtc2.IMetadataObserver
 import io.agora.rtc2.video.ChannelMediaInfo
 import io.agora.rtc2.video.ChannelMediaRelayConfiguration
+import io.agora.rtc2.video.ImageTrackOptions
 import io.agora.rtc2.video.VideoCanvas
 import io.agora.rtc2.video.VideoEncoderConfiguration
+import java.nio.charset.Charset
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+
 
 /**
  * @author create by zhangwei03
@@ -110,14 +124,19 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             binding.btSubmitPk.isVisible = true
             binding.btSwitchStream.isVisible = false
             binding.btSwitchCarma.isVisible = true
-            binding.btMute.isVisible = true
-            binding.btMute.setImageResource(R.drawable.ic_mic_on)
+            binding.btMuteMic.isVisible = true
+            binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
+            binding.btMuteCarma.isVisible = true
+            binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
+            binding.btBitrate.isVisible = false
         } else {
             binding.layoutChannel.isVisible = false
             binding.btSubmitPk.isVisible = false
             binding.btSwitchStream.isVisible = true
             binding.btSwitchCarma.isVisible = false
-            binding.btMute.isVisible = false
+            binding.btMuteMic.isVisible = false
+            binding.btMuteCarma.isVisible = false
+            binding.btBitrate.isVisible = true
         }
         binding.tvChannelId.text = "ChannelId:$channelName"
         binding.btnBack.setOnClickListener {
@@ -157,15 +176,30 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.btSwitchCarma.setOnClickListener {
             rtcEngine.switchCamera()
         }
-        binding.btMute.setOnClickListener {
+        binding.btMuteMic.setOnClickListener {
             if (muteLocalAudio) {
                 muteLocalAudio = false
-                binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
                 rtcEngine.muteLocalAudioStream(false)
             } else {
                 muteLocalAudio = true
-                binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
                 rtcEngine.muteLocalAudioStream(true)
+            }
+        }
+        binding.btMuteCarma.setOnClickListener {
+            if (muteLocalVideo) {
+                muteLocalVideo = false
+                binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
+                rtcEngine.muteLocalVideoStream(false)
+                val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage,15)
+                rtcEngine.enableVideoImageSource(false,imageTrackOptions)
+            } else {
+                muteLocalVideo = true
+                binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
+                rtcEngine.muteLocalVideoStream(true)
+                val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage,15)
+                rtcEngine.enableVideoImageSource(true,imageTrackOptions)
             }
         }
         val dashboardFragment = DashboardFragment()
@@ -177,20 +211,30 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             dashboardFragment.setOn(it.isSelected)
             binding.flDashboard.isVisible = it.isSelected
         }
+        binding.btBitrate.setOnClickListener {
+            val cxt = context ?: return@setOnClickListener
+            val data = arrayOf("SD", "HD")
+            ViewTool.showPop(cxt, binding.btBitrate, data, object : OnItemClickListener {
+                override fun OnItemClick(position: Int, text: String) {
+                    binding.btBitrate.text = text
+                }
+            })
+        }
     }
 
     private var muteLocalAudio = false
+    private var muteLocalVideo = false
 
     private val mediaPlayerObserver = object : MPObserverAdapter() {
         override fun onPlayerStateChanged(
             state: io.agora.mediaplayer.Constants.MediaPlayerState?,
-            error: io.agora.mediaplayer.Constants.MediaPlayerError?
+            error: io.agora.mediaplayer.Constants.MediaPlayerReason?
         ) {
             super.onPlayerStateChanged(state, error)
             if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED) {
                 mediaPlayer?.play()
             }
-            if (error != io.agora.mediaplayer.Constants.MediaPlayerError.PLAYER_ERROR_NONE) {
+            if (error != io.agora.mediaplayer.Constants.MediaPlayerReason.PLAYER_REASON_NONE) {
                 runOnMainThread {
                     ToastTool.showToast("$error")
                 }
@@ -205,6 +249,13 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 }
             }
         }
+
+        override fun onMetaData(type: io.agora.mediaplayer.Constants.MediaPlayerMetadataType?, data: ByteArray?) {
+            super.onMetaData(type, data)
+            data?.let {
+                Log.d(TAG, "onMetaData type:$type,data:${String(it)}")
+            }
+        }
     }
 
     private fun switchCdnAudience(rtmpPullUrl: String) {
@@ -215,15 +266,20 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.btSwitchStream.text = getString(R.string.rtc_audience)
         binding.layoutVideoContainer.isVisible = true
         binding.videoPKLayout.videoContainer.isVisible = false
+        binding.btBitrate.isVisible = true
 
         val textureView = TextureView(act)
         binding.layoutVideoContainer.removeAllViews()
         binding.layoutVideoContainer.addView(textureView)
         mediaPlayer = rtcEngine.createMediaPlayer()
         mediaPlayer?.apply {
+            setPlayerOption("is_live_source", 1);
             setPlayerOption("play_speed_down_cache_duration", 0)
+            setPlayerOption("open_timeout_until_success", 6000)
+            setPlayerOption("enable_search_metadata", 1)
             registerPlayerObserver(mediaPlayerObserver)
             setView(textureView)
+            Log.d(TAG,"rtmpPullUrl $rtmpPullUrl")
             open(rtmpPullUrl, 0)
         }
 
@@ -242,6 +298,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.btSwitchStream.text = getString(R.string.cdn_audience)
         binding.layoutVideoContainer.isVisible = true
         binding.videoPKLayout.videoContainer.isVisible = false
+        binding.btBitrate.isVisible = false
 
         initVideoView()
         joinChannel()
@@ -264,6 +321,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             runOnMainThread {
                 if (isBroadcast()) {
                     setRtmpStreamEnable(true)
+                    startSendSei()
                 } else {
                     //超级画质
                     val ret1 = rtcEngine.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}}")
@@ -315,7 +373,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             runOnMainThread {
                 when (state) {
                     Constants.RTMP_STREAM_PUBLISH_STATE_RUNNING -> {
-                        if (code == Constants.RTMP_STREAM_PUBLISH_ERROR_OK) {
+                        if (code == Constants.RTMP_STREAM_PUBLISH_REASON_OK) {
                             ToastTool.showToast("rtmp stream publish state running")
                         }
                     }
@@ -375,7 +433,13 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 AgoraRtcEngineInstance.transcoder.stopRtmpStream(null)
                 publishedRtmp = false
             }
-            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(TranscodeSetting.liveTranscoding(channelName, pushUrl, ownerUid)) { succeed ->
+            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(
+                TranscodeSetting.liveTranscoding(
+                    channelName,
+                    pushUrl,
+                    ownerUid
+                )
+            ) { succeed ->
                 if (succeed) {
                     publishedRtmp = true
                     ToastTool.showToast("rtmp stream publish state running")
@@ -399,7 +463,13 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private fun updateRtmpStreamEnable(@Size(min = 1) vararg uids: Int) {
         // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
         val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
-        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(TranscodeSetting.liveTranscoding(channelName, pushUrl, *uids)) { succeed ->
+        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(
+            TranscodeSetting.liveTranscoding(
+                channelName,
+                pushUrl,
+                *uids
+            )
+        ) { succeed ->
             if (succeed) {
                 publishedRtmp = true
             } else {
@@ -419,7 +489,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         val destChannelInfo = ChannelMediaInfo(remoteChannelId, null, ownerUid)
         mediaRelayConfiguration.setDestChannelInfo(remoteChannelId, destChannelInfo)
         // 调用 startChannelMediaRelay 开始跨频道媒体流转发
-        val result = rtcEngine.startChannelMediaRelay(mediaRelayConfiguration)
+        val result = rtcEngine.startOrUpdateChannelMediaRelay(mediaRelayConfiguration)
         if (result == Constants.ERR_OK) {
         } else {
             ToastTool.showToast("channel media relay error:$result！")
@@ -549,6 +619,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         // 265
         rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
+        val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
+        Log.d(TAG, "registerMediaMetadataObserver code:$code")
         rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
     }
 
@@ -614,7 +686,10 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     }
 
     override fun onDestroy() {
+        val code: Int = rtcEngine.unregisterMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
+        Log.d(TAG, "unregisterMediaMetadataObserver code:$code")
         if (isBroadcast()) {
+            stopSendSei()
             setRtmpStreamEnable(false)
         } else {
             mediaPlayer?.apply {
@@ -628,4 +703,81 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         AgoraRtcEngineInstance.destroy()
         super.onDestroy()
     }
+
+    private fun sendMetaSei() {
+        val map = SeiHelper.buildSei(channelName, curUid)
+        val jsonString = GsonTools.beanToString(map) ?: return
+        metadata = jsonString.toByteArray()
+    }
+
+    // 开始发送 sei
+    private var mStopSei = true
+    private var seiFuture: ScheduledFuture<*>? = null
+    private val seiTask = object : Runnable {
+        override fun run() {
+            if (mStopSei) return
+            if (isBroadcast()) sendMetaSei()
+        }
+    }
+
+    private fun startSendSei() {
+        mStopSei = false
+        seiFuture = ThreadTool.scheduledThreadPool.scheduleAtFixedRate(seiTask, 0, 1, TimeUnit.SECONDS)
+    }
+
+    // 停止播放歌词
+    private fun stopSendSei() {
+        mStopSei = true
+        seiFuture?.cancel(true)
+        seiFuture = null
+        if (ThreadTool.scheduledThreadPool is ScheduledThreadPoolExecutor) {
+            ThreadTool.scheduledThreadPool.remove(seiTask)
+        }
+    }
+
+    private var metadata: ByteArray?=null
+
+    private val iMetadataObserver: IMetadataObserver = object : IMetadataObserver {
+        /**Returns the maximum data size of Metadata */
+        override fun getMaxMetadataSize(): Int {
+            return KeyCenter.MAX_META_SIZE
+        }
+
+        /**Occurs when the SDK is ready to receive and send metadata.
+         * You need to specify the metadata in the return value of this callback.
+         * @param timeStampMs The timestamp (ms) of the current metadata.
+         * @return The metadata that you want to send in the format of byte[]. Ensure that you set the return value.
+         * PS: Ensure that the size of the metadata does not exceed the value set in the getMaxMetadataSize callback.
+         */
+        override fun onReadyToSendMetadata(timeStampMs: Long, sourceType: Int): ByteArray? {
+            /**Check if the metadata is empty. */
+
+            if (metadata == null) {
+                return null
+            }
+            Log.i(TAG, "There is metadata to send!")
+            /**Recycle metadata objects. */
+            val toBeSend: ByteArray = metadata!!
+            metadata = null
+            if (toBeSend.size > KeyCenter.MAX_META_SIZE) {
+                Log.e(TAG, String.format("Metadata exceeding max length %d!", KeyCenter.MAX_META_SIZE))
+                return null
+            }
+            val data = String(toBeSend, Charset.forName("UTF-8"))
+            Log.i(TAG, String.format("Metadata sent successfully! The content is %s", data))
+            return toBeSend
+        }
+
+        /**Occurs when the local user receives the metadata.
+         * @param buffer The received metadata.
+         * @param uid The ID of the user who sent the metadata.
+         * @param timeStampMs The timestamp (ms) of the received metadata.
+         */
+        override fun onMetadataReceived(buffer: ByteArray, uid: Int, timeStampMs: Long) {
+            val data = String(buffer, Charset.forName("UTF-8"))
+            Log.i(TAG, "onMetadataReceived:$data")
+        }
+    }
+
+
 }

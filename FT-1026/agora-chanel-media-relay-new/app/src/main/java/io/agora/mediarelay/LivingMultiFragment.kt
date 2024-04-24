@@ -21,14 +21,27 @@ import io.agora.mediarelay.rtc.AgoraRtcHelper
 import io.agora.mediarelay.rtc.IAgoraRtcClient
 import io.agora.mediarelay.rtc.MPObserverAdapter
 import io.agora.mediarelay.rtc.RtcSettings
+import io.agora.mediarelay.rtc.SeiHelper
 import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
+import io.agora.mediarelay.tools.FileUtils
+import io.agora.mediarelay.tools.GsonTools
 import io.agora.mediarelay.tools.PermissionHelp
+import io.agora.mediarelay.tools.ThreadTool
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.widget.OnFastClickListener
+import io.agora.mediarelay.widget.PopAdapter
+import io.agora.mediarelay.widget.ViewTool
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
+import io.agora.rtc2.DataStreamConfig
+import io.agora.rtc2.IMetadataObserver
+import io.agora.rtc2.video.ImageTrackOptions
 import io.agora.rtc2.video.VideoCanvas
+import java.nio.charset.Charset
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 enum class AudienceStatus {
     CDN_Audience,
@@ -122,15 +135,18 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             binding.btLinking.isVisible = false
             binding.btSwitchStream.isVisible = false
             binding.btSwitchCarma.isVisible = true
-            binding.btMute.isVisible = true
-            binding.btMute.setImageResource(R.drawable.ic_mic_on)
+            binding.btMuteMic.isVisible = true
+            binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
+            binding.btMuteCarma.isVisible = true
+            binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
             binding.recyclerVideo.isVisible = true
             binding.layoutCdnContainer.isVisible = false
         } else {
             binding.btLinking.isVisible = true
             binding.btSwitchStream.isVisible = true
             binding.btSwitchCarma.isVisible = false
-            binding.btMute.isVisible = false
+            binding.btMuteMic.isVisible = false
+            binding.btMuteCarma.isVisible = false
             // 默认 cdn 观众
             binding.recyclerVideo.isVisible = false
             binding.layoutCdnContainer.isVisible = true
@@ -148,7 +164,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                         audienceStatus = AudienceStatus.RTC_Broadcaster
                         switchRtc(Constants.CLIENT_ROLE_BROADCASTER)
                         binding.btSwitchCarma.isVisible = true
-                        binding.btMute.isVisible = true
+                        binding.btMuteMic.isVisible = true
+                        binding.btMuteCarma.isVisible = true
                         binding.btSwitchStream.isVisible = false
                         binding.btLinking.text = getString(R.string.hang_up)
                         rtcEngine.setEnableSpeakerphone(false)
@@ -163,7 +180,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                         val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
                         Log.d("alien", "rtc 观众--> rtc 主播 ret:$ret")
                         binding.btSwitchCarma.isVisible = true
-                        binding.btMute.isVisible = true
+                        binding.btMuteMic.isVisible = true
+                        binding.btMuteCarma.isVisible = true
                         binding.btSwitchStream.isVisible = false
                         binding.btLinking.text = getString(R.string.hang_up)
                         rtcEngine.setEnableSpeakerphone(false)
@@ -178,7 +196,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                         val ret = rtcEngine.updateChannelMediaOptions(channelMediaOptions)
                         Log.d("alien", "rtc 主播--> rtc 观众 ret:$ret")
                         binding.btSwitchCarma.isVisible = false
-                        binding.btMute.isVisible = false
+                        binding.btMuteMic.isVisible = false
+                        binding.btMuteCarma.isVisible = false
                         binding.btSwitchStream.isVisible = true
                         binding.btLinking.text = getString(R.string.calling)
                     }
@@ -193,7 +212,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                         audienceStatus = AudienceStatus.RTC_Audience
                         switchRtc(Constants.CLIENT_ROLE_AUDIENCE)
                         binding.btSwitchCarma.isVisible = false
-                        binding.btMute.isVisible = false
+                        binding.btMuteMic.isVisible = false
+                        binding.btMuteCarma.isVisible = false
                         binding.btSwitchStream.isVisible = true
                         binding.btLinking.text = getString(R.string.calling)
                     }
@@ -202,7 +222,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                         audienceStatus = AudienceStatus.CDN_Audience
                         switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
                         binding.btSwitchCarma.isVisible = false
-                        binding.btMute.isVisible = false
+                        binding.btMuteMic.isVisible = false
+                        binding.btMuteCarma.isVisible = false
                         binding.btSwitchStream.isVisible = true
                         binding.btLinking.text = getString(R.string.calling)
                     }
@@ -211,7 +232,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                         audienceStatus = AudienceStatus.CDN_Audience
                         switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
                         binding.btSwitchCarma.isVisible = false
-                        binding.btMute.isVisible = false
+                        binding.btMuteMic.isVisible = false
+                        binding.btMuteCarma.isVisible = false
                         binding.btSwitchStream.isVisible = true
                         binding.btLinking.text = getString(R.string.calling)
                     }
@@ -224,15 +246,30 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 rtcEngine.switchCamera()
             }
         })
-        binding.btMute.setOnClickListener {
+        binding.btMuteMic.setOnClickListener {
             if (muteLocalAudio) {
                 muteLocalAudio = false
-                binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
                 rtcEngine.muteLocalAudioStream(false)
             } else {
                 muteLocalAudio = true
-                binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
                 rtcEngine.muteLocalAudioStream(true)
+            }
+        }
+        binding.btMuteCarma.setOnClickListener {
+            if (muteLocalVideo) {
+                muteLocalVideo = false
+                binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
+                rtcEngine.muteLocalVideoStream(false)
+                val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage,15)
+                rtcEngine.enableVideoImageSource(false,imageTrackOptions)
+            } else {
+                muteLocalVideo = true
+                binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
+                rtcEngine.muteLocalVideoStream(true)
+                val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage,15)
+                rtcEngine.enableVideoImageSource(true,imageTrackOptions)
             }
         }
         val dashboardFragment = DashboardFragment()
@@ -244,21 +281,31 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             dashboardFragment.setOn(it.isSelected)
             binding.flDashboard.isVisible = it.isSelected
         }
+        binding.btBitrate.setOnClickListener {
+            val cxt = context ?: return@setOnClickListener
+            val data = arrayOf("SD", "HD")
+            ViewTool.showPop(cxt, binding.btBitrate, data, object : PopAdapter.OnItemClickListener {
+                override fun OnItemClick(position: Int, text: String) {
+                    binding.btBitrate.text = text
+                }
+            })
+        }
     }
 
     private var muteLocalAudio = false
+    private var muteLocalVideo = false
 
     private val mediaPlayerObserver = object : MPObserverAdapter() {
         override fun onPlayerStateChanged(
             state: io.agora.mediaplayer.Constants.MediaPlayerState?,
-            error: io.agora.mediaplayer.Constants.MediaPlayerError?
+            error: io.agora.mediaplayer.Constants.MediaPlayerReason?
         ) {
             super.onPlayerStateChanged(state, error)
             Log.d(TAG, "onPlayerStateChanged: $state，$error")
             if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED) {
                 mediaPlayer?.play()
             }
-            if (error != io.agora.mediaplayer.Constants.MediaPlayerError.PLAYER_ERROR_NONE) {
+            if (error != io.agora.mediaplayer.Constants.MediaPlayerReason.PLAYER_REASON_NONE) {
                 runOnMainThread {
                     ToastTool.showToast("$error")
                 }
@@ -296,10 +343,12 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         binding.layoutCdnContainer.addView(mpkTextureView)
         binding.layoutCdnContainer.isVisible = true
         binding.recyclerVideo.isVisible = false
+        binding.btBitrate.isVisible = true
         mediaPlayer = rtcEngine.createMediaPlayer()
         mediaPlayer?.apply {
+            setPlayerOption("is_live_source", 1);
             setPlayerOption("play_speed_down_cache_duration", 0)
-            setPlayerOption("is_live_source", 1)
+            setPlayerOption("open_timeout_until_success", 6000)
             registerPlayerObserver(mediaPlayerObserver)
             setView(mpkTextureView)
             open(rtmpPullUrl, 0)
@@ -320,6 +369,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         binding.layoutCdnContainer.removeAllViews()
         binding.layoutCdnContainer.isVisible = false
         binding.recyclerVideo.isVisible = true
+        binding.btBitrate.isVisible = false
         joinChannel(role)
     }
 
@@ -327,11 +377,19 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         onChannelJoined = {
             runOnMainThread {
                 if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
+                    startSendSei()
                     if (muteLocalAudio) {
-                        binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                        binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
                         rtcEngine.muteLocalAudioStream(true)
                     } else {
-                        binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                        binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
+                        rtcEngine.muteLocalAudioStream(false)
+                    }
+                    if (muteLocalVideo) {
+                        binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
+                        rtcEngine.muteLocalAudioStream(true)
+                    } else {
+                        binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
                         rtcEngine.muteLocalAudioStream(false)
                     }
                     videoAdapter?.apply {
@@ -345,6 +403,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 }
                 if (isOwner) {
                     setRtmpStreamEnable(true)
+                    startSendSei()
                 } else {
                     //超级画质
                     if (audienceStatus == AudienceStatus.RTC_Audience) {
@@ -356,7 +415,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             }
         },
         onLeaveChannel = {
-            runOnMainThread{
+            runOnMainThread {
                 if (!isOwner) { // 非房主加入空位置
                     videoAdapter?.apply {
                         mVideoList.forEach(action = { key, value ->
@@ -401,12 +460,20 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             if (isOwner) return@IChannelEventListener
             runOnMainThread {
                 if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
+                    startSendSei()
                     if (muteLocalAudio) {
-                        binding.btMute.setImageResource(R.drawable.ic_mic_off)
+                        binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
                         rtcEngine.muteLocalAudioStream(true)
                     } else {
-                        binding.btMute.setImageResource(R.drawable.ic_mic_on)
+                        binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
                         rtcEngine.muteLocalAudioStream(false)
+                    }
+                    if (muteLocalVideo) {
+                        binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
+                        rtcEngine.muteLocalVideoStream(true)
+                    } else {
+                        binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
+                        rtcEngine.muteLocalVideoStream(false)
                     }
                     videoAdapter?.apply {
                         val existIndex = mVideoList.indexOfValue(curUid)
@@ -424,6 +491,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                         mVideoList.put(existIndex, -1)
                         notifyItemChanged(existIndex)
                     }
+                    stopSendSei()
                 }
             }
         },
@@ -433,7 +501,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             runOnMainThread {
                 when (state) {
                     Constants.RTMP_STREAM_PUBLISH_STATE_RUNNING -> {
-                        if (code == Constants.RTMP_STREAM_PUBLISH_ERROR_OK) {
+                        if (code == Constants.RTMP_STREAM_PUBLISH_REASON_OK) {
                             ToastTool.showToast("rtmp stream publish state running")
                         }
                     }
@@ -563,6 +631,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         // 265
         rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
+        val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
+        Log.d(TAG, "registerMediaMetadataObserver code:$code")
         rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
     }
 
@@ -595,6 +665,11 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     }
 
     override fun onDestroy() {
+        val code: Int = rtcEngine.unregisterMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
+        Log.d(TAG, "unregisterMediaMetadataObserver code:$code")
+        if (isOwner || audienceStatus == AudienceStatus.RTC_Broadcaster) {
+            stopSendSei()
+        }
         if (isOwner) {
             setRtmpStreamEnable(false)
         } else {
@@ -658,6 +733,81 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 if (holder.binding.flVideo.childCount > 0) holder.binding.flVideo.removeAllViews()
                 holder.binding.flVideo.addView(textureView)
             }
+        }
+    }
+
+    private fun sendMetaSei() {
+        val map = SeiHelper.buildSei(channelName, curUid)
+        val jsonString = GsonTools.beanToString(map) ?: return
+        metadata = jsonString.toByteArray()
+    }
+
+    // 开始发送 sei
+    private var mStopSei = true
+    private var seiFuture: ScheduledFuture<*>? = null
+    private val seiTask = object : Runnable {
+        override fun run() {
+            if (mStopSei) return
+            if (isOwner || audienceStatus == AudienceStatus.RTC_Broadcaster) sendMetaSei()
+        }
+    }
+
+    private fun startSendSei() {
+        mStopSei = false
+        seiFuture = ThreadTool.scheduledThreadPool.scheduleAtFixedRate(seiTask, 0, 1, TimeUnit.SECONDS)
+    }
+
+    // 停止播放歌词
+    private fun stopSendSei() {
+        mStopSei = true
+        seiFuture?.cancel(true)
+        seiFuture = null
+        if (ThreadTool.scheduledThreadPool is ScheduledThreadPoolExecutor) {
+            ThreadTool.scheduledThreadPool.remove(seiTask)
+        }
+    }
+
+    private var metadata: ByteArray?=null
+
+    private val iMetadataObserver: IMetadataObserver = object : IMetadataObserver {
+        /**Returns the maximum data size of Metadata */
+        override fun getMaxMetadataSize(): Int {
+            return KeyCenter.MAX_META_SIZE
+        }
+
+        /**Occurs when the SDK is ready to receive and send metadata.
+         * You need to specify the metadata in the return value of this callback.
+         * @param timeStampMs The timestamp (ms) of the current metadata.
+         * @return The metadata that you want to send in the format of byte[]. Ensure that you set the return value.
+         * PS: Ensure that the size of the metadata does not exceed the value set in the getMaxMetadataSize callback.
+         */
+        override fun onReadyToSendMetadata(timeStampMs: Long, sourceType: Int): ByteArray? {
+            /**Check if the metadata is empty. */
+
+            if (metadata == null) {
+                return null
+            }
+            Log.i(TAG, "There is metadata to send!")
+            /**Recycle metadata objects. */
+            val toBeSend: ByteArray = metadata!!
+            metadata = null
+            if (toBeSend.size > KeyCenter.MAX_META_SIZE) {
+                Log.e(TAG, String.format("Metadata exceeding max length %d!", KeyCenter.MAX_META_SIZE))
+                return null
+            }
+            val data = String(toBeSend, Charset.forName("UTF-8"))
+            Log.i(TAG, String.format("Metadata sent successfully! The content is %s", data))
+            return toBeSend
+        }
+
+        /**Occurs when the local user receives the metadata.
+         * @param buffer The received metadata.
+         * @param uid The ID of the user who sent the metadata.
+         * @param timeStampMs The timestamp (ms) of the received metadata.
+         */
+        override fun onMetadataReceived(buffer: ByteArray, uid: Int, timeStampMs: Long) {
+            val data = String(buffer, Charset.forName("UTF-8"))
+            Log.i(TAG, "onMetadataReceived:$data")
         }
     }
 }

@@ -9,14 +9,19 @@ import java.util.*
  */
 object KeyCenter {
 
-    private const val AGORA_PUSH_URL = "rtmp://examplepush.agoramdn.com/live/"
-    private const val AGORA_PULL_URL = "http://examplepull.agoramdn.com/live/"
+//    private const val AGORA_PUSH_URL = "rtmp://examplepush.agoramdn.com/live/"
+//    private const val AGORA_PULL_URL = "http://examplepull.agoramdn.com/live/"
+
+    private const val AGORA_PUSH_URL = "rtmp://push.webdemo.agoraio.cn/live/"
+    private const val AGORA_PULL_URL = "https://pull.webdemo.agoraio.cn/live/"
 
     private const val CUSTOM_PUSH_URL =
         "rtmp://193.122.93.11:1935/2058423337/4996731320601635_obs?zgToken=db71ff614d41372383390c8b0e4f8d27d042c9e4d852dec21b9e03ee92d84c66&zgExpired=1706969844&zgNonce=1706797044862&zgVer=v1"
     private const val CUSTOM_PULL_URL = ""
 
     private const val urlPre = "agdemo"
+
+    val MAX_META_SIZE = 1024
 
     var pushUrl = AGORA_PUSH_URL
     var pullUrl = AGORA_PULL_URL
@@ -55,10 +60,10 @@ object KeyCenter {
 
     /**cdn pull url*/
     fun getRtmpPullUrl(channelId: String): String {
-        if (pullUrl == AGORA_PULL_URL) {
-            return "$pullUrl$urlPre$channelId.flv"
+        return if (pullUrl == AGORA_PULL_URL) {
+            "$pullUrl$urlPre$channelId.flv"
         } else {
-            return pullUrl
+            pullUrl
         }
     }
 

@@ -35,8 +35,7 @@
         android:layout_height="60dp"
         android:gravity="center"
         android:textColor="@color/white"
-        android:textSize="16sp"
-        android:textStyle="bold"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/btn_back"
         app:layout_constraintStart_toEndOf="@id/btn_back"
         app:layout_constraintTop_toTopOf="@id/btn_back"
@@ -94,13 +93,23 @@
         tools:visibility="invisible" />
 
     <ImageView
-        android:id="@+id/bt_mute"
+        android:id="@+id/bt_mute_mic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="15dp"
         android:src="@drawable/ic_mic_on"
         app:layout_constraintBottom_toBottomOf="@id/btn_back"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_back" />
+
+    <ImageView
+        android:id="@+id/bt_mute_carma"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="15dp"
+        android:src="@drawable/ic_camera_on"
+        app:layout_constraintBottom_toBottomOf="@id/btn_back"
+        app:layout_constraintEnd_toStartOf="@+id/bt_mute_mic"
         app:layout_constraintTop_toTopOf="@id/btn_back" />
 
     <ImageView
@@ -112,6 +121,18 @@
         android:src="@drawable/ic_dashboard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_back" />
+
+    <TextView
+        android:id="@+id/bt_bitrate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="4dp"
+        android:text="720p"
+        android:textColor="@color/white"
+        app:layout_constraintStart_toEndOf="@id/bt_dashboard"
+        app:layout_constraintTop_toTopOf="@id/bt_dashboard"
+        app:layout_constraintBottom_toBottomOf="@id/bt_dashboard"/>
 
     <FrameLayout
         android:id="@+id/fl_dashboard"
