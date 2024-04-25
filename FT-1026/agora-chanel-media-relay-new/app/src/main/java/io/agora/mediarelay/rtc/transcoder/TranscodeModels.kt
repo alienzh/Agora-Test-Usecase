@@ -12,7 +12,7 @@ data class TransInputItem(
    val height: Int,
 ) {}
 
-data class TranscodeSetting(
+data class TranscodeSetting constructor(
    val rtcChannel: String,
    val cdnURL: String,
    val fps: Int,
@@ -22,12 +22,21 @@ data class TranscodeSetting(
    val inputItems: List<TransInputItem>
 ) {
 
+   // 480p
+   // h264
+   // 1500
+
    companion object {
+      // private val bitrate = 3072
+      private val bitRate = 1500
+      // private val videoDimensions = VideoEncoderConfiguration.VD_1920x1080
+      private val videoDimensions = VideoEncoderConfiguration.VD_640x480
+
       /**旁路推流转码1v1*/
       fun liveTranscoding(channel: String, cdn: String, @Size(min = 1) vararg uids: Int): TranscodeSetting {
          // 竖屏
-         val fullWidth = VideoEncoderConfiguration.VD_1920x1080.height
-         val fullHeight = VideoEncoderConfiguration.VD_1920x1080.width
+         val fullWidth = videoDimensions.height
+         val fullHeight = videoDimensions.width
          val inputItems = mutableListOf<TransInputItem>()
          // 分配主播的画面布局。
          var totalX = 0
@@ -51,7 +60,7 @@ data class TranscodeSetting(
             channel,
             cdn,
             VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value,
-            3072,
+            bitRate,
             fullWidth,
             fullHeight,
             inputItems
@@ -61,8 +70,8 @@ data class TranscodeSetting(
       /**旁路推流转码1vn*/
       fun liveTranscodingMulti(channel: String, cdn: String, videoUids: SparseIntArray): TranscodeSetting {
          // 竖屏
-         val fullWidth = VideoEncoderConfiguration.VD_1920x1080.height
-         val fullHeight = VideoEncoderConfiguration.VD_1920x1080.width
+         val fullWidth = videoDimensions.height
+         val fullHeight = videoDimensions.width
          val inputItems = mutableListOf<TransInputItem>()
          // 分配主播的画面布局。
          val startY = ((fullHeight - fullWidth) * 0.5).toInt()
@@ -88,7 +97,7 @@ data class TranscodeSetting(
             channel,
             cdn,
             VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15.value,
-            3072,
+            bitRate,
             fullWidth,
             fullHeight,
             inputItems
@@ -98,8 +107,8 @@ data class TranscodeSetting(
       /**旁路推流转码1v2*/
       fun liveTranscoding3(channel: String, cdn: String, videoUids: SparseIntArray): TranscodeSetting {
          // 竖屏
-         val fullWidth = VideoEncoderConfiguration.VD_1920x1080.height
-         val fullHeight = VideoEncoderConfiguration.VD_1920x1080.width
+         val fullWidth = videoDimensions.height
+         val fullHeight = videoDimensions.width
          val inputItems = mutableListOf<TransInputItem>()
          // 分配主播的画面布局。
          val startY = ((fullHeight - fullWidth) * 0.5).toInt()
@@ -141,7 +150,7 @@ data class TranscodeSetting(
             channel,
             cdn,
             VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15.value,
-            3072,
+            bitRate,
             fullWidth,
             fullHeight,
             inputItems
@@ -150,8 +159,8 @@ data class TranscodeSetting(
       /**旁路推流转码1v3*/
       fun liveTranscoding4(channel: String, cdn: String, videoUids: SparseIntArray): TranscodeSetting {
          // 竖屏
-         val fullWidth = VideoEncoderConfiguration.VD_1920x1080.height
-         val fullHeight = VideoEncoderConfiguration.VD_1920x1080.width
+         val fullWidth = videoDimensions.height
+         val fullHeight = videoDimensions.width
          val inputItems = mutableListOf<TransInputItem>()
          // 分配主播的画面布局。
          val startY = ((fullHeight - fullWidth) * 0.5).toInt()
@@ -177,7 +186,7 @@ data class TranscodeSetting(
             channel,
             cdn,
             VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15.value,
-            3072,
+            bitRate,
             fullWidth,
             fullHeight,
             inputItems

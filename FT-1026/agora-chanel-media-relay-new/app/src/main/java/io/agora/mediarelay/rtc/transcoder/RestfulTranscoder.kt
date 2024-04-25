@@ -301,7 +301,17 @@ class RestfulTranscoder constructor(
                                         "width" to setting.width,
                                         "height" to setting.height,
                                         "lowBitrateHighQuality" to false,
-                                    )
+                                    ),
+//                                    "seiOption" to mapOf(
+//                                        "source" to emptyMap<String,Any>(),
+//                                        "sink" to mapOf(
+//                                           "type" to 100,
+//                                            "aliyun" to true,
+//                                            "info" to mapOf(
+//                                                "asdfadfa" to "123123"
+//                                            ),
+//                                        )
+//                                    ),
                                 )
                             )
                         )

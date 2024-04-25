@@ -28,7 +28,6 @@ import io.agora.mediarelay.tools.ThreadTool
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.widget.OnFastClickListener
-import io.agora.mediarelay.widget.PopAdapter
 import io.agora.mediarelay.tools.ViewTool
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
@@ -266,13 +265,13 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             if (muteLocalVideo) {
                 muteLocalVideo = false
                 binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-                rtcEngine.muteLocalVideoStream(false)
+                rtcEngine.startPreview()
                 val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage, 15)
                 rtcEngine.enableVideoImageSource(false, imageTrackOptions)
             } else {
                 muteLocalVideo = true
                 binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
-                rtcEngine.muteLocalVideoStream(true)
+                rtcEngine.stopPreview()
                 val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage, 15)
                 rtcEngine.enableVideoImageSource(true, imageTrackOptions)
             }
@@ -515,10 +514,10 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     }
                     if (muteLocalVideo) {
                         binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
-                        rtcEngine.muteLocalVideoStream(true)
+                        rtcEngine.stopPreview()
                     } else {
                         binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-                        rtcEngine.muteLocalVideoStream(false)
+                        rtcEngine.startPreview()
                     }
                     videoAdapter?.apply {
                         val existIndex = mVideoList.indexOfValue(curUid)
@@ -673,8 +672,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         updateVideoEncoder()
 //        val score = rtcEngine.queryDeviceScore()
 //        Log.d(TAG, "queryDeviceScore $score")
-        // 265
-        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
+        // TODO: 注释 264 1  265 2
+        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":1}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")

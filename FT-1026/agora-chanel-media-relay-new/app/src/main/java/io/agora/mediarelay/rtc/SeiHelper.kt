@@ -6,7 +6,7 @@ object SeiHelper {
         val streamList = mutableListOf<Map<String, Any>>()
         streamList.add(
             mapOf(
-                "uid" to "1000087250",
+                "uid" to uid,
                 "paneid" to 0,
                 "zorder" to 0,
                 "x" to 0,
@@ -49,7 +49,7 @@ object SeiHelper {
                         "multi_pk_escaped" to false,
                         "mute" to false,
                         "name" to "Yc39",
-                        "uid" to "1000087250"
+                        "uid" to uid
                     )
                 ),
                 "rid" to "6d78fdc6-1e6b-4a47-8a0e-cffc89b5e510"

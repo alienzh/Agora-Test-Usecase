@@ -234,13 +234,13 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             if (muteLocalVideo) {
                 muteLocalVideo = false
                 binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-                rtcEngine.muteLocalVideoStream(false)
+                rtcEngine.startPreview()
                 val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage, 15)
                 rtcEngine.enableVideoImageSource(false, imageTrackOptions)
             } else {
                 muteLocalVideo = true
                 binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
-                rtcEngine.muteLocalVideoStream(true)
+                rtcEngine.stopPreview()
                 val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage, 15)
                 rtcEngine.enableVideoImageSource(true, imageTrackOptions)
             }
@@ -472,10 +472,10 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
                     }
                     if (muteLocalVideo) {
                         binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
-                        rtcEngine.muteLocalVideoStream(true)
+                        rtcEngine.stopPreview()
                     } else {
                         binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-                        rtcEngine.muteLocalVideoStream(false)
+                        rtcEngine.startPreview()
                     }
                     val existIndex = mVideoList.indexOfValue(curUid)
                     if (existIndex != -1) return@runOnMainThread
@@ -618,7 +618,8 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
 //        val score = rtcEngine.queryDeviceScore()
 //        Log.d(TAG, "queryDeviceScore $score")
         // 265
-        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
+        // TODO: 注释 264 1  265 2
+        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":1}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")
