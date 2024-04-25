@@ -19,6 +19,9 @@ object KeyCenter {
         "rtmp://193.122.93.11:1935/2058423337/4996731320601635_obs?zgToken=db71ff614d41372383390c8b0e4f8d27d042c9e4d852dec21b9e03ee92d84c66&zgExpired=1706969844&zgNonce=1706797044862&zgVer=v1"
     private const val CUSTOM_PULL_URL = ""
 
+    // cdn 分辨率
+    val mBitrateList = arrayOf("720p", "1080p")
+
     private const val urlPre = "agdemo"
 
     val MAX_META_SIZE = 1024
@@ -59,9 +62,13 @@ object KeyCenter {
     }
 
     /**cdn pull url*/
-    fun getRtmpPullUrl(channelId: String): String {
+    fun getRtmpPullUrl(channelId: String, position: Int = 0): String {
         return if (pullUrl == AGORA_PULL_URL) {
-            "$pullUrl$urlPre$channelId.flv"
+            if (position > 0 && position < mBitrateList.size) {
+                "$pullUrl$urlPre${channelId}_las${mBitrateList[position]}.flv"
+            } else {
+                "$pullUrl$urlPre$channelId.flv"
+            }
         } else {
             pullUrl
         }

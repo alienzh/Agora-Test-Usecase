@@ -63,4 +63,6 @@
     <string name="dashboard_svc">SVC: %s</string>
     <string name="dashboard_h265">H265: %s</string>
     <string name="dashboard_device_score">DeviceScore: %s</string>
+    <string name="switch_src_success">Switch src success</string>
+    <string name="switch_src_failed">Switch src failed</string>
 </resources>

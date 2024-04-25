@@ -25,9 +25,9 @@ class RestfulTranscoder constructor(
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
-        .addInterceptor(CurlInterceptor(logger = object :Logger{
+        .addInterceptor(CurlInterceptor(logger = object : Logger {
             override fun log(message: String) {
-                Log.d("curl",message)
+                Log.d("curl", message)
             }
         }))
 //        .addInterceptor()
@@ -49,7 +49,7 @@ class RestfulTranscoder constructor(
 
     private var updateSequenceId: Int = 0
 
-    private fun mayAcquire(completion: ((tokenName: String?)->Unit)?) {
+    private fun mayAcquire(completion: ((tokenName: String?) -> Unit)?) {
         if (!builderToken.isNullOrEmpty()) {
             completion?.invoke(builderToken)
             return
@@ -87,7 +87,7 @@ class RestfulTranscoder constructor(
         })
     }
 
-    fun startRtmpStreamWithTranscoding(setting: TranscodeSetting, completion: ((succeed: Boolean)->Unit)?) {
+    fun startRtmpStreamWithTranscoding(setting: TranscodeSetting, completion: ((succeed: Boolean) -> Unit)?) {
         // reset builderToken
         builderToken = null
         mayAcquire { tokenName ->
@@ -117,6 +117,7 @@ class RestfulTranscoder constructor(
                         this@RestfulTranscoder.taskId = json.getString("taskId")
                         completion?.invoke(true)
                     }
+
                     override fun onFailure(call: Call, e: IOException) {
                         completion?.invoke(false)
                     }
@@ -127,7 +128,7 @@ class RestfulTranscoder constructor(
         }
     }
 
-    private fun queryRtmpTranscoding(completion: ((succeed: Boolean)->Unit)?) {
+    private fun queryRtmpTranscoding(completion: ((succeed: Boolean) -> Unit)?) {
         val taskId = this.taskId ?: run {
             completion?.invoke(true)
             return
@@ -149,6 +150,7 @@ class RestfulTranscoder constructor(
                         val responseBody = response.body?.string()
                         Log.d("aaa", "Response: $responseBody")
                     }
+
                     override fun onFailure(call: Call, e: IOException) {
                         Log.d("aaa", "Network request failed: ${e.message}")
                     }
@@ -159,7 +161,7 @@ class RestfulTranscoder constructor(
         }
     }
 
-    fun updateRtmpTranscoding(setting: TranscodeSetting, completion: ((succeed: Boolean)->Unit)?) {
+    fun updateRtmpTranscoding(setting: TranscodeSetting, completion: ((succeed: Boolean) -> Unit)?) {
         val taskId = this.taskId ?: run {
             completion?.invoke(false)
             return
@@ -190,6 +192,7 @@ class RestfulTranscoder constructor(
                             completion?.invoke(false)
                         }
                     }
+
                     override fun onFailure(call: Call, e: IOException) {
                         completion?.invoke(false)
                     }
@@ -200,7 +203,7 @@ class RestfulTranscoder constructor(
         }
     }
 
-    fun stopRtmpStream(completion: ((succeed: Boolean)->Unit)?) {
+    fun stopRtmpStream(completion: ((succeed: Boolean) -> Unit)?) {
         val taskId = this.taskId ?: run {
             completion?.invoke(true)
             return
@@ -223,6 +226,7 @@ class RestfulTranscoder constructor(
                             completion?.invoke(false)
                         }
                     }
+
                     override fun onFailure(call: Call, e: IOException) {
                         completion?.invoke(false)
                     }
@@ -254,7 +258,7 @@ class RestfulTranscoder constructor(
                     "rtcChannel" to setting.rtcChannel,
                     "rtcUid" to item.uid,
                     "rtcToken" to rtcToken,
-                    ),
+                ),
                 "placeholderImageUrl" to null,
                 "region" to mapOf(
                     "x" to item.x,
@@ -296,7 +300,7 @@ class RestfulTranscoder constructor(
                                         "bitrate" to setting.bitrate,
                                         "width" to setting.width,
                                         "height" to setting.height,
-                                        "lowBitrateHighQuality" to false
+                                        "lowBitrateHighQuality" to false,
                                     )
                                 )
                             )

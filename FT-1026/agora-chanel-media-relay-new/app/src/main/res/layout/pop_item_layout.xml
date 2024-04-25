@@ -1,25 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center_horizontal"
-    android:background="@color/white"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@android:color/transparent">
 
     <TextView
-        android:id="@+id/select_count"
-        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:gravity="center"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="4dp"
+        android:textColor="@color/black_overlay"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:gravity="center"
-        android:clickable="true"
-        android:textColor="@drawable/pop_color_pressed"
-        android:background="@color/white"
-        android:textSize="14sp"
-        android:paddingVertical="4dp"
-        android:paddingHorizontal="6dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="720p" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

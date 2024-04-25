@@ -26,10 +26,9 @@ import io.agora.mediarelay.tools.ThreadTool
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.widget.PopAdapter.OnItemClickListener
-import io.agora.mediarelay.widget.ViewTool
+import io.agora.mediarelay.tools.ViewTool
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
-import io.agora.rtc2.DataStreamConfig
 import io.agora.rtc2.IMetadataObserver
 import io.agora.rtc2.video.ChannelMediaInfo
 import io.agora.rtc2.video.ChannelMediaRelayConfiguration
@@ -76,6 +75,13 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     }
 
     private var mediaPlayer: IMediaPlayer? = null
+
+    /**
+     * cdn 链接 码率 index
+     * 0 720p, 1 1080p
+     * [KeyCenter.mBitrateList]
+     */
+    private var cdnPosition = 0
 
     @Volatile
     private var isInPk: Boolean = false
@@ -137,6 +143,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             binding.btMuteMic.isVisible = false
             binding.btMuteCarma.isVisible = false
             binding.btBitrate.isVisible = true
+            binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
         }
         binding.tvChannelId.text = "ChannelId:$channelName"
         binding.btnBack.setOnClickListener {
@@ -169,7 +176,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             if (isCdnAudience) {
                 switchRtcAudience()
             } else {
-                switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
+                switchCdnAudience(cdnPosition)
             }
             isCdnAudience = !isCdnAudience
         }
@@ -192,14 +199,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 muteLocalVideo = false
                 binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
                 rtcEngine.muteLocalVideoStream(false)
-                val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage,15)
-                rtcEngine.enableVideoImageSource(false,imageTrackOptions)
+                val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage, 15)
+                rtcEngine.enableVideoImageSource(false, imageTrackOptions)
             } else {
                 muteLocalVideo = true
                 binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
                 rtcEngine.muteLocalVideoStream(true)
-                val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage,15)
-                rtcEngine.enableVideoImageSource(true,imageTrackOptions)
+                val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage, 15)
+                rtcEngine.enableVideoImageSource(true, imageTrackOptions)
             }
         }
         val dashboardFragment = DashboardFragment()
@@ -213,12 +220,31 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
         binding.btBitrate.setOnClickListener {
             val cxt = context ?: return@setOnClickListener
-            val data = arrayOf("SD", "HD")
-            ViewTool.showPop(cxt, binding.btBitrate, data, object : OnItemClickListener {
-                override fun OnItemClick(position: Int, text: String) {
-                    binding.btBitrate.text = text
+            val data = KeyCenter.mBitrateList
+            ViewTool.showPop(cxt, binding.btBitrate, data, cdnPosition) { position, text ->
+                tempCdnPosition = position
+                val pullUrl = KeyCenter.getRtmpPullUrl(channelName, position)
+                Log.d(TAG, "switchSrc $pullUrl")
+                mediaPlayer?.switchSrc(pullUrl, true)
+            }
+        }
+    }
+
+    // 临时变量，切换成功则修改
+    private var tempCdnPosition = -1
+
+    private fun switchSrcSuccess(ret: Boolean) {
+        runOnMainThread {
+            if (ret) {
+                cdnPosition = tempCdnPosition
+                tempCdnPosition = -1
+                if (cdnPosition >= 0 && cdnPosition < KeyCenter.mBitrateList.size) {
+                    binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
                 }
-            })
+                ToastTool.showToast(R.string.switch_src_success)
+            } else {
+                ToastTool.showToast(R.string.switch_src_failed)
+            }
         }
     }
 
@@ -226,6 +252,27 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private var muteLocalVideo = false
 
     private val mediaPlayerObserver = object : MPObserverAdapter() {
+        override fun onPlayerEvent(
+            eventCode: io.agora.mediaplayer.Constants.MediaPlayerEvent?,
+            elapsedTime: Long,
+            message: String?
+        ) {
+            super.onPlayerEvent(eventCode, elapsedTime, message)
+            Log.d(TAG, "onPlayerEvent: $eventCode，$elapsedTime,$message")
+            when (eventCode) {
+                io.agora.mediaplayer.Constants.MediaPlayerEvent.PLAYER_EVENT_SWITCH_COMPLETE -> {
+                    switchSrcSuccess(true)
+                }
+
+                io.agora.mediaplayer.Constants.MediaPlayerEvent.PLAYER_EVENT_SWITCH_ERROR -> {
+                    switchSrcSuccess(false)
+                    Log.d(TAG, "getPlaySrc:${mediaPlayer?.playSrc}")
+                }
+
+                else -> {}
+            }
+        }
+
         override fun onPlayerStateChanged(
             state: io.agora.mediaplayer.Constants.MediaPlayerState?,
             error: io.agora.mediaplayer.Constants.MediaPlayerReason?
@@ -258,8 +305,10 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
     }
 
-    private fun switchCdnAudience(rtmpPullUrl: String) {
+    private fun switchCdnAudience(cdnPosition: Int) {
         val act = activity ?: return
+        val rtmpPullUrl = KeyCenter.getRtmpPullUrl(channelName, cdnPosition)
+        binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
         rtcEngine.leaveChannel()
         remotePkUid = -1
         isInPk = false
@@ -279,7 +328,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             setPlayerOption("enable_search_metadata", 1)
             registerPlayerObserver(mediaPlayerObserver)
             setView(textureView)
-            Log.d(TAG,"rtmpPullUrl $rtmpPullUrl")
+            Log.d(TAG, "rtmpPullUrl $rtmpPullUrl")
             open(rtmpPullUrl, 0)
         }
 
@@ -416,7 +465,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 joinChannel()
             } else {
                 if (isCdnAudience) {
-                    switchCdnAudience(KeyCenter.getRtmpPullUrl(channelName))
+                    switchCdnAudience(cdnPosition)
                 } else {
                     switchRtcAudience()
                 }
@@ -735,7 +784,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
     }
 
-    private var metadata: ByteArray?=null
+    private var metadata: ByteArray? = null
 
     private val iMetadataObserver: IMetadataObserver = object : IMetadataObserver {
         /**Returns the maximum data size of Metadata */
