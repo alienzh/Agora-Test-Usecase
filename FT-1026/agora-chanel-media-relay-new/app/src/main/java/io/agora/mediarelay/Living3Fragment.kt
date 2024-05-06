@@ -328,7 +328,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
                 rtcEngine.setupLocalVideo(null);
             } else {
                 rtcEngine.setupRemoteVideo(
-                    VideoCanvas(null, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, value)
+                    VideoCanvas(null, Constants.RENDER_MODE_FIT, value)
                 )
             }
         }
@@ -419,6 +419,8 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
         },
         onUserInfoUpdated = { uid, userInfo ->
             uidMapping[userInfo.userAccount] = userInfo.uid
+        },
+        onUserJoined = { uid ->
             val existIndex = mVideoList.indexOfValue(uid)
             if (existIndex != -1) return@IChannelEventListener
             val emptyIndex = fetchValidIndex(uid)
@@ -657,7 +659,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
         if (uid == -1) {
             mTextureVideos.remove(position)
             rtcEngine.setupRemoteVideo(
-                VideoCanvas(null, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
+                VideoCanvas(null, Constants.RENDER_MODE_HIDDEN, uid)
             )
             if (videoContainer.childCount > 0) videoContainer.removeAllViews()
         } else {
@@ -672,11 +674,15 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             }
             if (uid == uidMapping[userAccount]) {
                 rtcEngine.setupLocalVideo(
-                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_AUTO, uid)
+                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, uid).apply {
+                        mirrorMode = Constants.VIDEO_MIRROR_MODE_ENABLED
+                    }
                 )
             } else {
                 rtcEngine.setupRemoteVideo(
-                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
+                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, uid).apply {
+                        mirrorMode = Constants.VIDEO_MIRROR_MODE_DISABLED
+                    }
                 )
             }
             if (videoContainer.childCount > 0) videoContainer.removeAllViews()

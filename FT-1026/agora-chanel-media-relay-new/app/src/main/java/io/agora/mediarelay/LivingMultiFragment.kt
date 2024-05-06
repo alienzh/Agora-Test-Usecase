@@ -344,7 +344,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 rtcEngine.setupLocalVideo(null);
             } else {
                 rtcEngine.setupRemoteVideo(
-                    VideoCanvas(null, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, value)
+                    VideoCanvas(null, Constants.RENDER_MODE_FIT, value)
                 )
             }
         }
@@ -438,6 +438,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         },
         onUserInfoUpdated = { uid, userInfo ->
             uidMapping[userInfo.userAccount] = userInfo.uid
+        },
+        onUserJoined = { uid ->
             videoAdapter?.apply {
                 val existIndex = mVideoList.indexOfValue(uid)
                 if (existIndex != -1) return@IChannelEventListener
@@ -685,7 +687,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             if (uid == -1) {
                 mTextureVideos.remove(position)
                 rtcEngine.setupRemoteVideo(
-                    VideoCanvas(null, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
+                    VideoCanvas(null, Constants.RENDER_MODE_FIT, uid)
                 )
                 if (holder.binding.flVideo.childCount > 0) holder.binding.flVideo.removeAllViews()
             } else {
@@ -699,11 +701,15 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 }
                 if (uid == uidMapping[userAccount]) {
                     rtcEngine.setupLocalVideo(
-                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_AUTO, uid)
+                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, uid).apply {
+                            mirrorMode = Constants.VIDEO_MIRROR_MODE_ENABLED
+                        }
                     )
                 } else {
                     rtcEngine.setupRemoteVideo(
-                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
+                        VideoCanvas(textureView, Constants.RENDER_MODE_FIT, uid).apply {
+                            mirrorMode = Constants.VIDEO_MIRROR_MODE_DISABLED
+                        }
                     )
                 }
                 if (holder.binding.flVideo.childCount > 0) holder.binding.flVideo.removeAllViews()

@@ -514,12 +514,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
             uidMapping[userAccount]?.let { uid ->
                 rtcEngine.setupLocalVideo(
-                    VideoCanvas(
-                        localTexture,
-                        Constants.RENDER_MODE_ADAPTIVE,
-                        Constants.VIDEO_MIRROR_MODE_ENABLED,
-                        uid
-                    )
+                    VideoCanvas(localTexture, Constants.RENDER_MODE_ADAPTIVE, uid).apply {
+                        mirrorMode = Constants.VIDEO_MIRROR_MODE_ENABLED
+                    }
                 )
             }
 
@@ -530,11 +527,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             // pk 频道主播
             remoteRtcConnection?.let {
                 rtcEngine.setupRemoteVideoEx(
-                    VideoCanvas(
-                        remoteTexture,
-                        Constants.RENDER_MODE_FIT,
-                        remotePkUid
-                    ), it
+                    VideoCanvas(remoteTexture, Constants.RENDER_MODE_FIT, remotePkUid).apply {
+                        mirrorMode = Constants.VIDEO_MIRROR_MODE_DISABLED
+                    }, it
                 )
             }
 
@@ -546,11 +541,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
                 uidMapping[ownerAccount]?.let { ownerUid ->
                     rtcEngine.setupRemoteVideo(
-                        VideoCanvas(
-                            remoteTextureA,
-                            Constants.RENDER_MODE_FIT,
-                            ownerUid
-                        )
+                        VideoCanvas(remoteTextureA, Constants.RENDER_MODE_FIT, ownerUid).apply {
+                            mirrorMode = Constants.VIDEO_MIRROR_MODE_DISABLED
+                        }
                     )
                 }
 
@@ -560,11 +553,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
                 remoteRtcConnection?.let {
                     rtcEngine.setupRemoteVideoEx(
-                        VideoCanvas(
-                            remoteTextureB,
-                            Constants.RENDER_MODE_FIT,
-                            remotePkUid
-                        ), it
+                        VideoCanvas(remoteTextureB, Constants.RENDER_MODE_FIT, remotePkUid).apply {
+                            mirrorMode = Constants.VIDEO_MIRROR_MODE_DISABLED
+                        }, it
                     )
                 }
 
@@ -588,12 +579,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.layoutVideoContainer.removeAllViews()
         binding.layoutVideoContainer.addView(localTexture)
         rtcEngine.setupLocalVideo(
-            VideoCanvas(
-                localTexture,
-                Constants.RENDER_MODE_FIT,
-                Constants.VIDEO_MIRROR_MODE_ENABLED,
-                localUid
-            )
+            VideoCanvas(localTexture, Constants.RENDER_MODE_FIT, localUid).apply {
+                mirrorMode = Constants.VIDEO_MIRROR_MODE_ENABLED
+            }
         )
     }
 
@@ -604,11 +592,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.layoutVideoContainer.addView(remoteTexture)
 
         rtcEngine.setupRemoteVideo(
-            VideoCanvas(
-                remoteTexture,
-                Constants.RENDER_MODE_FIT,
-                remoteUid
-            )
+            VideoCanvas(remoteTexture, Constants.RENDER_MODE_FIT, remoteUid).apply {
+                mirrorMode = Constants.VIDEO_MIRROR_MODE_DISABLED
+            }
         )
     }
 
@@ -725,12 +711,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 LogTool.d(TAG, "remoteChannel onFirstRemoteVideoFrame uid:$uid,width:$width,height:$height")
             }
 
-            override fun onUserInfoUpdated(uid: Int, userInfo: UserInfo) {
-                super.onUserInfoUpdated(uid, userInfo)
-                LogTool.d(
-                    TAG,
-                    "remoteChannel onUserInfoUpdated uid:$uid,userInfo:${userInfo.uid}-${userInfo.userAccount}"
-                )
+            override fun onUserJoined(uid: Int, elapsed: Int) {
+                super.onUserJoined(uid, elapsed)
+                LogTool.d(TAG, "remoteChannel remoteChannel uid:$uid")
                 runOnMainThread {
                     updatePkMode(uid)
                     if (isOwner) {
@@ -741,6 +724,17 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                             updateRtmpStreamEnable(*channelUids)
                         }
                     }
+                }
+            }
+
+            override fun onUserInfoUpdated(uid: Int, userInfo: UserInfo) {
+                super.onUserInfoUpdated(uid, userInfo)
+                LogTool.d(
+                    TAG,
+                    "remoteChannel onUserInfoUpdated uid:$uid,userInfo:${userInfo.uid}-${userInfo.userAccount}"
+                )
+                runOnMainThread {
+                    uidMapping[userInfo.userAccount] = userInfo.uid
                 }
             }
         })

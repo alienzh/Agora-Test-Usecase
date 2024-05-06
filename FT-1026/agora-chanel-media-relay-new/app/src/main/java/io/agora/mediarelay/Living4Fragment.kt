@@ -327,7 +327,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
                 rtcEngine.setupLocalVideo(null);
             } else {
                 rtcEngine.setupRemoteVideo(
-                    VideoCanvas(null, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_DISABLED, value)
+                    VideoCanvas(null, Constants.RENDER_MODE_FIT, value)
                 )
             }
         }
@@ -416,8 +416,10 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
                 notifyDataSetChanged()
             }
         },
-        onUserInfoUpdated = {uid, userInfo ->
+        onUserInfoUpdated = { uid, userInfo ->
             uidMapping[userInfo.userAccount] = userInfo.uid
+        },
+        onUserJoined = { uid ->
             val existIndex = mVideoList.indexOfValue(uid)
             if (existIndex != -1) return@IChannelEventListener
             val emptyIndex = fetchValidIndex(uid)
@@ -656,9 +658,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
         val uid = mVideoList[position]
         if (uid == -1) {
             mTextureVideos.remove(position)
-            rtcEngine.setupRemoteVideo(
-                VideoCanvas(null, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
-            )
+            rtcEngine.setupRemoteVideo(VideoCanvas(null, Constants.RENDER_MODE_HIDDEN, uid))
             if (videoContainer.childCount > 0) videoContainer.removeAllViews()
         } else {
             var textureView = mTextureVideos[position]
@@ -672,11 +672,15 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             }
             if (uid == uidMapping[userAccount]) {
                 rtcEngine.setupLocalVideo(
-                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_AUTO, uid)
+                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, uid).apply {
+                        mirrorMode = Constants.VIDEO_MIRROR_MODE_ENABLED
+                    }
                 )
             } else {
                 rtcEngine.setupRemoteVideo(
-                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, Constants.VIDEO_MIRROR_MODE_DISABLED, uid)
+                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, uid).apply {
+                        mirrorMode = Constants.VIDEO_MIRROR_MODE_DISABLED
+                    }
                 )
             }
             if (videoContainer.childCount > 0) videoContainer.removeAllViews()
