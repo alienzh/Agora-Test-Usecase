@@ -1,15 +1,12 @@
 package io.agora.mediarelay.widget
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.*
 import io.agora.mediarelay.R
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentDashboardBinding
 import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.IVideoInfoListener
-import io.agora.mediarelay.tools.ToastTool
 import io.agora.rtc2.Constants
 import io.agora.rtc2.IRtcEngineEventHandler
 
@@ -106,14 +103,5 @@ class DashboardFragment : BaseUiFragment<FragmentDashboardBinding>(), IVideoInfo
     override fun onDownlinkNetworkInfoUpdated(info: IRtcEngineEventHandler.DownlinkNetworkInfo?) {
         downInfo = info
         runOnMainThread { updateView() }
-    }
-
-    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
-    private fun runOnMainThread(runnable: Runnable) {
-        if (Thread.currentThread() === mainHandler.looper.thread) {
-            runnable.run()
-        } else {
-            mainHandler.post(runnable)
-        }
     }
 }

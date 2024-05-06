@@ -2,13 +2,10 @@ package io.agora.mediarelay
 
 import android.content.Context
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.util.SparseIntArray
 import android.view.*
 import androidx.core.util.forEach
-import androidx.core.view.WindowCompat
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
@@ -39,12 +36,6 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-enum class AudienceStatus {
-    CDN_Audience,
-    RTC_Audience,
-    RTC_Broadcaster
-}
-
 /**
  * @author create by zhangwei03
  */
@@ -55,12 +46,6 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         const val KEY_CHANNEL_ID: String = "key_channel_id"
         const val KEY_ROLE: String = "key_role"
     }
-
-    private var permissionHelp: PermissionHelp? = null
-
-    // 跨频道媒体流转发
-    @Volatile
-    private var mediaRelaying = false
 
     // 推流状态
     @Volatile
@@ -91,39 +76,22 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     @Volatile
     private var audienceStatus: AudienceStatus = AudienceStatus.CDN_Audience
 
-    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
-
-    private val ownerUid by lazy { channelName.toIntOrNull() ?: 123 }
-
-    private val curUid by lazy {
-        KeyCenter.rtcUid(role == Constants.CLIENT_ROLE_BROADCASTER, channelName)
-    }
-
     // 房主
     private val isOwner: Boolean
-        get() {
-            return role == Constants.CLIENT_ROLE_BROADCASTER
-        }
+        get() = role == Constants.CLIENT_ROLE_BROADCASTER
+
+    // 用户 account
+    private val userAccount by lazy {
+        KeyCenter.rtcAccount(isOwner, channelName)
+    }
+
+    //key account，value rtc-uid
+    private val uidMapping = mutableMapOf<String, Int>()
 
     private var videoAdapter: VideoAdapter? = null
 
-    private fun runOnMainThread(runnable: Runnable) {
-        if (Thread.currentThread() === mainHandler.looper.thread) {
-            runnable.run()
-        } else {
-            mainHandler.post(runnable)
-        }
-    }
-
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLivingMultiBinding {
         return FragmentLivingMultiBinding.inflate(inflater)
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is MainActivity) {
-            permissionHelp = context.permissionHelp
-        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -290,7 +258,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             val data = KeyCenter.mBitrateList
             ViewTool.showPop(cxt, binding.btBitrate, data, cdnPosition) { position, text ->
                 tempCdnPosition = position
-                mediaPlayer?.switchSrc(KeyCenter.getRtmpPullUrl(channelName, position), true)
+                mediaPlayer?.switchSrc(KeyCenter.getRtmpPullUrl(channelName, position), false)
             }
         }
     }
@@ -372,7 +340,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
         rtcEngine.leaveChannel()
         videoAdapter?.mVideoList?.forEach { key, value ->
-            if (value == curUid) {
+            if (value == uidMapping[userAccount]) {
                 rtcEngine.setupLocalVideo(null);
             } else {
                 rtcEngine.setupRemoteVideo(
@@ -414,87 +382,82 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         binding.layoutCdnContainer.isVisible = false
         binding.recyclerVideo.isVisible = true
         binding.btBitrate.isVisible = false
-        joinChannel(role)
+        registerAccount { uid, userCount ->
+            joinChannel(userAccount, role)
+        }
     }
 
     private val eventListener = IAgoraRtcClient.IChannelEventListener(
-        onChannelJoined = {
-            runOnMainThread {
-                if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
-                    startSendSei()
-                    if (muteLocalAudio) {
-                        binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
-                        rtcEngine.muteLocalAudioStream(true)
-                    } else {
-                        binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
-                        rtcEngine.muteLocalAudioStream(false)
-                    }
-                    if (muteLocalVideo) {
-                        binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
-                        rtcEngine.muteLocalAudioStream(true)
-                    } else {
-                        binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-                        rtcEngine.muteLocalAudioStream(false)
-                    }
-                    videoAdapter?.apply {
-                        val existIndex = mVideoList.indexOfValue(curUid)
-                        if (existIndex != -1) return@runOnMainThread
-                        val emptyIndex = mVideoList.indexOfValue(-1)
-                        if (emptyIndex == -1) return@runOnMainThread
-                        mVideoList.put(emptyIndex, curUid)
-                        notifyItemChanged(emptyIndex)
-                    }
-                }
-                if (isOwner) {
-                    setRtmpStreamEnable(true)
-                    startSendSei()
+        onChannelJoined = { channel, uid ->
+            if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
+                startSendSei()
+                if (muteLocalAudio) {
+                    binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
+                    rtcEngine.muteLocalAudioStream(true)
                 } else {
-                    //超级画质
-                    if (audienceStatus == AudienceStatus.RTC_Audience) {
-                        val ret1 = rtcEngine.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}}")
-                        val ret2 = rtcEngine.setParameters("{\"rtc.video.sr_type\":20}")
-                        Log.d(TAG, "enable_sr ret：$ret1, sr_type ret：$ret2")
-                    }
+                    binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
+                    rtcEngine.muteLocalAudioStream(false)
+                }
+                if (muteLocalVideo) {
+                    binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
+                    rtcEngine.muteLocalAudioStream(true)
+                } else {
+                    binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
+                    rtcEngine.muteLocalAudioStream(false)
+                }
+                videoAdapter?.apply {
+                    val existIndex = mVideoList.indexOfValue(uid)
+                    if (existIndex != -1) return@IChannelEventListener
+                    val emptyIndex = mVideoList.indexOfValue(-1)
+                    if (emptyIndex == -1) return@IChannelEventListener
+                    mVideoList.put(emptyIndex, uid)
+                    notifyItemChanged(emptyIndex)
+                }
+            }
+            if (isOwner) {
+                setRtmpStreamEnable(true)
+                startSendSei()
+            } else {
+                //超级画质
+                if (audienceStatus == AudienceStatus.RTC_Audience) {
+                    val ret1 = rtcEngine.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}}")
+                    val ret2 = rtcEngine.setParameters("{\"rtc.video.sr_type\":20}")
+                    Log.d(TAG, "enable_sr ret：$ret1, sr_type ret：$ret2")
                 }
             }
         },
         onLeaveChannel = {
-            runOnMainThread {
-                if (!isOwner) { // 非房主加入空位置
-                    videoAdapter?.apply {
-                        mVideoList.forEach(action = { key, value ->
-                            mVideoList.put(key, -1)
-                        })
-                        notifyDataSetChanged()
-                    }
+            if (!isOwner) { // 非房主加入空位置
+                videoAdapter?.apply {
+                    mVideoList.forEach(action = { key, value ->
+                        mVideoList.put(key, -1)
+                    })
+                    notifyDataSetChanged()
                 }
             }
         },
-        onUserJoined = { uid ->
-            runOnMainThread {
-                videoAdapter?.apply {
-                    val existIndex = mVideoList.indexOfValue(uid)
-                    if (existIndex != -1) return@runOnMainThread
-                    val emptyIndex = mVideoList.indexOfValue(-1)
-                    if (emptyIndex == -1) return@runOnMainThread
-                    mVideoList.put(emptyIndex, uid)
-                    notifyItemChanged(emptyIndex)
-                    if (isOwner) {
-                        updateRtmpStreamEnable()
-                    }
+        onUserInfoUpdated = { uid, userInfo ->
+            uidMapping[userInfo.userAccount] = userInfo.uid
+            videoAdapter?.apply {
+                val existIndex = mVideoList.indexOfValue(uid)
+                if (existIndex != -1) return@IChannelEventListener
+                val emptyIndex = mVideoList.indexOfValue(-1)
+                if (emptyIndex == -1) return@IChannelEventListener
+                mVideoList.put(emptyIndex, uid)
+                notifyItemChanged(emptyIndex)
+                if (isOwner) {
+                    updateRtmpStreamEnable()
                 }
             }
         },
         onUserOffline = {
-            runOnMainThread {
-                videoAdapter?.apply {
-                    val index = mVideoList.indexOfValue(it)
-                    if (index == -1) return@runOnMainThread
-                    mVideoList.put(index, -1)
-                    notifyItemChanged(index)
-                    if (isOwner) {
-                        updateRtmpStreamEnable()
-                    }
+            videoAdapter?.apply {
+                val index = mVideoList.indexOfValue(it)
+                if (index == -1) return@IChannelEventListener
+                mVideoList.put(index, -1)
+                notifyItemChanged(index)
+                if (isOwner) {
+                    updateRtmpStreamEnable()
                 }
             }
         },
@@ -502,104 +465,97 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         onClientRoleChanged = { oldRole, newRole, newRoleOptions ->
             // 忽略房主
             if (isOwner) return@IChannelEventListener
-            runOnMainThread {
-                if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
-                    startSendSei()
-                    if (muteLocalAudio) {
-                        binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
-                        rtcEngine.muteLocalAudioStream(true)
-                    } else {
-                        binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
-                        rtcEngine.muteLocalAudioStream(false)
-                    }
-                    if (muteLocalVideo) {
-                        binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
-                        rtcEngine.stopPreview()
-                    } else {
-                        binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-                        rtcEngine.startPreview()
-                    }
-                    videoAdapter?.apply {
-                        val existIndex = mVideoList.indexOfValue(curUid)
-                        if (existIndex != -1) return@runOnMainThread
-                        val emptyIndex = mVideoList.indexOfValue(-1)
-                        if (emptyIndex == -1) return@runOnMainThread
-                        mVideoList.put(emptyIndex, curUid)
-                        notifyItemChanged(emptyIndex)
-                    }
+            if (audienceStatus == AudienceStatus.RTC_Broadcaster) { // 非房主加入空位置
+                startSendSei()
+                if (muteLocalAudio) {
+                    binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
+                    rtcEngine.muteLocalAudioStream(true)
                 } else {
-                    videoAdapter?.apply {
-                        // 是否已经在麦位上
-                        val existIndex = mVideoList.indexOfValue(curUid)
-                        if (existIndex == -1) return@runOnMainThread
-                        mVideoList.put(existIndex, -1)
-                        notifyItemChanged(existIndex)
-                    }
-                    stopSendSei()
+                    binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
+                    rtcEngine.muteLocalAudioStream(false)
                 }
+                if (muteLocalVideo) {
+                    binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
+                    rtcEngine.stopPreview()
+                } else {
+                    binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
+                    rtcEngine.startPreview()
+                }
+                videoAdapter?.apply {
+                    val curUid = uidMapping[userAccount] ?: return@IChannelEventListener
+                    val existIndex = mVideoList.indexOfValue(curUid)
+                    if (existIndex != -1) return@IChannelEventListener
+                    val emptyIndex = mVideoList.indexOfValue(-1)
+                    if (emptyIndex == -1) return@IChannelEventListener
+                    mVideoList.put(emptyIndex, curUid)
+                    notifyItemChanged(emptyIndex)
+                }
+            } else {
+                videoAdapter?.apply {
+                    val curUid = uidMapping[userAccount] ?: return@IChannelEventListener
+                    // 是否已经在麦位上
+                    val existIndex = mVideoList.indexOfValue(curUid)
+                    if (existIndex == -1) return@IChannelEventListener
+                    mVideoList.put(existIndex, -1)
+                    notifyItemChanged(existIndex)
+                }
+                stopSendSei()
             }
         },
 
         onRtmpStreamingStateChanged = { url, state, code ->
-            Log.d(TAG, "onRtmpStreamingStateChanged $state  code: $code url: $url")
-            runOnMainThread {
-                when (state) {
-                    Constants.RTMP_STREAM_PUBLISH_STATE_RUNNING -> {
-                        if (code == Constants.RTMP_STREAM_PUBLISH_REASON_OK) {
-                            ToastTool.showToast("rtmp stream publish state running")
-                        }
+            when (state) {
+                Constants.RTMP_STREAM_PUBLISH_STATE_RUNNING -> {
+                    if (code == Constants.RTMP_STREAM_PUBLISH_REASON_OK) {
+                        ToastTool.showToast("rtmp stream publish state running")
                     }
+                }
 
-                    Constants.RTMP_STREAM_PUBLISH_STATE_FAILURE -> {
-                        ToastTool.showToast("rtmp stream publish state failure: $code")
-                    }
+                Constants.RTMP_STREAM_PUBLISH_STATE_FAILURE -> {
+                    ToastTool.showToast("rtmp stream publish state failure: $code")
                 }
             }
         },
-        onChannelMediaRelayStateChanged = { state, code ->
-            //跨频道媒体流转发状态
-            //https://docs.agora.io/cn/extension_customer/API%20Reference/java_ng/API/toc_stream_management.html?platform=Android#callback_irtcengineeventhandler_onchannelmediarelaystatechanged
-            runOnMainThread {
-                when (state) {
-                    // 源频道主播成功加入目标频道
-                    Constants.RELAY_STATE_RUNNING -> {
-                        mediaRelaying = true
-                        ToastTool.showToast("relay state running: $code")
-                    }
-                    // 发生异常，详见 code 中提示的错误信息
-                    Constants.RELAY_STATE_FAILURE -> {
-                        mediaRelaying = false
-                        ToastTool.showToast("relay state failure: $code")
-                    }
-
-                    else -> {
-                        mediaRelaying = false
-                    }
-                }
-            }
+        onLocalUserRegistered = { uid, userAccount ->
+            uidMapping[userAccount] = uid
+            this.onLocalUserRegistered?.invoke(uid, userAccount)
+            this.onLocalUserRegistered = null
         },
     )
 
     private fun initRtcEngine() {
         checkRequirePerms {
             AgoraRtcEngineInstance.eventListener = eventListener
-            if (isOwner) {
-                joinChannel(Constants.CLIENT_ROLE_BROADCASTER)
-            } else {
-                // 默认 cdn 观众
-                switchCdnAudience(cdnPosition)
-            }
-
             val act = activity ?: return@checkRequirePerms
             val videoItem = SparseIntArray()
             for (i in 0 until 16) {
                 videoItem.put(i, -1)
             }
             if (isOwner) {
-                videoItem.put(0, ownerUid)
+                registerAccount { uid, userCount ->
+                    videoItem.put(0, uid)
+                    videoAdapter = VideoAdapter(act, videoItem)
+                    binding.recyclerVideo.adapter = videoAdapter
+                    joinChannel(userCount, Constants.CLIENT_ROLE_BROADCASTER)
+                }
+            } else {
+                // 默认 cdn 观众
+                switchCdnAudience(cdnPosition)
+                videoAdapter = VideoAdapter(act, videoItem)
+                binding.recyclerVideo.adapter = videoAdapter
             }
-            videoAdapter = VideoAdapter(act, videoItem)
-            binding.recyclerVideo.adapter = videoAdapter
+        }
+    }
+
+    var onLocalUserRegistered: ((uid: Int, userAccount: String) -> Unit)? = null
+
+    private fun registerAccount(onLocalUserRegistered: ((uid: Int, userCount: String) -> Unit)) {
+        val existUid = uidMapping[userAccount]
+        if (existUid != null) {
+            onLocalUserRegistered.invoke(existUid, userAccount)
+        } else {
+            this.onLocalUserRegistered = onLocalUserRegistered
+            rtcEngine.registerLocalUserAccount(AgoraRtcEngineInstance.mAppId, userAccount)
         }
     }
 
@@ -661,7 +617,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         }
     }
 
-    private fun joinChannel(role: Int) {
+    private fun joinChannel(userAccount: String, role: Int) {
         channelMediaOptions.clientRoleType = role
         channelMediaOptions.autoSubscribeVideo = true
         channelMediaOptions.autoSubscribeAudio = true
@@ -677,35 +633,11 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")
-        rtcEngine.joinChannel(null, channelName, curUid, channelMediaOptions)
+        rtcEngine.joinChannelWithUserAccount(null, channelName, userAccount, channelMediaOptions)
     }
 
     private fun updateVideoEncoder() {
         rtcEngine.setVideoEncoderConfiguration(AgoraRtcEngineInstance.videoEncoderConfiguration)
-    }
-
-    private fun checkRequirePerms(
-        force: Boolean = false,
-        denied: (() -> Unit)? = null,
-        granted: () -> Unit
-    ) {
-        permissionHelp?.checkCameraAndMicPerms(
-            granted = { granted.invoke() },
-            unGranted = { denied?.invoke() },
-            force = force
-        )
-    }
-
-    override fun onResume() {
-        activity?.let {
-            val insetsController = WindowCompat.getInsetsController(it.window, it.window.decorView)
-            insetsController.isAppearanceLightStatusBars = false
-        }
-        super.onResume()
-    }
-
-    override fun onPause() {
-        super.onPause()
     }
 
     override fun onDestroy() {
@@ -765,7 +697,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 } else {
                     ((textureView.parent) as ViewGroup).removeAllViews()
                 }
-                if (uid == curUid) {
+                if (uid == uidMapping[userAccount]) {
                     rtcEngine.setupLocalVideo(
                         VideoCanvas(textureView, Constants.RENDER_MODE_FIT, Constants.VIDEO_MIRROR_MODE_AUTO, uid)
                     )
@@ -781,6 +713,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     }
 
     private fun sendMetaSei() {
+        val curUid = uidMapping[userAccount] ?: return
         val map = SeiHelper.buildSei(channelName, curUid)
         val jsonString = GsonTools.beanToString(map) ?: return
         metadata = jsonString.toByteArray()
@@ -801,7 +734,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         seiFuture = ThreadTool.scheduledThreadPool.scheduleAtFixedRate(seiTask, 0, 1, TimeUnit.SECONDS)
     }
 
-    // 停止播放歌词
+    // 停止发送 sei
     private fun stopSendSei() {
         mStopSei = true
         seiFuture?.cancel(true)

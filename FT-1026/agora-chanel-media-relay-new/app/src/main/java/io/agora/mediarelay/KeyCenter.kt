@@ -4,6 +4,12 @@ import io.agora.media.RtcTokenBuilder
 import io.agora.mediarelay.tools.LogTool
 import java.util.*
 
+enum class AudienceStatus {
+    CDN_Audience,
+    RTC_Audience,
+    RTC_Broadcaster
+}
+
 /**
  * @author create by zhangwei03
  */
@@ -43,13 +49,13 @@ object KeyCenter {
         return pushUrl == AGORA_PUSH_URL && pullUrl == AGORA_PULL_URL
     }
 
-    var rtcAudienceUid: Int = 0
+    private var innerRtcAudienceUid: String = ""
 
-    /**房主uid 为房间id*/
-    fun rtcUid(isBroadcast: Boolean, channelId: String): Int {
-        if (isBroadcast) return channelId.toIntOrNull() ?: 123
-        if (rtcAudienceUid == 0) rtcAudienceUid = UUID.randomUUID().hashCode()
-        return Math.abs(rtcAudienceUid)
+    /**用户 account*/
+    fun rtcAccount(isBroadcast: Boolean, channelId: String): String {
+        if (isBroadcast) return channelId
+        if (innerRtcAudienceUid.isEmpty()) innerRtcAudienceUid = Math.abs(UUID.randomUUID().hashCode()).toString()
+        return innerRtcAudienceUid
     }
 
     /**cdn push url*/

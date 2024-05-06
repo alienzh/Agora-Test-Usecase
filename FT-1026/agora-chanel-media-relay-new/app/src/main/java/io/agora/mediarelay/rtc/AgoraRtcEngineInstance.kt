@@ -1,5 +1,7 @@
 package io.agora.mediarelay.rtc
 
+import android.os.Handler
+import android.os.Looper
 import io.agora.mediarelay.BuildConfig
 import io.agora.mediarelay.MApp
 import io.agora.mediarelay.rtc.transcoder.RestfulTranscoder
@@ -11,10 +13,20 @@ import io.agora.rtc2.IRtcEngineEventHandler
 import io.agora.rtc2.RtcEngine
 import io.agora.rtc2.RtcEngineConfig
 import io.agora.rtc2.RtcEngineEx
+import io.agora.rtc2.UserInfo
 import io.agora.rtc2.video.VideoEncoderConfiguration
 import java.util.concurrent.Executors
 
 object AgoraRtcEngineInstance {
+
+    private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
+    private fun runOnMainThread(runnable: Runnable) {
+        if (Thread.currentThread() === mainHandler.looper.thread) {
+            runnable.run()
+        } else {
+            mainHandler.post(runnable)
+        }
+    }
 
     val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
         orientationMode = VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE
@@ -30,7 +42,7 @@ object AgoraRtcEngineInstance {
 
     private var innerTranscoder: RestfulTranscoder? = null
 
-    private var mAppId: String = BuildConfig.AGORA_APP_ID
+    var mAppId: String = BuildConfig.AGORA_APP_ID
     private var mCustomerKey: String = BuildConfig.AGORA_APP_ID
     private var mSecret: String = BuildConfig.AGORA_APP_ID
 
@@ -71,47 +83,51 @@ object AgoraRtcEngineInstance {
                         LogTool.e(TAG, "error:code=$err, message=${RtcEngine.getErrorDescription(err)}")
                     }
 
-                    override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
+                    override fun onJoinChannelSuccess(channel: String, uid: Int, elapsed: Int) {
                         super.onJoinChannelSuccess(channel, uid, elapsed)
-                        rtcEngine.setEnableSpeakerphone(false)
-                        rtcEngine.setEnableSpeakerphone(true)
-                        eventListener?.onChannelJoined?.invoke()
                         LogTool.d(TAG, "onJoinChannelSuccess channelId $channel")
+                        runOnMainThread {
+                            rtcEngine.setEnableSpeakerphone(false)
+                            rtcEngine.setEnableSpeakerphone(true)
+                            eventListener?.onChannelJoined?.invoke(channel, uid)
+                        }
                     }
 
                     override fun onLeaveChannel(stats: RtcStats?) {
                         super.onLeaveChannel(stats)
-                        eventListener?.onLeaveChannel?.invoke()
                         LogTool.d(TAG, "onLeaveChannel")
+                        runOnMainThread {
+                            eventListener?.onLeaveChannel?.invoke()
+                        }
                     }
 
                     override fun onUserJoined(uid: Int, elapsed: Int) {
                         super.onUserJoined(uid, elapsed)
-                        eventListener?.onUserJoined?.invoke(uid)
                         LogTool.d(TAG, "onUserJoined: $uid")
+                        runOnMainThread {
+                            eventListener?.onUserJoined?.invoke(uid)
+                        }
                     }
 
                     override fun onUserOffline(uid: Int, reason: Int) {
                         super.onUserOffline(uid, reason)
-                        eventListener?.onUserOffline?.invoke(uid)
                         LogTool.d(TAG, "onUserOffline: $uid")
+                        runOnMainThread {
+                            eventListener?.onUserOffline?.invoke(uid)
+                        }
                     }
 
                     override fun onRtmpStreamingStateChanged(url: String?, state: Int, errCode: Int) {
                         super.onRtmpStreamingStateChanged(url, state, errCode)
-                        eventListener?.onRtmpStreamingStateChanged?.invoke(url ?: "", state, errCode)
                         LogTool.d(TAG, "onRtmpStreamingStateChanged:$url state:$state, errCode:$errCode")
+                        runOnMainThread {
+                            eventListener?.onRtmpStreamingStateChanged?.invoke(url ?: "", state, errCode)
+                        }
                     }
 
                     override fun onRtmpStreamingEvent(url: String?, event: Int) {
                         super.onRtmpStreamingEvent(url, event)
                         LogTool.d(TAG, "onRtmpStreamingEvent:$url event:$event")
-                    }
-
-                    override fun onChannelMediaRelayStateChanged(state: Int, code: Int) {
-                        super.onChannelMediaRelayStateChanged(state, code)
-                        eventListener?.onChannelMediaRelayStateChanged?.invoke(state, code)
-                        LogTool.d(TAG, "onChannelMediaRelayStateChanged state: $state, code: $code")
                     }
 
                     override fun onLocalVideoStats(source: Constants.VideoSourceType?, stats: LocalVideoStats?) {
@@ -123,28 +139,70 @@ object AgoraRtcEngineInstance {
                     override fun onRemoteVideoStats(stats: RemoteVideoStats?) {
                         super.onRemoteVideoStats(stats)
                         stats ?: return
-                        mVideoInfoListener?.onRemoteVideoStats(stats)
+                        runOnMainThread {
+                            mVideoInfoListener?.onRemoteVideoStats(stats)
+                        }
                     }
 
                     override fun onUplinkNetworkInfoUpdated(info: UplinkNetworkInfo?) {
                         super.onUplinkNetworkInfoUpdated(info)
-                        mVideoInfoListener?.onUplinkNetworkInfoUpdated(info)
+                        runOnMainThread {
+                            mVideoInfoListener?.onUplinkNetworkInfoUpdated(info)
+                        }
                     }
 
                     override fun onDownlinkNetworkInfoUpdated(info: DownlinkNetworkInfo?) {
                         super.onDownlinkNetworkInfoUpdated(info)
-                        mVideoInfoListener?.onDownlinkNetworkInfoUpdated(info)
+                        runOnMainThread {
+                            mVideoInfoListener?.onDownlinkNetworkInfoUpdated(info)
+                        }
                     }
 
                     override fun onClientRoleChanged(oldRole: Int, newRole: Int, newRoleOptions: ClientRoleOptions?) {
                         super.onClientRoleChanged(oldRole, newRole, newRoleOptions)
-                        eventListener?.onClientRoleChanged?.invoke(oldRole, newRole, newRoleOptions)
                         LogTool.d(TAG, "onClientRoleChanged: oldRole:$oldRole,newRole:$newRole")
+                        runOnMainThread {
+                            eventListener?.onClientRoleChanged?.invoke(oldRole, newRole, newRoleOptions)
+                        }
                     }
 
                     override fun onClientRoleChangeFailed(reason: Int, currentRole: Int) {
                         super.onClientRoleChangeFailed(reason, currentRole)
                         LogTool.d(TAG, "onClientRoleChangeFailed: reason:$reason,currentRole:$currentRole")
+                    }
+
+                    override fun onLocalUserRegistered(uid: Int, userAccount: String) {
+                        super.onLocalUserRegistered(uid, userAccount)
+                        LogTool.d(TAG, "onLocalUserRegistered: uid:$uid,userAccount:$userAccount")
+                        runOnMainThread {
+                            eventListener?.onLocalUserRegistered?.invoke(uid, userAccount)
+                        }
+                    }
+
+                    override fun onUserInfoUpdated(uid: Int, userInfo: UserInfo) {
+                        super.onUserInfoUpdated(uid, userInfo)
+                        LogTool.d(TAG, "onUserInfoUpdated: uid:$uid,userInfo:${userInfo.uid}-${userInfo.userAccount}")
+                        runOnMainThread {
+                            eventListener?.onUserInfoUpdated?.invoke(uid, userInfo)
+                        }
+                    }
+
+                    override fun onStreamMessage(uid: Int, streamId: Int, data: ByteArray) {
+                        super.onStreamMessage(uid, streamId, data)
+                        LogTool.d(TAG, "onStreamMessage: uid:$uid,streamId:$streamId,${String(data)}")
+                        runOnMainThread {
+                            eventListener?.onStreamMessage?.invoke(uid, streamId, data)
+                        }
+                    }
+
+                    override fun onFirstRemoteVideoFrame(uid: Int, width: Int, height: Int, elapsed: Int) {
+                        super.onFirstRemoteVideoFrame(uid, width, height, elapsed)
+                        LogTool.d(TAG, "onFirstRemoteVideoFrame: uid:$uid,width:$width,height:$height}")
+                    }
+
+                    override fun onRemoteVideoStateChanged(uid: Int, state: Int, reason: Int, elapsed: Int) {
+                        super.onRemoteVideoStateChanged(uid, state, reason, elapsed)
+                        LogTool.d(TAG, "onRemoteVideoStateChanged: uid:$uid,state:$state,reason:$reason")
                     }
                 }
                 innerRtcEngine = (RtcEngine.create(config) as RtcEngineEx).apply {
@@ -153,7 +211,6 @@ object AgoraRtcEngineInstance {
             }
             return innerRtcEngine!!
         }
-
 
     fun destroy() {
         innerRtcEngine?.let {

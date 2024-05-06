@@ -39,7 +39,8 @@ class RestfulTranscoder constructor(
 
     private var builderToken: String? = null
 
-    private val host = "api.sd-rtn.com"
+//    private val host = "https://api.sd-rtn.com"
+    private val host = "http://112.13.168.202:16000"
 
     private val apiVersion = "/v1/projects/"
 
@@ -238,7 +239,7 @@ class RestfulTranscoder constructor(
     }
 
     private fun getURL(api: String): String {
-        return "https://$host$apiVersion$appId$api"
+        return "$host$apiVersion$appId$api"
     }
 
     private fun dataMapFromSetting(setting: TranscodeSetting): Map<String, Any> {
@@ -248,14 +249,14 @@ class RestfulTranscoder constructor(
         setting.inputItems.forEach { item ->
             val audioInput = mapOf(
                 "rtc" to mapOf(
-                    "rtcChannel" to setting.rtcChannel,
+                    "rtcChannel" to item.channel,
                     "rtcUid" to item.uid,
                     "rtcToken" to rtcToken
-                )
+                ),
             )
             val videoInput = mapOf(
                 "rtc" to mapOf(
-                    "rtcChannel" to setting.rtcChannel,
+                    "rtcChannel" to item.channel,
                     "rtcUid" to item.uid,
                     "rtcToken" to rtcToken,
                 ),
