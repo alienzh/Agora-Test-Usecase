@@ -12,13 +12,13 @@ object ToastTool {
 
     fun showToast(resStringId: Int) {
         runOnMainThread {
-            Toast.makeText(MApp.instance(), resStringId, Toast.LENGTH_SHORT).show()
+            Toast.makeText(MApp.instance(), resStringId, Toast.LENGTH_LONG).show()
         }
     }
 
     fun showToast(str: String?) {
         runOnMainThread {
-            Toast.makeText(MApp.instance(), str, Toast.LENGTH_SHORT).show()
+            Toast.makeText(MApp.instance(), str, Toast.LENGTH_LONG).show()
         }
     }
 

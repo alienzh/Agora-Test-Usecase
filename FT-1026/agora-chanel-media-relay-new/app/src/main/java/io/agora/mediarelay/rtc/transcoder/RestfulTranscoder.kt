@@ -39,7 +39,7 @@ class RestfulTranscoder constructor(
 
     private var builderToken: String? = null
 
-//    private val host = "https://api.sd-rtn.com"
+    //    private val host = "https://api.sd-rtn.com"
     private val host = "http://112.13.168.202:16000"
 
     private val apiVersion = "/v1/projects/"
@@ -50,9 +50,9 @@ class RestfulTranscoder constructor(
 
     private var updateSequenceId: Int = 0
 
-    private fun mayAcquire(completion: ((tokenName: String?) -> Unit)?) {
+    private fun mayAcquire(completion: ((tokenName: String?, code: Int, message: String) -> Unit)?) {
         if (!builderToken.isNullOrEmpty()) {
-            completion?.invoke(builderToken)
+            completion?.invoke(builderToken, 200, "already acquire token")
             return
         }
         val api = "/rtsc/cloud-transcoder/builderTokens"
@@ -69,29 +69,31 @@ class RestfulTranscoder constructor(
             override fun onResponse(call: Call, response: Response) {
                 val responseBody = response.body?.string()
                 if (responseBody == null) {
-                    completion?.invoke(null)
+                    completion?.invoke(null, response.code, response.message)
                     return
                 }
                 val json = JSONObject(responseBody)
                 if (!json.has("tokenName")) {
-                    completion?.invoke(null)
+                    completion?.invoke(null, response.code, responseBody)
                     return
                 }
                 val tokenName = json.getString("tokenName")
                 builderToken = tokenName
-                completion?.invoke(tokenName)
+                completion?.invoke(tokenName, response.code, responseBody)
             }
 
             override fun onFailure(call: Call, e: IOException) {
-                completion?.invoke(null)
+                completion?.invoke(null, -100, "http onFailure")
             }
         })
     }
 
-    fun startRtmpStreamWithTranscoding(setting: TranscodeSetting, completion: ((succeed: Boolean) -> Unit)?) {
+    fun startRtmpStreamWithTranscoding(
+        setting: TranscodeSetting, completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?
+    ) {
         // reset builderToken
         builderToken = null
-        mayAcquire { tokenName ->
+        mayAcquire { tokenName, code, message ->
             if (tokenName != null) {
                 val api = "/rtsc/cloud-transcoder/tasks?builderToken=$tokenName"
                 val map = dataMapFromSetting(setting)
@@ -107,20 +109,20 @@ class RestfulTranscoder constructor(
                     override fun onResponse(call: Call, response: Response) {
                         val responseBody = response.body?.string()
                         if (responseBody == null) {
-                            completion?.invoke(false)
+                            completion?.invoke(false, response.code, response.message)
                             return
                         }
                         val json = JSONObject(responseBody)
                         if (!json.has("taskId")) {
-                            completion?.invoke(false)
+                            completion?.invoke(false, response.code, responseBody)
                             return
                         }
                         this@RestfulTranscoder.taskId = json.getString("taskId")
-                        completion?.invoke(true)
+                        completion?.invoke(true, response.code, responseBody)
                     }
 
                     override fun onFailure(call: Call, e: IOException) {
-                        completion?.invoke(false)
+                        completion?.invoke(false, -100, e.message ?: "http onFailure")
                     }
                 })
             } else {
@@ -134,7 +136,7 @@ class RestfulTranscoder constructor(
             completion?.invoke(true)
             return
         }
-        mayAcquire { tokenName ->
+        mayAcquire { tokenName, code, message ->
             if (tokenName != null) {
                 val api = "/rtsc/cloud-transcoder/tasks/$taskId"
                 val builder = getURL(api).toHttpUrl().newBuilder()
@@ -162,12 +164,14 @@ class RestfulTranscoder constructor(
         }
     }
 
-    fun updateRtmpTranscoding(setting: TranscodeSetting, completion: ((succeed: Boolean) -> Unit)?) {
+    fun updateRtmpTranscoding(
+        setting: TranscodeSetting, completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?
+    ) {
         val taskId = this.taskId ?: run {
-            completion?.invoke(false)
+            completion?.invoke(false, -100, "update rtmp but taskId is empty")
             return
         }
-        mayAcquire { tokenName ->
+        mayAcquire { tokenName, code, message ->
             if (tokenName != null) {
                 updateSequenceId++
                 val api = "/rtsc/cloud-transcoder/tasks/$taskId"
@@ -188,14 +192,14 @@ class RestfulTranscoder constructor(
                 client.newCall(request).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
                         if (response.code == 200) {
-                            completion?.invoke(true)
+                            completion?.invoke(true, response.code, response.body?.string() ?: "")
                         } else {
-                            completion?.invoke(false)
+                            completion?.invoke(false, response.code, response.body?.string() ?: response.message)
                         }
                     }
 
                     override fun onFailure(call: Call, e: IOException) {
-                        completion?.invoke(false)
+                        completion?.invoke(false, -100, e.message ?: "http onFailure")
                     }
                 })
             } else {
@@ -204,12 +208,12 @@ class RestfulTranscoder constructor(
         }
     }
 
-    fun stopRtmpStream(completion: ((succeed: Boolean) -> Unit)?) {
+    fun stopRtmpStream(completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?) {
         val taskId = this.taskId ?: run {
-            completion?.invoke(true)
+            completion?.invoke(true, -100, "stop rtmp but taskId is empty")
             return
         }
-        mayAcquire { tokenName ->
+        mayAcquire { tokenName, code, message ->
             if (tokenName != null) {
                 val api = "/rtsc/cloud-transcoder/tasks/$taskId?builderToken=$tokenName"
                 val request = Request.Builder()
@@ -222,14 +226,14 @@ class RestfulTranscoder constructor(
                     override fun onResponse(call: Call, response: Response) {
                         if (response.code == 200) {
                             this@RestfulTranscoder.taskId = null
-                            completion?.invoke(true)
+                            completion?.invoke(true, response.code, response.body?.string() ?: "")
                         } else {
-                            completion?.invoke(false)
+                            completion?.invoke(false, response.code, response.body?.string() ?: response.message)
                         }
                     }
 
                     override fun onFailure(call: Call, e: IOException) {
-                        completion?.invoke(false)
+                        completion?.invoke(false, -100, e.message ?: "http onFailure")
                     }
                 })
             } else {
@@ -304,11 +308,11 @@ class RestfulTranscoder constructor(
                                         "lowBitrateHighQuality" to false,
                                     ),
                                     "seiOption" to mapOf(
-                                        "source" to emptyMap<String,Any>(),
+                                        "source" to emptyMap<String, Any>(),
                                         "sink" to mapOf(
-                                           "type" to 100,
+                                            "type" to 100,
                                             "aliyun" to true,
-                                            "info" to emptyMap<String,Any>()
+                                            "info" to emptyMap<String, Any>()
                                         )
                                     ),
                                 )

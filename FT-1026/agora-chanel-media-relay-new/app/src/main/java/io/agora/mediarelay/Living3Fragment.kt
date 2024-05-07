@@ -546,21 +546,21 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
                     pushUrl,
                     mVideoList
                 )
-            ) { succeed ->
+            ) { succeed, code, message ->
                 if (succeed) {
                     publishedRtmp = true
-                    ToastTool.showToast("rtmp stream publish state running")
+                    ToastTool.showToast("start rtmp stream success！")
                 } else {
-                    ToastTool.showToast("push rtmp stream error ！")
+                    ToastTool.showToast("start rtmp stream error, $code, $message")
                 }
             }
         } else {
             // 删除一个推流地址。
-            AgoraRtcEngineInstance.transcoder.stopRtmpStream { succeed ->
+            AgoraRtcEngineInstance.transcoder.stopRtmpStream { succeed, code, message ->
                 if (succeed) {
                     publishedRtmp = false
                 } else {
-                    ToastTool.showToast("stop rtmp stream error ！")
+                    ToastTool.showToast("stop rtmp stream error, $code, $message")
                 }
             }
         }
@@ -576,11 +576,12 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
                 pushUrl,
                 mVideoList
             )
-        ) { succeed ->
+        ) { succeed, code, message ->
             if (succeed) {
                 publishedRtmp = true
+                ToastTool.showToast("update rtmp stream success！")
             } else {
-                ToastTool.showToast("push rtmp stream error ！")
+                ToastTool.showToast("update rtmp stream error, $code, $message")
             }
         }
     }

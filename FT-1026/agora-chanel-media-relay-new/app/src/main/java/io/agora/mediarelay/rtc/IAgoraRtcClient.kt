@@ -17,7 +17,6 @@ interface IAgoraRtcClient {
         var onUserJoined: ((uid: Int) -> Unit)? = null,
         var onUserOffline: ((uid: Int) -> Unit)? = null,
         var onRtmpStreamingStateChanged: ((url: String, state: Int, code: Int) -> Unit)? = null,
-        var onChannelMediaRelayStateChanged: ((state: Int, code: Int) -> Unit)? = null,
         var onClientRoleChanged: ((oldRole: Int, newRole: Int, newRoleOptions: ClientRoleOptions?) -> Unit)? = null,
         var onLocalUserRegistered: ((uid: Int, userAccount: String) -> Unit)? = null,
         var onUserInfoUpdated: ((uid: Int, userInfo: UserInfo) -> Unit)? = null,
