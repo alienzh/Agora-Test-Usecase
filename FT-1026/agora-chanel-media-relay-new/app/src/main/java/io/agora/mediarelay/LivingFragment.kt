@@ -35,6 +35,7 @@ import io.agora.rtc2.UserInfo
 import io.agora.rtc2.video.ImageTrackOptions
 import io.agora.rtc2.video.VideoCanvas
 import io.agora.rtc2.video.VideoEncoderConfiguration
+import io.agora.utils2.HttpRequest
 import org.json.JSONObject
 import java.nio.charset.Charset
 import java.util.concurrent.ScheduledFuture
@@ -449,6 +450,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
     }
 
+    private var rtmpRetryCount = 0
+
     /**推流到CDN*/
     private fun setRtmpStreamEnable(enable: Boolean, uid: Int) {
         if (enable) {
@@ -468,7 +471,16 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 if (succeed) {
                     publishedRtmp = true
                     ToastTool.showToast("start rtmp stream success！")
+                    rtmpRetryCount = 0
+                } else if (code == 206) {
+                    rtmpRetryCount++
+                    if (rtmpRetryCount >= 3) {
+                        ToastTool.showToast("start rtmp stream error, $code, $message")
+                        return@startRtmpStreamWithTranscoding
+                    }
+                    setRtmpStreamEnable(true, uid)
                 } else {
+                    rtmpRetryCount = 0
                     ToastTool.showToast("start rtmp stream error, $code, $message")
                 }
             }

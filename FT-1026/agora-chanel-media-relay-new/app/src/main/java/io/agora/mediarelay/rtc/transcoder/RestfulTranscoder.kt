@@ -4,21 +4,67 @@ import android.util.Log
 import com.google.gson.Gson
 import com.moczul.ok2curl.CurlInterceptor
 import com.moczul.ok2curl.logger.Logger
-import okhttp3.*
+import io.agora.logging.LogManager
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import java.io.IOException
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.TimeUnit
+
+
+class RetryInterceptor constructor(
+    private var maxRetryCount: Int,
+    private var retryDelayMillis: Int
+) : Interceptor {
+
+    @Throws(IOException::class)
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        var response: Response? = null
+        var retryCount = 0
+        do {
+            try {
+                response = chain.proceed(request)
+            } catch (e: IOException) {
+                // 请求失败，重试
+                if (retryCount < maxRetryCount) {
+                    retryCount++
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(retryDelayMillis.toLong())
+                    } catch (sleepException: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                        return response!!
+                    }
+                } else {
+                    throw e
+                }
+            }
+        } while (response == null)
+        return response
+    }
+}
+
 
 class RestfulTranscoder constructor(
     private val appId: String,
     customerKey: String,
     secret: String
 ) {
+
+    private val logger by lazy {
+        LogManager.instance()
+    }
+
+    private val TAG = "Restful_TAG"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -27,10 +73,11 @@ class RestfulTranscoder constructor(
         .addInterceptor(HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY))
         .addInterceptor(CurlInterceptor(logger = object : Logger {
             override fun log(message: String) {
-                Log.d("curl", message)
+                logger.info("curl", message)
             }
         }))
-//        .addInterceptor()
+        .retryOnConnectionFailure(false)
+        .addInterceptor(RetryInterceptor(3, 3000))
         .build()
 
     private val instanceId = UUID.randomUUID().toString()
@@ -52,6 +99,7 @@ class RestfulTranscoder constructor(
 
     private fun mayAcquire(completion: ((tokenName: String?, code: Int, message: String) -> Unit)?) {
         if (!builderToken.isNullOrEmpty()) {
+            logger.info(TAG, "already acquire token：$builderToken")
             completion?.invoke(builderToken, 200, "already acquire token")
             return
         }
@@ -68,6 +116,7 @@ class RestfulTranscoder constructor(
         client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val responseBody = response.body?.string()
+                logger.info(TAG, "acquire, code:${response.code}, $responseBody")
                 if (responseBody == null) {
                     completion?.invoke(null, response.code, response.message)
                     return
@@ -83,13 +132,15 @@ class RestfulTranscoder constructor(
             }
 
             override fun onFailure(call: Call, e: IOException) {
+                logger.error(TAG, "acquire ：$e")
                 completion?.invoke(null, -100, "http onFailure")
             }
         })
     }
 
     fun startRtmpStreamWithTranscoding(
-        setting: TranscodeSetting, completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?
+        setting: TranscodeSetting,
+        completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?
     ) {
         // reset builderToken
         builderToken = null
@@ -108,7 +159,15 @@ class RestfulTranscoder constructor(
                 client.newCall(request).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
                         val responseBody = response.body?.string()
+                        logger.info(TAG, "create, code:${response.code}, $responseBody")
                         if (responseBody == null) {
+                            completion?.invoke(false, response.code, response.message)
+                            return
+                        }
+                        if (response.code != 200) {
+                            if (response.code == 206) {
+                                queryRtmpTranscoding { }
+                            }
                             completion?.invoke(false, response.code, response.message)
                             return
                         }
@@ -122,17 +181,17 @@ class RestfulTranscoder constructor(
                     }
 
                     override fun onFailure(call: Call, e: IOException) {
+                        logger.error(TAG, "create ：$e")
                         completion?.invoke(false, -100, e.message ?: "http onFailure")
                     }
                 })
-            } else {
-                startRtmpStreamWithTranscoding(setting, completion)
             }
         }
     }
 
     private fun queryRtmpTranscoding(completion: ((succeed: Boolean) -> Unit)?) {
         val taskId = this.taskId ?: run {
+            logger.info(TAG, "query but taskId empty")
             completion?.invoke(true)
             return
         }
@@ -151,15 +210,13 @@ class RestfulTranscoder constructor(
                 client.newCall(request).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
                         val responseBody = response.body?.string()
-                        Log.d("aaa", "Response: $responseBody")
+                        logger.info(TAG, "query, code:${response.code}, $responseBody")
                     }
 
                     override fun onFailure(call: Call, e: IOException) {
-                        Log.d("aaa", "Network request failed: ${e.message}")
+                        logger.error(TAG, "query：$e")
                     }
                 })
-            } else {
-                queryRtmpTranscoding(completion)
             }
         }
     }
@@ -168,6 +225,7 @@ class RestfulTranscoder constructor(
         setting: TranscodeSetting, completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?
     ) {
         val taskId = this.taskId ?: run {
+            logger.info(TAG, "update but taskId empty")
             completion?.invoke(false, -100, "update rtmp but taskId is empty")
             return
         }
@@ -191,25 +249,27 @@ class RestfulTranscoder constructor(
                     .build()
                 client.newCall(request).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
+                        val responseBody = response.body?.string()
+                        logger.info(TAG, "update, code:${response.code}, $responseBody")
                         if (response.code == 200) {
-                            completion?.invoke(true, response.code, response.body?.string() ?: "")
+                            completion?.invoke(true, response.code, responseBody ?: "")
                         } else {
-                            completion?.invoke(false, response.code, response.body?.string() ?: response.message)
+                            completion?.invoke(false, response.code, responseBody ?: response.message)
                         }
                     }
 
                     override fun onFailure(call: Call, e: IOException) {
+                        logger.error(TAG, "update：$e")
                         completion?.invoke(false, -100, e.message ?: "http onFailure")
                     }
                 })
-            } else {
-                updateRtmpTranscoding(setting, completion)
             }
         }
     }
 
     fun stopRtmpStream(completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?) {
         val taskId = this.taskId ?: run {
+            logger.info(TAG, "stop but taskId empty")
             completion?.invoke(true, -100, "stop rtmp but taskId is empty")
             return
         }
@@ -224,20 +284,21 @@ class RestfulTranscoder constructor(
                     .build()
                 client.newCall(request).enqueue(object : Callback {
                     override fun onResponse(call: Call, response: Response) {
+                        val responseBody = response.body?.string()
+                        logger.info(TAG, "delete, code:${response.code}, $responseBody")
                         if (response.code == 200) {
                             this@RestfulTranscoder.taskId = null
-                            completion?.invoke(true, response.code, response.body?.string() ?: "")
+                            completion?.invoke(true, response.code, responseBody ?: "")
                         } else {
-                            completion?.invoke(false, response.code, response.body?.string() ?: response.message)
+                            completion?.invoke(false, response.code, responseBody ?: response.message)
                         }
                     }
 
                     override fun onFailure(call: Call, e: IOException) {
+                        logger.error(TAG, "delete：$e")
                         completion?.invoke(false, -100, e.message ?: "http onFailure")
                     }
                 })
-            } else {
-                stopRtmpStream(completion)
             }
         }
     }

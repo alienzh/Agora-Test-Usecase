@@ -103,4 +103,5 @@ dependencies {
     // http://10.80.1.174:8090/agora_sdk/4.1.1.26/official_build/2024-01-30/android/full/Agora_Native_SDK_for_Android_rel.v4.1.1.26_57277_FULL_20240130_1218_292068.zip
     implementation 'io.agora:authentication:2.0.0'
     implementation 'commons-codec:commons-codec:1.16.0'
+    implementation 'io.github.winskyan:Agora-LoggingService:1.0.9'
 }
