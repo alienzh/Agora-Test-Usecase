@@ -20,7 +20,6 @@ import io.agora.mediarelay.rtc.SeiHelper
 import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.FileUtils
 import io.agora.mediarelay.tools.GsonTools
-import io.agora.mediarelay.tools.PermissionHelp
 import io.agora.mediarelay.tools.ThreadTool
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
@@ -112,6 +111,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
             binding.recyclerVideo.isVisible = true
             binding.layoutCdnContainer.isVisible = false
+            binding.btBitrate.isVisible = false
         } else {
             binding.btLinking.isVisible = true
             binding.btSwitchStream.isVisible = true
@@ -121,6 +121,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             // 默认 cdn 观众
             binding.recyclerVideo.isVisible = false
             binding.layoutCdnContainer.isVisible = true
+            binding.btBitrate.isVisible = true
             binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
         }
         binding.tvChannelId.text = "ChannelId:$channelName"
@@ -631,7 +632,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
 //        val score = rtcEngine.queryDeviceScore()
 //        Log.d(TAG, "queryDeviceScore $score")
         // TODO: 注释 264 1  265 2
-        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":1}")
+        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")

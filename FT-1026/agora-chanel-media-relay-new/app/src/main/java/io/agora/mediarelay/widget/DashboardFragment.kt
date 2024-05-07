@@ -2,6 +2,8 @@ package io.agora.mediarelay.widget
 
 import android.os.Bundle
 import android.view.*
+import io.agora.base.VideoFrame
+import io.agora.mediaplayer.IMediaPlayerVideoFrameObserver
 import io.agora.mediarelay.R
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentDashboardBinding
@@ -21,6 +23,10 @@ class DashboardFragment : BaseUiFragment<FragmentDashboardBinding>(), IVideoInfo
     private var upInfo: IRtcEngineEventHandler.UplinkNetworkInfo? = null
 
     private var downInfo: IRtcEngineEventHandler.DownlinkNetworkInfo? = null
+
+    private var mediaPlayerVideoFrameObserver: IMediaPlayerVideoFrameObserver?=null
+
+    private var videoFrame: VideoFrame? = null
 
     private val score by lazy {
         AgoraRtcEngineInstance.rtcEngine.queryDeviceScore()
@@ -43,6 +49,10 @@ class DashboardFragment : BaseUiFragment<FragmentDashboardBinding>(), IVideoInfo
 
     fun setOn(isOn: Boolean) {
         mIsOn = isOn
+    }
+
+    fun updateVideoFrame(videoFrame: VideoFrame){
+
     }
 
     private fun updateView() {

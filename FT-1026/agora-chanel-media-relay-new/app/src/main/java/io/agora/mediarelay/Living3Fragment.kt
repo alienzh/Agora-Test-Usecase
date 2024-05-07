@@ -111,6 +111,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
             binding.videosLayout.videoContainer.isVisible = true
             binding.layoutCdnContainer.isVisible = false
+            binding.btBitrate.isVisible = false
         } else {
             binding.btLinking.isVisible = true
             binding.btSwitchStream.isVisible = true
@@ -119,6 +120,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             // 默认 cdn 观众
             binding.videosLayout.videoContainer.isVisible = false
             binding.layoutCdnContainer.isVisible = true
+            binding.btBitrate.isVisible = true
             binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
         }
         binding.tvChannelId.text = "ChannelId:$channelName"
@@ -217,15 +219,15 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             }
         }
         binding.btMuteCarma.setOnClickListener {
-            if (muteLocalAudio) {
-                muteLocalAudio = false
-                binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
+            if (muteLocalVideo) {
+                muteLocalVideo = false
+                binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
                 rtcEngine.startPreview()
                 val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage, 15)
                 rtcEngine.enableVideoImageSource(false, imageTrackOptions)
             } else {
-                muteLocalAudio = true
-                binding.btMuteMic.setImageResource(R.drawable.ic_mic_off)
+                muteLocalVideo = true
+                binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
                 rtcEngine.stopPreview()
                 val imageTrackOptions = ImageTrackOptions(FileUtils.blackImage, 15)
                 rtcEngine.enableVideoImageSource(true, imageTrackOptions)
@@ -596,7 +598,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
 //        Log.d(TAG, "queryDeviceScore $score")
         // 265
         // TODO: 注释 264 1  265 2
-        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":1}")
+        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")

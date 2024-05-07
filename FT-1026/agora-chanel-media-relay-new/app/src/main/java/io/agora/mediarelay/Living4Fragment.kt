@@ -111,6 +111,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
             binding.videosLayout.videoContainer.isVisible = true
             binding.layoutCdnContainer.isVisible = false
+            binding.btBitrate.isVisible = false
         } else {
             binding.btLinking.isVisible = true
             binding.btSwitchStream.isVisible = true
@@ -119,6 +120,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             // 默认 cdn 观众
             binding.videosLayout.videoContainer.isVisible = false
             binding.layoutCdnContainer.isVisible = true
+            binding.btBitrate.isVisible = true
             binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
         }
         binding.tvChannelId.text = "ChannelId:$channelName"
@@ -595,7 +597,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
 //        Log.d(TAG, "queryDeviceScore $score")
         // 265
         // TODO: 注释 264 1  265 2
-        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":1}")
+        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")

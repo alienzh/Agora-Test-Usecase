@@ -33,11 +33,9 @@ data class TranscodeSetting constructor(
     // 1500
 
     companion object {
-        // private val bitrate = 3072
-        private val bitRate = 1500
+         private val bitRate = 3072
 
-        // private val videoDimensions = VideoEncoderConfiguration.VD_1920x1080
-        private val videoDimensions = VideoEncoderConfiguration.VD_640x480
+         private val videoDimensions = VideoEncoderConfiguration.VD_1920x1080
 
         /**旁路推流转码1v1*/
         fun liveTranscoding(

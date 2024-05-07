@@ -6,7 +6,9 @@ import android.view.*
 import androidx.annotation.Size
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
+import io.agora.base.VideoFrame
 import io.agora.mediaplayer.IMediaPlayer
+import io.agora.mediaplayer.IMediaPlayerVideoFrameObserver
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentLivingBinding
 import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
@@ -155,7 +157,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 }
 
                 AudienceStatus.RTC_Audience -> { // rtc 观众 --> cdn 观众
-                    audienceStatus = AudienceStatus.RTC_Audience
+                    audienceStatus = AudienceStatus.CDN_Audience
                     switchCdnAudience(cdnPosition)
                 }
 
@@ -625,7 +627,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         Log.d(TAG, "queryDeviceScore $score")
         // 265
         // TODO: 注释 264 1  265 2
-        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":1}")
+        rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")
