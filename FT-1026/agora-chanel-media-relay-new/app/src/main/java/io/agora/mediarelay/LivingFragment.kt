@@ -509,9 +509,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         val act = activity ?: return
         binding.videoPKLayout.videoContainer.isVisible = true
         binding.layoutVideoContainer.isVisible = false
+        binding.layoutVideoContainer.removeAllViews()
         binding.btSubmitPk.text = getString(R.string.stop_pk)
         if (isOwner) { // 主播
-            val localTexture = TextureView(act)
             binding.videoPKLayout.iBroadcasterAView.removeAllViews()
             binding.videoPKLayout.iBroadcasterAView.addView(localTexture)
 
@@ -570,15 +570,20 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private fun updateIdleMode() {
         binding.videoPKLayout.videoContainer.isVisible = false
         binding.layoutVideoContainer.isVisible = true
+        binding.videoPKLayout.iBroadcasterAView.removeAllViews()
+        binding.videoPKLayout.iBroadcasterBView.removeAllViews()
         binding.btSubmitPk.text = getString(R.string.start_pk)
         uidMapping[userAccount]?.let { uid ->
             setupLocalVideo(uid)
         }
     }
 
+    private val localTexture by lazy {
+        TextureView(requireActivity())
+    }
+
     private fun setupLocalVideo(localUid: Int) {
-        val act = activity ?: return
-        val localTexture = TextureView(act)
+        activity ?: return
         binding.layoutVideoContainer.removeAllViews()
         binding.layoutVideoContainer.addView(localTexture)
         rtcEngine.setupLocalVideo(
