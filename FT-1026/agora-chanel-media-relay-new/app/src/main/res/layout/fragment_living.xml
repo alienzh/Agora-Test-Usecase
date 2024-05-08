@@ -95,11 +95,10 @@
         android:layout_marginTop="5dp"
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
-        android:paddingHorizontal="12dp"
+        android:paddingHorizontal="10dp"
         android:text="@string/start_pk"
         android:textColor="#282828"
-        android:textSize="14sp"
-        android:textStyle="bold"
+        android:textSize="13sp"
         app:layout_constraintBottom_toBottomOf="@id/layout_channel"
         app:layout_constraintStart_toEndOf="@id/layout_channel"
         app:layout_constraintTop_toTopOf="@id/layout_channel" />

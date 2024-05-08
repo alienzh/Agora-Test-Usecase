@@ -87,7 +87,8 @@ class RestfulTranscoder constructor(
     private var builderToken: String? = null
 
     //    private val host = "https://api.sd-rtn.com"
-    private val host = "http://112.13.168.202:16000"
+//    private val host = "http://112.13.168.202:16000"
+    private val host = "http://183.131.160.228:16000"
 
     private val apiVersion = "/v1/projects/"
 
