@@ -16,6 +16,7 @@ import io.agora.mediarelay.databinding.ViewVideoItemBinding
 import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.IAgoraRtcClient
 import io.agora.mediarelay.rtc.MPObserverAdapter
+import io.agora.mediarelay.rtc.RtcSettings
 import io.agora.mediarelay.rtc.SeiHelper
 import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.FileUtils
@@ -383,8 +384,8 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         binding.layoutCdnContainer.isVisible = false
         binding.recyclerVideo.isVisible = true
         binding.btBitrate.isVisible = false
-        registerAccount { uid, userCount ->
-            joinChannel(userAccount, role)
+        registerAccount { uid, userAccount ->
+            joinChannel(userAccount, uid, role)
         }
     }
 
@@ -539,7 +540,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     videoItem.put(0, uid)
                     videoAdapter = VideoAdapter(act, videoItem)
                     binding.recyclerVideo.adapter = videoAdapter
-                    joinChannel(userCount, Constants.CLIENT_ROLE_BROADCASTER)
+                    joinChannel(userCount, uid, Constants.CLIENT_ROLE_BROADCASTER)
                 }
             } else {
                 // 默认 cdn 观众
@@ -550,15 +551,23 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         }
     }
 
-    var onLocalUserRegistered: ((uid: Int, userAccount: String) -> Unit)? = null
+    private var onLocalUserRegistered: ((uid: Int, userAccount: String) -> Unit)? = null
 
     private fun registerAccount(onLocalUserRegistered: ((uid: Int, userCount: String) -> Unit)) {
-        val existUid = uidMapping[userAccount]
-        if (existUid != null) {
-            onLocalUserRegistered.invoke(existUid, userAccount)
+        if (RtcSettings.mEnableUserAccount) {
+            val existUid = uidMapping[userAccount]
+            if (existUid != null) {
+                onLocalUserRegistered.invoke(existUid, userAccount)
+            } else {
+                this.onLocalUserRegistered = onLocalUserRegistered
+                rtcEngine.registerLocalUserAccount(AgoraRtcEngineInstance.mAppId, userAccount)
+            }
         } else {
-            this.onLocalUserRegistered = onLocalUserRegistered
-            rtcEngine.registerLocalUserAccount(AgoraRtcEngineInstance.mAppId, userAccount)
+            val uid = userAccount.toInt()
+            uidMapping[userAccount] = uid
+            val ownerUid = channelName.toInt()
+            uidMapping[channelName] = ownerUid
+            onLocalUserRegistered.invoke(uid, userAccount)
         }
     }
 
@@ -621,7 +630,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         }
     }
 
-    private fun joinChannel(userAccount: String, role: Int) {
+    private fun joinChannel(userAccount: String, uid: Int, role: Int) {
         channelMediaOptions.clientRoleType = role
         channelMediaOptions.autoSubscribeVideo = true
         channelMediaOptions.autoSubscribeAudio = true
@@ -637,7 +646,11 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")
-        rtcEngine.joinChannelWithUserAccount(null, channelName, userAccount, channelMediaOptions)
+        if (RtcSettings.mEnableUserAccount) {
+            rtcEngine.joinChannelWithUserAccount(null, channelName, userAccount, channelMediaOptions)
+        } else {
+            rtcEngine.joinChannel(null, channelName, uid, channelMediaOptions)
+        }
     }
 
     private fun updateVideoEncoder() {

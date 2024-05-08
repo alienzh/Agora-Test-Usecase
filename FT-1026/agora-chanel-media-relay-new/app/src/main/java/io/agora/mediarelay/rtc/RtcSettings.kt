@@ -41,6 +41,12 @@ object RtcSettings {
             LogTool.d("RtcSetting BitRate：$newValue")
         }
 
+    var mEnableUserAccount:Boolean = false
+        set(newValue){
+            field = newValue
+            LogTool.d("RtcSetting mEnableUserAccount：$newValue")
+        }
+
     fun reset() {
         mVideoDimensionsAuto = false
         mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080

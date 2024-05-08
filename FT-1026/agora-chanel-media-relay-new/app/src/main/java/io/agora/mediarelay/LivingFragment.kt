@@ -342,7 +342,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.btBitrate.isVisible = false
 
         registerAccount { uid, userAccount ->
-            joinChannel(userAccount)
+            joinChannel(userAccount, uid)
         }
     }
 
@@ -373,12 +373,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         },
         onUserInfoUpdated = { uid, userInfo ->
             uidMapping[userInfo.userAccount] = userInfo.uid
+        },
+        onUserJoined = { uid ->
             if (isOwner) {
                 // nothing
             } else {
-                if (channelName == userInfo.userAccount) {
-                    // 当前房间主播
-                    setupRemoteVideo(userInfo.uid)
+                // 当前房间主播
+                if (uidMapping[channelName] == uid) {
+                    setupRemoteVideo(uid)
                 }
             }
         },
@@ -430,7 +432,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             if (isOwner) {
                 registerAccount { uid, userCount ->
                     setupLocalVideo(uid)
-                    joinChannel(userCount)
+                    joinChannel(userCount, uid)
                 }
             } else {
                 switchCdnAudience(cdnPosition)
@@ -441,16 +443,22 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private var onLocalUserRegistered: ((uid: Int, userAccount: String) -> Unit)? = null
 
     private fun registerAccount(onLocalUserRegistered: ((uid: Int, userCount: String) -> Unit)) {
-        val existUid = uidMapping[userAccount]
-        if (existUid != null) {
-            onLocalUserRegistered.invoke(existUid, userAccount)
+        if (RtcSettings.mEnableUserAccount) {
+            val existUid = uidMapping[userAccount]
+            if (existUid != null) {
+                onLocalUserRegistered.invoke(existUid, userAccount)
+            } else {
+                this.onLocalUserRegistered = onLocalUserRegistered
+                rtcEngine.registerLocalUserAccount(AgoraRtcEngineInstance.mAppId, userAccount)
+            }
         } else {
-            this.onLocalUserRegistered = onLocalUserRegistered
-            rtcEngine.registerLocalUserAccount(AgoraRtcEngineInstance.mAppId, userAccount)
+            val uid = userAccount.toInt()
+            uidMapping[userAccount] = uid
+            val ownerUid = channelName.toInt()
+            uidMapping[channelName] = ownerUid
+            onLocalUserRegistered.invoke(uid, userAccount)
         }
     }
-
-    private var rtmpRetryCount = 0
 
     /**推流到CDN*/
     private fun setRtmpStreamEnable(enable: Boolean, uid: Int) {
@@ -471,16 +479,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 if (succeed) {
                     publishedRtmp = true
                     ToastTool.showToast("start rtmp stream success！")
-                    rtmpRetryCount = 0
-                } else if (code == 206) {
-                    rtmpRetryCount++
-                    if (rtmpRetryCount >= 3) {
-                        ToastTool.showToast("start rtmp stream error, $code, $message")
-                        return@startRtmpStreamWithTranscoding
-                    }
-                    setRtmpStreamEnable(true, uid)
                 } else {
-                    rtmpRetryCount = 0
                     ToastTool.showToast("start rtmp stream error, $code, $message")
                 }
             }
@@ -585,8 +584,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.videoPKLayout.iBroadcasterAView.removeAllViews()
         binding.videoPKLayout.iBroadcasterBView.removeAllViews()
         binding.btSubmitPk.text = getString(R.string.start_pk)
-        uidMapping[userAccount]?.let { uid ->
-            setupLocalVideo(uid)
+        if (isOwner) {
+            uidMapping[userAccount]?.let { uid ->
+                setupLocalVideo(uid)
+            }
+        } else {
+            uidMapping[channelName]?.let { uid ->
+                setupRemoteVideo(uid)
+            }
         }
     }
 
@@ -618,7 +623,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         )
     }
 
-    private fun joinChannel(userAccount: String) {
+    private fun joinChannel(userAccount: String, uid: Int) {
         val channelMediaOptions = ChannelMediaOptions()
         channelMediaOptions.clientRoleType = role
         channelMediaOptions.autoSubscribeVideo = true
@@ -649,7 +654,11 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
         val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
         Log.d(TAG, "registerMediaMetadataObserver code:$code")
-        rtcEngine.joinChannelWithUserAccount(null, channelName, userAccount, channelMediaOptions)
+        if (RtcSettings.mEnableUserAccount) {
+            rtcEngine.joinChannelWithUserAccount(null, channelName, userAccount, channelMediaOptions)
+        } else {
+            rtcEngine.joinChannel(null, channelName, uid, channelMediaOptions)
+        }
     }
 
     private fun updateVideoEncoder() {
@@ -711,53 +720,65 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         channelMediaOptions.publishMicrophoneTrack = false
 
         updateVideoEncoder()
-        rtcEngine.joinChannelWithUserAccountEx(null, remoteChannel, userAccount, channelMediaOptions, object :
-            IRtcEngineEventHandler() {
-            override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
-                super.onJoinChannelSuccess(channel, uid, elapsed)
-                runOnMainThread {
-                    remoteRtcConnection = RtcConnection(channel, uid)
-                }
-                LogTool.d(TAG, "remoteChannel onJoinChannelSuccess channel:$channel,uid:$uid,")
-            }
+        if (RtcSettings.mEnableUserAccount) {
+            rtcEngine.joinChannelWithUserAccountEx(
+                null,
+                remoteChannel,
+                userAccount,
+                channelMediaOptions,
+                rtcEventHandlerEx
+            )
+        } else {
+            val uid = uidMapping[userAccount] ?: return
+            rtcEngine.joinChannelEx(null, RtcConnection(remoteChannel, uid), channelMediaOptions, rtcEventHandlerEx)
+        }
+    }
 
-            override fun onRemoteVideoStateChanged(uid: Int, state: Int, reason: Int, elapsed: Int) {
-                super.onRemoteVideoStateChanged(uid, state, reason, elapsed)
-                LogTool.d(TAG, "remoteChannel onRemoteVideoStateChanged uid:$uid,state:$state,reason:$reason")
+    private val rtcEventHandlerEx = object : IRtcEngineEventHandler() {
+        override fun onJoinChannelSuccess(channel: String?, uid: Int, elapsed: Int) {
+            super.onJoinChannelSuccess(channel, uid, elapsed)
+            runOnMainThread {
+                remoteRtcConnection = RtcConnection(channel, uid)
             }
+            LogTool.d(TAG, "remoteChannel onJoinChannelSuccess channel:$channel,uid:$uid,")
+        }
 
-            override fun onFirstRemoteVideoFrame(uid: Int, width: Int, height: Int, elapsed: Int) {
-                super.onFirstRemoteVideoFrame(uid, width, height, elapsed)
-                LogTool.d(TAG, "remoteChannel onFirstRemoteVideoFrame uid:$uid,width:$width,height:$height")
-            }
+        override fun onRemoteVideoStateChanged(uid: Int, state: Int, reason: Int, elapsed: Int) {
+            super.onRemoteVideoStateChanged(uid, state, reason, elapsed)
+            LogTool.d(TAG, "remoteChannel onRemoteVideoStateChanged uid:$uid,state:$state,reason:$reason")
+        }
 
-            override fun onUserJoined(uid: Int, elapsed: Int) {
-                super.onUserJoined(uid, elapsed)
-                LogTool.d(TAG, "remoteChannel remoteChannel uid:$uid")
-                runOnMainThread {
-                    updatePkMode(uid)
-                    if (isOwner) {
-                        uidMapping[userAccount]?.let { ownerUid ->
-                            val channelUid = ChannelUid(channelName, ownerUid)
-                            val remoteChannelUid = ChannelUid(remoteChannel, uid)
-                            val channelUids = arrayOf(channelUid, remoteChannelUid)
-                            updateRtmpStreamEnable(*channelUids)
-                        }
+        override fun onFirstRemoteVideoFrame(uid: Int, width: Int, height: Int, elapsed: Int) {
+            super.onFirstRemoteVideoFrame(uid, width, height, elapsed)
+            LogTool.d(TAG, "remoteChannel onFirstRemoteVideoFrame uid:$uid,width:$width,height:$height")
+        }
+
+        override fun onUserJoined(uid: Int, elapsed: Int) {
+            super.onUserJoined(uid, elapsed)
+            LogTool.d(TAG, "remoteChannel remoteChannel uid:$uid")
+            runOnMainThread {
+                updatePkMode(uid)
+                if (isOwner) {
+                    uidMapping[userAccount]?.let { ownerUid ->
+                        val channelUid = ChannelUid(channelName, ownerUid)
+                        val remoteChannelUid = ChannelUid(remotePkChannel, uid)
+                        val channelUids = arrayOf(channelUid, remoteChannelUid)
+                        updateRtmpStreamEnable(*channelUids)
                     }
                 }
             }
+        }
 
-            override fun onUserInfoUpdated(uid: Int, userInfo: UserInfo) {
-                super.onUserInfoUpdated(uid, userInfo)
-                LogTool.d(
-                    TAG,
-                    "remoteChannel onUserInfoUpdated uid:$uid,userInfo:${userInfo.uid}-${userInfo.userAccount}"
-                )
-                runOnMainThread {
-                    uidMapping[userInfo.userAccount] = userInfo.uid
-                }
+        override fun onUserInfoUpdated(uid: Int, userInfo: UserInfo) {
+            super.onUserInfoUpdated(uid, userInfo)
+            LogTool.d(
+                TAG,
+                "remoteChannel onUserInfoUpdated uid:$uid,userInfo:${userInfo.uid}-${userInfo.userAccount}"
+            )
+            runOnMainThread {
+                uidMapping[userInfo.userAccount] = userInfo.uid
             }
-        })
+        }
     }
 
     private fun stopPk() {

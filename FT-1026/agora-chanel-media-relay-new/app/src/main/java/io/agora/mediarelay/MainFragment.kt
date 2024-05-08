@@ -57,6 +57,12 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 }
             }
         }
+        binding.cbUserAccount.setChecked(RtcSettings.mEnableUserAccount)
+        binding.cbUserAccount.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (buttonView.isPressed) {
+                RtcSettings.mEnableUserAccount = isChecked
+            }
+        }
         checkVideoSettingsVisible()
         // mode
         binding.groupAnchor.setOnCheckedChangeListener { _, _ ->

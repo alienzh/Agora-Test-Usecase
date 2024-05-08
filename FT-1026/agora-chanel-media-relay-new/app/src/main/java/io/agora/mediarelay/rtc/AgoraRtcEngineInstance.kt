@@ -85,7 +85,7 @@ object AgoraRtcEngineInstance {
 
                     override fun onJoinChannelSuccess(channel: String, uid: Int, elapsed: Int) {
                         super.onJoinChannelSuccess(channel, uid, elapsed)
-                        LogTool.d(TAG, "onJoinChannelSuccess channelId $channel")
+                        LogTool.d(TAG, "onJoinChannelSuccess channelId $channel, uid $uid")
                         runOnMainThread {
                             rtcEngine.setEnableSpeakerphone(false)
                             rtcEngine.setEnableSpeakerphone(true)
