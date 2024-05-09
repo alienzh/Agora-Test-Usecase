@@ -14,7 +14,8 @@ enum class CdnMakes {
     Agora,
     Huawei,
     Tecent,
-    Ali
+    Ali,
+    Custom
 }
 
 data class CdnUrlModel constructor(
@@ -74,40 +75,40 @@ object KeyCenter {
     private const val AGORA_PULL_URL = "http://pull.webdemo.agoraio.cn/live/"
 
     private const val push_huawei =
-        "rtmp://push-hw.jacocdn.com/live/5032135167930818_main?hwSecret=1f77a692ea3da3443386db91df8bf6bc065172b11610b578489c6bcf0db3ed37&hwTime=663dc5dd"
+        "rtmp://push-hw.jacocdn.com/live/5032165489042748_main?hwSecret=7be88c45c52fbeb28f8ad4df8d483f712e1c34b0ebacdd1a9d48d57e033c8fd0&hwTime=663de219"
     private const val push_tecent =
-        "rtmp://tlive-push.jacocdn.com/tlive/5032135167930818_backup?txSecret=aa720aba117e0f411ac955ec1eb58bfd&txTime=663DC5DF"
+        "rtmp://tlive-push.jacocdn.com/tlive/5032165489042748_backup?txSecret=3fbce9793ecdb85af2701a7126d47956&txTime=663DE219"
     private const val push_ali =
-        "rtmp://ali-push.jacocdn.com/live/5032135167930818_ali?auth_key=1715324384-0-0-b142a3281b6f95dd1b18fbabe2107f7c"
+        "rtmp://ali-push.jacocdn.com/live/5032165489042748_ali?auth_key=1715331609-0-0-2761e566096089321f7d5004c878c44b"
 
     private const val pull_huawei_720p =
-        "http://play-hw.jacocdn.com/live/5032135167930818_main_720P.flv?hwSecret=4c29d424229add9159971e70153845c8fc8f8deabba3b24461a7765e0de8e48c&hwTime=663dc6e1"
+        "http://play-hw.jacocdn.com/live/5032165489042748_main_720P.flv?hwSecret=c6379c47e441ddf9bcd81a2c3c13eb5816099cd57bc9ae54c689c0a4251d739e&hwTime=663de23a"
     private const val pull_huawei_540p =
-        "http://play-hw.jacocdn.com/live/5032135167930818_main_540P.flv?hwSecret=42fb8837b25a43d44c1e60272248673857a247790bd69a3761bb240093420e7c&hwTime=663dc6e1"
+        "http://play-hw.jacocdn.com/live/5032165489042748_main_540P.flv?hwSecret=cbf874a0e0a307754b4a6848de39180a62be33799fae38c2bf662fb586615e90&hwTime=663de23a"
     private const val pull_huawei_1080p =
-        "http://play-hw.jacocdn.com/live/5032135167930818_main.flv?hwSecret=81bd19c9cc153828f8d2f1dfd296d66fb77fba558f61e9c83289f8b291bca7dc&hwTime=663dc6e1"
+        "http://play-hw.jacocdn.com/live/5032165489042748_main.flv?hwSecret=cbf618f07feafdfaa04f1be6dad71631c5aacb3bc0ee546a1e47c84f8237df88&hwTime=663de23a"
 
     private const val pull_tecent_720p =
-        "http://tlive-play.jacocdn.com/tlive/5032135167930818_backup_720P.flv?txSecret=d810b0b0d4c773a64a3fa0c5d49d8156&txTime=663DC5E8"
+        "http://tlive-play.jacocdn.com/tlive/5032165489042748_backup_720P.flv?txSecret=42b32a98697c5303fbdabed49905a97a&txTime=663DE2FF"
     private const val pull_tecent_540p =
-        "http://tlive-play.jacocdn.com/tlive/5032135167930818_backup_540P.flv?txSecret=9f4e81ae7a14b1ca1fa74406a485683d&txTime=663DC5E8"
+        "http://tlive-play.jacocdn.com/tlive/5032165489042748_backup_540P.flv?txSecret=a19d01bef4a3fe31748337ec9fcefd26&txTime=663DE2FF"
     private const val pull_tecent_1080p =
-        "http://tlive-play.jacocdn.com/tlive/5032135167930818_backup.flv?txSecret=74290305f05e889861d901b348da0ed6&txTime=663DC5E8"
+        "http://tlive-play.jacocdn.com/tlive/5032165489042748_backup.flv?txSecret=888d94b812c39d873971cf6af90bdd71&txTime=663DE2FF"
 
     private const val pull_ali_720p =
-        "http://ali-play.jacocdn.com/live/5032135167930818_ali_720P.flv?auth_key=1715324641-0-0-2c135bf40a89a1e06894730bc70ae906"
+        "http://ali-play.jacocdn.com/live/5032165489042748_ali_720P.flv?auth_key=1715331642-0-0-a966075f95bad97141198b2157a37e1b"
     private const val pull_ali_540p =
-        "http://ali-play.jacocdn.com/live/5032135167930818_ali_540P.flv?auth_key=1715324641-0-0-42763e87b0cb8873f12eec27f451838f\""
+        "http://ali-play.jacocdn.com/live/5032165489042748_ali_540P.flv?auth_key=1715331642-0-0-40c244ee90826e9eebf7229b871cb617"
     private const val pull_ali_1080p =
-        "http://ali-play.jacocdn.com/live/5032135167930818_ali.flv?auth_key=1715324641-0-0-2c942e3bc5a3877861f89e41998c178d"
+        "http://ali-play.jacocdn.com/live/5032165489042748_ali.flv?auth_key=1715331642-0-0-51128672b60c759d33012b94adabaf00"
 
     // cdn 分辨率
-    var mBitrateList = arrayOf<String?>("720p", "1080p")
+    var mBitrateList = arrayOf<String?>("1080p", "720p")
 
     private const val replaceChannel = "channle"
     private val mAgoraCdnPullList = arrayOf(
         CdnUrlModel("1080p", "${AGORA_PULL_URL}agdemo${replaceChannel}_las1080p.flv"),
-        CdnUrlModel("720p", "$$AGORA_PULL_URL}agdemo${replaceChannel}.flv"),
+        CdnUrlModel("720p", "${AGORA_PULL_URL}agdemo${replaceChannel}.flv"),
     )
 
     private val mHuaweiCdnPullList = arrayOf(
@@ -158,6 +159,11 @@ object KeyCenter {
                         mBitrateList[i] = mAliCdnPullList[i].bitrate
                     }
                 }
+                CdnMakes.Custom -> {
+                    innerPushUrl = ""
+                    innerPullUrl = ""
+                    mBitrateList = arrayOf("custom")
+                }
 
                 else -> {
                     innerPushUrl = AGORA_PUSH_URL
@@ -178,9 +184,16 @@ object KeyCenter {
     private var innerPushUrl = AGORA_PUSH_URL
     private var innerPullUrl = AGORA_PULL_URL
 
+    fun setCustomPushUrl(pushUrl:String){
+        this.innerPushUrl = pushUrl
+    }
+
+    fun setCustomPullUrl(pushUrl:String){
+        this.innerPullUrl = pushUrl
+    }
+
     val mPushUrl: String
         get() = innerPushUrl
-
 
     val mPullUrl: String
         get() = innerPullUrl

@@ -37,11 +37,14 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         } else "Empty"
         binding.etPushUrl.setText(KeyCenter.mPushUrl)
         binding.etPullUrl.setText(KeyCenter.mPullUrl)
+        binding.etPushUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
+        binding.etPullUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
 
         when (KeyCenter.cdnMakes) {
             CdnMakes.Huawei -> binding.groupCdn.check(R.id.cdn_huawei)
             CdnMakes.Tecent -> binding.groupCdn.check(R.id.cdn_tecent)
             CdnMakes.Ali -> binding.groupCdn.check(R.id.cdn_ali)
+            CdnMakes.Custom -> binding.groupCdn.check(R.id.cdn_custom)
             else -> binding.groupCdn.check(R.id.cdn_agora)
         }
 
@@ -50,10 +53,13 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 R.id.cdn_huawei -> KeyCenter.cdnMakes = CdnMakes.Huawei
                 R.id.cdn_tecent -> KeyCenter.cdnMakes = CdnMakes.Tecent
                 R.id.cdn_ali -> KeyCenter.cdnMakes = CdnMakes.Ali
+                R.id.cdn_custom -> KeyCenter.cdnMakes = CdnMakes.Custom
                 else -> KeyCenter.cdnMakes = CdnMakes.Agora
             }
             binding.etPushUrl.setText(KeyCenter.mPushUrl)
             binding.etPullUrl.setText(KeyCenter.mPullUrl)
+            binding.etPushUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
+            binding.etPullUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
         }
         // enable user account
         binding.cbUserAccount.setChecked(RtcSettings.mEnableUserAccount)
@@ -161,14 +167,13 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
     }
 
     private fun checkGoLivePage() {
-//        val inputPushUrl = binding.etPushUrl.text?.trim().toString()
-//        if (inputPushUrl.startsWith("rtmp")) {
-//            KeyCenter.pushUrl = inputPushUrl
-//        }
-//        val inputPullUrl = binding.etPullUrl.text?.trim().toString()
-//        if (inputPullUrl.startsWith("http")) {
-//            KeyCenter.pullUrl = inputPullUrl
-//        }
+        if (KeyCenter.cdnMakes == CdnMakes.Custom) {
+            val inputPushUrl = binding.etPushUrl.text?.trim().toString()
+            KeyCenter.setCustomPushUrl(inputPushUrl)
+            val inputPullUrl = binding.etPullUrl.text?.trim().toString()
+            KeyCenter.setCustomPullUrl(inputPullUrl)
+        }
+
         val channelId = binding.etChannel.text.toString()
         if (channelId.isEmpty()) {
             ToastTool.showToast("Please enter channel id")

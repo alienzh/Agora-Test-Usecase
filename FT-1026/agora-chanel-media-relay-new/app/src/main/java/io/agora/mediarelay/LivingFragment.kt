@@ -128,7 +128,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
             binding.btAlphaGift.isVisible = false
         }
-        binding.tvChannelId.text = "Channel:$channelName"
+        binding.tvChannelId.text = "$channelName(${KeyCenter.cdnMakes})"
         binding.btnBack.setOnClickListener {
             goBack()
         }

@@ -127,7 +127,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
             binding.btAlphaGift.isVisible = false
         }
-        binding.tvChannelId.text = "ChannelId:$channelName"
+        binding.tvChannelId.text = "$channelName(${KeyCenter.cdnMakes})"
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
