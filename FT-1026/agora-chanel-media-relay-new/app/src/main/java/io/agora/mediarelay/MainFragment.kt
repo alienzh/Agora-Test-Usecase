@@ -35,27 +35,25 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         binding.appIdCustom.text = if (BuildConfig.CUSTOM_APP_ID.isNotEmpty()) {
             BuildConfig.CUSTOM_APP_ID.substring(0, 9) + "***"
         } else "Empty"
-        binding.etPushUrl.setText(KeyCenter.pushUrl)
-        binding.etPullUrl.setText(KeyCenter.pullUrl)
-        if (KeyCenter.isAgoraCdn()) {
-            binding.groupCdn.check(R.id.cdn_agora)
-        } else {
-            binding.groupCdn.check(R.id.cdn_custom)
+        binding.etPushUrl.setText(KeyCenter.mPushUrl)
+        binding.etPullUrl.setText(KeyCenter.mPullUrl)
+
+        when (KeyCenter.cdnMakes) {
+            CdnMakes.Huawei -> binding.groupCdn.check(R.id.cdn_huawei)
+            CdnMakes.Tecent -> binding.groupCdn.check(R.id.cdn_tecent)
+            CdnMakes.Ali -> binding.groupCdn.check(R.id.cdn_ali)
+            else -> binding.groupCdn.check(R.id.cdn_agora)
         }
+
         binding.groupCdn.setOnCheckedChangeListener { radioGroup, checkedId ->
             when (checkedId) {
-                R.id.cdn_agora -> {
-                    KeyCenter.setupAgoraCdn(true)
-                    binding.etPushUrl.setText(KeyCenter.pushUrl)
-                    binding.etPullUrl.setText(KeyCenter.pullUrl)
-                }
-
-                R.id.cdn_custom -> {
-                    KeyCenter.setupAgoraCdn(false)
-                    binding.etPushUrl.setText(KeyCenter.pushUrl)
-                    binding.etPullUrl.setText(KeyCenter.pullUrl)
-                }
+                R.id.cdn_huawei -> KeyCenter.cdnMakes = CdnMakes.Huawei
+                R.id.cdn_tecent -> KeyCenter.cdnMakes = CdnMakes.Tecent
+                R.id.cdn_ali -> KeyCenter.cdnMakes = CdnMakes.Ali
+                else -> KeyCenter.cdnMakes = CdnMakes.Agora
             }
+            binding.etPushUrl.setText(KeyCenter.mPushUrl)
+            binding.etPullUrl.setText(KeyCenter.mPullUrl)
         }
         // enable user account
         binding.cbUserAccount.setChecked(RtcSettings.mEnableUserAccount)
@@ -163,14 +161,14 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
     }
 
     private fun checkGoLivePage() {
-        val inputPushUrl = binding.etPushUrl.text?.trim().toString()
-        if (inputPushUrl.startsWith("rtmp")) {
-            KeyCenter.pushUrl = inputPushUrl
-        }
-        val inputPullUrl = binding.etPullUrl.text?.trim().toString()
-        if (inputPullUrl.startsWith("http")) {
-            KeyCenter.pullUrl = inputPullUrl
-        }
+//        val inputPushUrl = binding.etPushUrl.text?.trim().toString()
+//        if (inputPushUrl.startsWith("rtmp")) {
+//            KeyCenter.pushUrl = inputPushUrl
+//        }
+//        val inputPullUrl = binding.etPullUrl.text?.trim().toString()
+//        if (inputPullUrl.startsWith("http")) {
+//            KeyCenter.pullUrl = inputPullUrl
+//        }
         val channelId = binding.etChannel.text.toString()
         if (channelId.isEmpty()) {
             ToastTool.showToast("Please enter channel id")

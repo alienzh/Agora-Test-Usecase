@@ -131,8 +131,10 @@
                     android:layout_height="wrap_content"
                     android:inputType="textUri"
                     android:textColor="@color/white"
+                    android:enabled="false"
                     android:textCursorDrawable="@drawable/bg_edit_cursor"
                     android:textSize="13sp" />
+
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -159,6 +161,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="textUri"
                     android:textColor="@color/white"
+                    android:enabled="false"
                     android:textCursorDrawable="@drawable/bg_edit_cursor"
                     android:textSize="13sp" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -202,11 +205,29 @@
                         android:textSize="13sp" />
 
                     <androidx.appcompat.widget.AppCompatRadioButton
-                        android:id="@+id/cdn_custom"
+                        android:id="@+id/cdn_huawei"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="@string/cdn_custom"
+                        android:text="Huawei"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+
+                    <androidx.appcompat.widget.AppCompatRadioButton
+                        android:id="@+id/cdn_tecent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Tecent"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+
+                    <androidx.appcompat.widget.AppCompatRadioButton
+                        android:id="@+id/cdn_ali"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Ali"
                         android:textColor="@color/white"
                         android:textSize="13sp" />
                 </RadioGroup>
