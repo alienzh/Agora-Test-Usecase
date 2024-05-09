@@ -57,12 +57,23 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 }
             }
         }
+        // enable user account
         binding.cbUserAccount.setChecked(RtcSettings.mEnableUserAccount)
         binding.cbUserAccount.setOnCheckedChangeListener { buttonView, isChecked ->
             if (buttonView.isPressed) {
                 RtcSettings.mEnableUserAccount = isChecked
             }
         }
+
+        // enable quic, 至针对直播流，主播隐藏，观众打开
+        binding.layoutQuic.isVisible = !isBroadcaster
+        binding.cbQuic.setChecked(RtcSettings.mEnableQuic)
+        binding.cbQuic.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (buttonView.isPressed) {
+                RtcSettings.mEnableQuic = isChecked
+            }
+        }
+
         checkVideoSettingsVisible()
         // mode
         binding.groupAnchor.setOnCheckedChangeListener { _, _ ->
@@ -91,9 +102,11 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         binding.etBitrate.setText("${RtcSettings.mBitRate}")
     }
 
+    private val isBroadcaster: Boolean
+        get() = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
+
     private fun checkVideoSettingsVisible() {
         val single = binding.groupAnchor.checkedRadioButtonId == R.id.scene_single
-        val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
         if (single && isBroadcaster) {
             binding.layoutResolution.isVisible = true
             binding.layoutFps.isVisible = true
@@ -103,6 +116,7 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             binding.layoutFps.isVisible = false
             binding.layoutBitrate.isVisible = false
         }
+        binding.layoutQuic.isVisible = !isBroadcaster
     }
 
     private fun setupVideoSettings() {
@@ -176,7 +190,6 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             )
         }
         setupVideoSettings()
-        val isBroadcaster = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
         val args = Bundle().apply {
             putString(LivingFragment.KEY_CHANNEL_ID, channelId)
             putInt(

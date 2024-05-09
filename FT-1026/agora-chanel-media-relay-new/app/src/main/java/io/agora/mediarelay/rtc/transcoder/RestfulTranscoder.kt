@@ -1,6 +1,5 @@
 package io.agora.mediarelay.rtc.transcoder
 
-import android.util.Log
 import com.google.gson.Gson
 import com.moczul.ok2curl.CurlInterceptor
 import com.moczul.ok2curl.logger.Logger

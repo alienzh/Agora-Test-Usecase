@@ -41,10 +41,16 @@ object RtcSettings {
             LogTool.d("RtcSetting BitRate：$newValue")
         }
 
-    var mEnableUserAccount:Boolean = false
-        set(newValue){
+    var mEnableUserAccount: Boolean = false
+        set(newValue) {
             field = newValue
             LogTool.d("RtcSetting mEnableUserAccount：$newValue")
+        }
+
+    var mEnableQuic: Boolean = false
+        set(newValue) {
+            field = newValue
+            LogTool.d("RtcSetting mEnableQuic：$newValue")
         }
 
     fun reset() {

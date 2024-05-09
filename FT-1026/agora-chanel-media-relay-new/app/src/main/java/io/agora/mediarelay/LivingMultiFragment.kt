@@ -113,6 +113,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             binding.recyclerVideo.isVisible = true
             binding.layoutCdnContainer.isVisible = false
             binding.btBitrate.isVisible = false
+            binding.btAlphaGift.isVisible = true
         } else {
             binding.btLinking.isVisible = true
             binding.btSwitchStream.isVisible = true
@@ -124,6 +125,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             binding.layoutCdnContainer.isVisible = true
             binding.btBitrate.isVisible = true
             binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
+            binding.btAlphaGift.isVisible = false
         }
         binding.tvChannelId.text = "ChannelId:$channelName"
         binding.btnBack.setOnClickListener {
@@ -263,6 +265,19 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 mediaPlayer?.switchSrc(KeyCenter.getRtmpPullUrl(channelName, position), false)
             }
         }
+        binding.btAlphaGift.setOnClickListener {
+            val cxt = context ?: return@setOnClickListener
+            val alphaGiftList = KeyCenter.alphaGiftList
+            val data: Array<String?> = arrayOfNulls<String>(alphaGiftList.size)
+
+            for (i in alphaGiftList.indices) {
+                data[i] = alphaGiftList[i].name
+            }
+            ViewTool.showPop(cxt, binding.btAlphaGift, data, giftPosition) { position, text ->
+                tempGiftPosition = position
+                showGiftTexture()
+            }
+        }
     }
 
     // 临时变量，切换成功则修改
@@ -363,6 +378,10 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             setPlayerOption("is_live_source", 1);
             setPlayerOption("play_speed_down_cache_duration", 0)
             setPlayerOption("open_timeout_until_success", 6000)
+            setPlayerOption("enable_search_metadata", 1)
+            if (RtcSettings.mEnableQuic) {
+                setPlayerOption("enable_quic", 1)
+            }
             registerPlayerObserver(mediaPlayerObserver)
             setView(mpkTextureView)
             open(rtmpPullUrl, 0)
@@ -806,6 +825,84 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
         override fun onMetadataReceived(buffer: ByteArray, uid: Int, timeStampMs: Long) {
             val data = String(buffer, Charset.forName("UTF-8"))
             Log.i(TAG, "onMetadataReceived:$data")
+        }
+    }
+
+    private var giftPosition: Int = -1
+
+    // 临时变量，切换成功则修改
+    private var tempGiftPosition = -1
+
+    private fun switchGiftSuccess(ret: Boolean) {
+        runOnMainThread {
+            if (ret) {
+                giftPosition = tempGiftPosition
+                tempGiftPosition = -1
+                if (giftPosition >= 0 && giftPosition < KeyCenter.alphaGiftList.size) {
+                    binding.btAlphaGift.text = KeyCenter.alphaGiftList[giftPosition].name
+                }
+                ToastTool.showToast(R.string.play_gift_success)
+            } else {
+                ToastTool.showToast(R.string.play_gift_failed)
+            }
+        }
+    }
+
+    private val localGiftTexture by lazy {
+        TextureView(requireActivity()).apply {
+            isOpaque = false
+        }
+    }
+
+    private var giftMediaPlayer: IMediaPlayer? = null
+
+    private fun showGiftTexture() {
+        val localContainter  = binding.root
+        val giftUrl = KeyCenter.alphaGiftList[tempGiftPosition].url
+        localContainter.removeView(localGiftTexture)
+        val childCount = localContainter.childCount
+        localContainter.addView(localGiftTexture, childCount)
+        giftMediaPlayer = rtcEngine.createMediaPlayer()
+        giftMediaPlayer?.apply {
+            val mode = KeyCenter.alphaGiftList[tempGiftPosition].mode
+            setPlayerOption("alpha_stitch_mode", mode)
+            registerPlayerObserver(giftMediaPlayerObserver)
+            setView(localGiftTexture)
+            open(giftUrl, 0)
+        }
+    }
+
+    private val giftMediaPlayerObserver = object : MPObserverAdapter() {
+
+        override fun onPlayerStateChanged(
+            state: io.agora.mediaplayer.Constants.MediaPlayerState?,
+            error: io.agora.mediaplayer.Constants.MediaPlayerReason?
+        ) {
+            super.onPlayerStateChanged(state, error)
+            Log.d(TAG, "gift onPlayerStateChanged: $state，$error")
+            when (state) {
+                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED -> {
+                    giftMediaPlayer?.play()
+                }
+
+                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING -> {
+                    switchGiftSuccess(true)
+                }
+
+                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYBACK_ALL_LOOPS_COMPLETED -> {
+                    runOnMainThread {
+                        binding.btAlphaGift.text = "send gift"
+                        giftPosition = -1
+                        val localContainter  = binding.root
+                        localContainter.removeView(localGiftTexture)
+                    }
+                }
+
+                else -> {}
+            }
+            if (error != io.agora.mediaplayer.Constants.MediaPlayerReason.PLAYER_REASON_NONE) {
+                switchGiftSuccess(false)
+            }
         }
     }
 }
