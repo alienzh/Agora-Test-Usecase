@@ -1,5 +1,7 @@
 package io.agora.mediarelay.rtc
 
+import io.agora.mediarelay.tools.TimeUtils
+
 object SeiHelper {
 
     fun buildSei(channelId: String, uid: Int): Map<String, Any> {
@@ -30,7 +32,7 @@ object SeiHelper {
             ),
             "stream" to streamList,
             "ver" to "1.0.0.20220915",
-            "ts" to 1708681950831,
+            "ts" to TimeUtils.currentTimeMillis(),
             "source" to "aliyun",
             "info" to mapOf(
                 "mcu_room_state" to mapOf(

@@ -6,6 +6,7 @@ import android.view.*
 import androidx.annotation.Size
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
+import com.google.gson.JsonObject
 import io.agora.mediaplayer.IMediaPlayer
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentLivingBinding
@@ -299,7 +300,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         override fun onMetaData(type: io.agora.mediaplayer.Constants.MediaPlayerMetadataType?, data: ByteArray?) {
             super.onMetaData(type, data)
             data?.let {
-                Log.d(TAG, "onMetaData type:$type,data:${String(it)}")
+                val str = String(it)
+                Log.d(TAG, "onMetaData type:$type,data:$str")
+                val seiMap =  GsonTools.strToMap(str)
+                runOnMainThread {
+                    seiMap["ts"]?.let {
+                        binding.hostTime.text = it.toString()
+                    }
+                }
             }
         }
     }
@@ -986,21 +994,23 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         ) {
             super.onPlayerStateChanged(state, error)
             Log.d(TAG, "gift onPlayerStateChanged: $state，$error")
-            when(state){
-                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED ->{
+            when (state) {
+                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED -> {
                     giftMediaPlayer?.play()
                 }
-                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING ->{
+
+                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING -> {
                     switchGiftSuccess(true)
                 }
-                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYBACK_ALL_LOOPS_COMPLETED ->{
-                   runOnMainThread{
-                       binding.btAlphaGift.text = "send gift"
-                       giftPosition = -1
+
+                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYBACK_ALL_LOOPS_COMPLETED -> {
+                    runOnMainThread {
+                        binding.btAlphaGift.text = "send gift"
+                        giftPosition = -1
 //                       val localContainter = (localTexture.parent as? ViewGroup)?:return@runOnMainThread
-                       val localContainter = binding.root
-                       localContainter.removeView(localGiftTexture)
-                   }
+                        val localContainter = binding.root
+                        localContainter.removeView(localGiftTexture)
+                    }
                 }
 
                 else -> {}

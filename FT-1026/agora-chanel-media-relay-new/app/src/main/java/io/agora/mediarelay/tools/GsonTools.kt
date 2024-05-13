@@ -71,6 +71,16 @@ object GsonTools {
     }
 
     @JvmStatic
+    fun strToMap(obj: String): Map<String, Any> {
+        return try {
+            gson.fromJson(obj, object : TypeToken<Map<String, Any>>() {}.type)
+        } catch (e: Exception) {
+            emptyMap()
+        }
+    }
+
+
+    @JvmStatic
     fun beanToMap(obj: Any): Map<String, Any> {
         return try {
             gson.fromJson(gson.toJson(obj), object : TypeToken<Map<String, Any>>() {}.type)

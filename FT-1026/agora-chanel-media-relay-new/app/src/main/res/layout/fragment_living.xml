@@ -192,6 +192,16 @@
         app:layout_constraintTop_toTopOf="@id/bt_dashboard"
         app:layout_constraintBottom_toBottomOf="@id/bt_dashboard"/>
 
+    <TextView
+        android:id="@+id/hostTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/bt_dashboard"
+        android:layout_marginEnd="30dp"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="@id/bt_dashboard"/>
+
     <FrameLayout
         android:id="@+id/fl_dashboard"
         android:layout_width="match_parent"
