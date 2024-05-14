@@ -206,6 +206,7 @@ object AgoraRtcEngineInstance {
                     }
                 }
                 innerRtcEngine = (RtcEngine.create(config) as RtcEngineEx).apply {
+                    setLogFilter(65535)
                     enableVideo()
                 }
             }
