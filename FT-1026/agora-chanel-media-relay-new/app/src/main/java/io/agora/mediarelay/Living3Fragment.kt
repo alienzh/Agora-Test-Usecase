@@ -19,6 +19,7 @@ import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.FileUtils
 import io.agora.mediarelay.tools.GsonTools
 import io.agora.mediarelay.tools.ThreadTool
+import io.agora.mediarelay.tools.TimeUtils
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.widget.OnFastClickListener
@@ -334,6 +335,21 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
                 }
             }
         }
+
+        override fun onMetaData(type: io.agora.mediaplayer.Constants.MediaPlayerMetadataType?, data: ByteArray?) {
+            super.onMetaData(type, data)
+            data ?: return
+            val seiMap = GsonTools.strToMap(String(data))
+            runOnMainThread {
+                seiMap["ts"]?.let { ts ->
+                    if (ts is Long) {
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                    } else if (ts is Int) {
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                    }
+                }
+            }
+        }
     }
 
     private fun switchCdnAudience(cdnPosition: Int) {
@@ -383,6 +399,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             it.destroy()
             mediaPlayer = null
         }
+        binding.cdnDiffTime.text = ""
         binding.btSwitchStream.text = getString(R.string.cdn_audience)
         binding.layoutCdnContainer.removeAllViews()
         binding.layoutCdnContainer.isVisible = false

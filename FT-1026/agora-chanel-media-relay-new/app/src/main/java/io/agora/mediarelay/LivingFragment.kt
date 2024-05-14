@@ -21,6 +21,7 @@ import io.agora.mediarelay.tools.FileUtils
 import io.agora.mediarelay.tools.GsonTools
 import io.agora.mediarelay.tools.LogTool
 import io.agora.mediarelay.tools.ThreadTool
+import io.agora.mediarelay.tools.TimeUtils
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.tools.ViewTool
@@ -299,13 +300,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
         override fun onMetaData(type: io.agora.mediaplayer.Constants.MediaPlayerMetadataType?, data: ByteArray?) {
             super.onMetaData(type, data)
-            data?.let {
-                val str = String(it)
-                Log.d(TAG, "onMetaData type:$type,data:$str")
-                val seiMap =  GsonTools.strToMap(str)
-                runOnMainThread {
-                    seiMap["ts"]?.let {
-                        binding.hostTime.text = it.toString()
+            data ?: return
+            val seiMap = GsonTools.strToMap(String(data))
+            runOnMainThread {
+                seiMap["ts"]?.let { ts ->
+                    if (ts is Long) {
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                    } else if (ts is Int) {
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
                     }
                 }
             }
@@ -359,6 +361,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             mediaPlayer = null
         }
 
+        binding.cdnDiffTime.text = ""
         binding.btSwitchStream.text = getString(R.string.cdn_audience)
         binding.layoutVideoContainer.isVisible = true
         binding.videoPKLayout.videoContainer.isVisible = false

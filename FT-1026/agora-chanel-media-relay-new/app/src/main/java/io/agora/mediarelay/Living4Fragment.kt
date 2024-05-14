@@ -19,6 +19,7 @@ import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.FileUtils
 import io.agora.mediarelay.tools.GsonTools
 import io.agora.mediarelay.tools.ThreadTool
+import io.agora.mediarelay.tools.TimeUtils
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.widget.OnFastClickListener
@@ -126,7 +127,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
             binding.btAlphaGift.isVisible = false
         }
-        binding.tvChannelId.text ="$channelName(${KeyCenter.cdnMakes})"
+        binding.tvChannelId.text = "$channelName(${KeyCenter.cdnMakes})"
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
@@ -333,6 +334,21 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
                 }
             }
         }
+
+        override fun onMetaData(type: io.agora.mediaplayer.Constants.MediaPlayerMetadataType?, data: ByteArray?) {
+            super.onMetaData(type, data)
+            data ?: return
+            val seiMap = GsonTools.strToMap(String(data))
+            runOnMainThread {
+                seiMap["ts"]?.let { ts ->
+                    if (ts is Long) {
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                    } else if (ts is Int) {
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                    }
+                }
+            }
+        }
     }
 
     private fun switchCdnAudience(cdnPosition: Int) {
@@ -382,6 +398,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             it.destroy()
             mediaPlayer = null
         }
+        binding.cdnDiffTime.text = ""
         binding.btSwitchStream.text = getString(R.string.cdn_audience)
         binding.layoutCdnContainer.removeAllViews()
         binding.layoutCdnContainer.isVisible = false
@@ -830,7 +847,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
     private fun showGiftTexture() {
 //        val localTexture = mTextureVideos[0] ?: return
 //        val localContainter = (localTexture.parent as? ViewGroup) ?: return
-        val localContainter  = binding.root
+        val localContainter = binding.root
         val giftUrl = KeyCenter.alphaGiftList[tempGiftPosition].url
         localContainter.removeView(localGiftTexture)
         val childCount = localContainter.childCount
@@ -868,7 +885,7 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
                         giftPosition = -1
 //                        val localTexture = mTextureVideos[0] ?: return@runOnMainThread
 //                        val localContainter = (localTexture.parent as? ViewGroup) ?: return@runOnMainThread
-                        val localContainter  = binding.root
+                        val localContainter = binding.root
                         localContainter.removeView(localGiftTexture)
                     }
                 }

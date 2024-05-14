@@ -11,6 +11,9 @@ import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentMainBinding
 import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.RtcSettings
+import io.agora.mediarelay.tools.LogTool
+import io.agora.mediarelay.tools.ThreadTool
+import io.agora.mediarelay.tools.TimeUtils
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.rtc2.Constants
 import io.agora.rtc2.video.VideoEncoderConfiguration
@@ -104,6 +107,8 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         binding.etFps.setText("${RtcSettings.mFrameRate}")
         // bitrate
         binding.etBitrate.setText("${RtcSettings.mBitRate}")
+
+        LogTool.d(TAG, "bingTime:${TimeUtils.currentTimeMillis()}")
     }
 
     private val isBroadcaster: Boolean

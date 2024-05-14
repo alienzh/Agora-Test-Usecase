@@ -22,6 +22,7 @@ import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.FileUtils
 import io.agora.mediarelay.tools.GsonTools
 import io.agora.mediarelay.tools.ThreadTool
+import io.agora.mediarelay.tools.TimeUtils
 import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.widget.OnFastClickListener
@@ -347,6 +348,21 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                 }
             }
         }
+
+        override fun onMetaData(type: io.agora.mediaplayer.Constants.MediaPlayerMetadataType?, data: ByteArray?) {
+            super.onMetaData(type, data)
+            data ?: return
+            val seiMap = GsonTools.strToMap(String(data))
+            runOnMainThread {
+                seiMap["ts"]?.let { ts ->
+                    if (ts is Long) {
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                    } else if (ts is Int) {
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                    }
+                }
+            }
+        }
     }
 
     var mpkTextureView: TextureView? = null
@@ -398,6 +414,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             mediaPlayer = null
             mpkTextureView = null
         }
+        binding.cdnDiffTime.text = ""
         binding.btSwitchStream.text = getString(R.string.cdn_audience)
         binding.layoutCdnContainer.removeAllViews()
         binding.layoutCdnContainer.isVisible = false
@@ -857,7 +874,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
     private var giftMediaPlayer: IMediaPlayer? = null
 
     private fun showGiftTexture() {
-        val localContainter  = binding.root
+        val localContainter = binding.root
         val giftUrl = KeyCenter.alphaGiftList[tempGiftPosition].url
         localContainter.removeView(localGiftTexture)
         val childCount = localContainter.childCount
@@ -893,7 +910,7 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
                     runOnMainThread {
                         binding.btAlphaGift.text = "send gift"
                         giftPosition = -1
-                        val localContainter  = binding.root
+                        val localContainter = binding.root
                         localContainter.removeView(localGiftTexture)
                     }
                 }
