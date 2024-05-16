@@ -30,7 +30,7 @@ object AgoraRtcEngineInstance {
 
     val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
         orientationMode = VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE
-        mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_ENABLED
+        mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_DISABLED
         dimensions = RtcSettings.mVideoDimensions
         frameRate = RtcSettings.mFrameRate
         bitrate = RtcSettings.mBitRate
@@ -43,8 +43,8 @@ object AgoraRtcEngineInstance {
     private var innerTranscoder: RestfulTranscoder? = null
 
     var mAppId: String = BuildConfig.AGORA_APP_ID
-    private var mCustomerKey: String = BuildConfig.AGORA_APP_ID
-    private var mSecret: String = BuildConfig.AGORA_APP_ID
+    private var mAccessKey: String = BuildConfig.AGORA_APP_ID
+    private var mSecretKey: String = BuildConfig.AGORA_APP_ID
 
     private var mVideoInfoListener: IVideoInfoListener? = null
 
@@ -52,10 +52,10 @@ object AgoraRtcEngineInstance {
 
     var eventListener: IAgoraRtcClient.IChannelEventListener? = null
 
-    fun setAppKeys(appId: String, customerKey: String, secret: String) {
+    fun setAppKeys(appId: String, accessKey: String, secretKey: String) {
         mAppId = appId
-        mCustomerKey = customerKey
-        mSecret = secret
+        mAccessKey = accessKey
+        mSecretKey = secretKey
     }
 
     fun setVideoInfoListener(listener: IVideoInfoListener?) {
@@ -65,7 +65,7 @@ object AgoraRtcEngineInstance {
     val transcoder: RestfulTranscoder
         get() {
             if (innerTranscoder == null) {
-                innerTranscoder = RestfulTranscoder(mAppId, mCustomerKey, mSecret)
+                innerTranscoder = RestfulTranscoder(mAppId, mAccessKey, mSecretKey)
             }
             return innerTranscoder!!
         }

@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.moczul.ok2curl.CurlInterceptor
 import com.moczul.ok2curl.logger.Logger
 import io.agora.logging.LogManager
+import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -16,9 +17,7 @@ import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import java.io.IOException
-import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 
 class RetryInterceptor constructor(
     private var maxRetryCount: Int,
@@ -55,8 +54,8 @@ class RetryInterceptor constructor(
 
 class RestfulTranscoder constructor(
     private val appId: String,
-    customerKey: String,
-    secret: String
+    val accessKey: String,
+    val secretKey: String
 ) {
 
     private val logger by lazy {
@@ -79,7 +78,7 @@ class RestfulTranscoder constructor(
         .addInterceptor(RetryInterceptor(3, 3000))
         .build()
 
-    private val instanceId = UUID.randomUUID().toString()
+//    private val instanceId = UUID.randomUUID().toString()
 
     private val gson = Gson()
 
@@ -87,24 +86,32 @@ class RestfulTranscoder constructor(
 
     //    private val host = "https://api.sd-rtn.com"
 //    private val host = "http://112.13.168.202:16000"
-    private val host = "http://183.131.160.228:16000"
+//    private val host = "http://183.131.160.228:16000"
+    private val host = "http://218.205.37.34:16000"
 
     private val apiVersion = "/v1/projects/"
 
-    private val author = TranscodeAuthor(customerKey, secret)
+    private val author = TranscodeAuthor(accessKey, secretKey)
 
     private var taskId: String? = null
 
     private var updateSequenceId: Int = 0
 
-    private fun mayAcquire(completion: ((tokenName: String?, code: Int, message: String) -> Unit)?) {
+    private fun mayAcquire(uid: Int, completion: ((tokenName: String?, code: Int, message: String) -> Unit)?) {
         if (!builderToken.isNullOrEmpty()) {
             logger.info(TAG, "already acquire token：$builderToken")
             completion?.invoke(builderToken, 200, "already acquire token")
             return
         }
-        val api = "/rtsc/cloud-transcoder/builderTokens"
-        val map = mapOf("instanceId" to instanceId)
+        val api = "/rtsc/stream-converter/builderTokens"
+        val map = mapOf(
+            "taskLabels" to mapOf(
+                "cname" to "rd-jaco",
+                "uid" to uid.toString(),
+            ),
+            "testPort" to 4447,
+            "testIp" to "218.205.37.34",
+        )
         val jsonString = gson.toJson(map)
         val requestBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
         val request = Request.Builder()
@@ -144,9 +151,9 @@ class RestfulTranscoder constructor(
     ) {
         // reset builderToken
         builderToken = null
-        mayAcquire { tokenName, code, message ->
+        mayAcquire(setting.uid) { tokenName, code, message ->
             if (tokenName != null) {
-                val api = "/rtsc/cloud-transcoder/tasks?builderToken=$tokenName"
+                val api = "/rtsc/stream-converter/tasks?builderToken=$tokenName"
                 val map = dataMapFromSetting(setting)
                 val jsonString = gson.toJson(map)
                 val requestBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
@@ -166,7 +173,7 @@ class RestfulTranscoder constructor(
                         }
                         if (response.code != 200) {
                             if (response.code == 206) {
-                                queryRtmpTranscoding { }
+                                queryRtmpTranscoding(setting.uid) { }
                             }
                             completion?.invoke(false, response.code, response.message)
                             return
@@ -189,15 +196,15 @@ class RestfulTranscoder constructor(
         }
     }
 
-    private fun queryRtmpTranscoding(completion: ((succeed: Boolean) -> Unit)?) {
+    private fun queryRtmpTranscoding(uid: Int, completion: ((succeed: Boolean) -> Unit)?) {
         val taskId = this.taskId ?: run {
             logger.info(TAG, "query but taskId empty")
             completion?.invoke(true)
             return
         }
-        mayAcquire { tokenName, code, message ->
+        mayAcquire(uid) { tokenName, code, message ->
             if (tokenName != null) {
-                val api = "/rtsc/cloud-transcoder/tasks/$taskId"
+                val api = "/rtsc/stream-converter/tasks/$taskId"
                 val builder = getURL(api).toHttpUrl().newBuilder()
                 builder.addQueryParameter("builderToken", tokenName)
                 val url = builder.build()
@@ -229,16 +236,16 @@ class RestfulTranscoder constructor(
             completion?.invoke(false, -100, "update rtmp but taskId is empty")
             return
         }
-        mayAcquire { tokenName, code, message ->
+        mayAcquire(setting.uid) { tokenName, code, message ->
             if (tokenName != null) {
                 updateSequenceId++
-                val api = "/rtsc/cloud-transcoder/tasks/$taskId"
+                val api = "/rtsc/stream-converter/tasks/$taskId"
                 val builder = getURL(api).toHttpUrl().newBuilder()
                 builder.addQueryParameter("builderToken", tokenName)
                 builder.addQueryParameter("sequenceId", updateSequenceId.toString())
-                builder.addQueryParameter("updateMask", "services.cloudTranscoder.config")
+                builder.addQueryParameter("updateMask", "subscribeConfig")
                 val url = builder.build()
-                val map = dataMapFromSetting(setting)
+                val map = dataMapFromSetting(setting, false)
                 val jsonString = gson.toJson(map)
                 val requestBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
                 val request = Request.Builder()
@@ -267,15 +274,15 @@ class RestfulTranscoder constructor(
         }
     }
 
-    fun stopRtmpStream(completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?) {
+    fun stopRtmpStream(uid: Int, completion: ((succeed: Boolean, code: Int, message: String) -> Unit)?) {
         val taskId = this.taskId ?: run {
             logger.info(TAG, "stop but taskId empty")
             completion?.invoke(true, -100, "stop rtmp but taskId is empty")
             return
         }
-        mayAcquire { tokenName, code, message ->
+        mayAcquire(uid) { tokenName, code, message ->
             if (tokenName != null) {
-                val api = "/rtsc/cloud-transcoder/tasks/$taskId?builderToken=$tokenName"
+                val api = "/rtsc/stream-converter/tasks/$taskId?builderToken=$tokenName"
                 val request = Request.Builder()
                     .url(getURL(api))
                     .header("Authorization", author.basicAuth())
@@ -307,81 +314,115 @@ class RestfulTranscoder constructor(
         return "$host$apiVersion$appId$api"
     }
 
-    private fun dataMapFromSetting(setting: TranscodeSetting): Map<String, Any> {
+    private fun dataMapFromSetting(setting: TranscodeSetting, start: Boolean = true): Map<String, Any> {
         val rtcToken = appId
         val audioInputs = mutableListOf<Map<String, *>>()
         val videoInputs = mutableListOf<Map<String, *>>()
         setting.inputItems.forEach { item ->
-            val audioInput = mapOf(
-                "rtc" to mapOf(
-                    "rtcChannel" to item.channel,
-                    "rtcUid" to item.uid,
-                    "rtcToken" to rtcToken
-                ),
+            val audioRtcMap = mutableMapOf(
+                "rtcStringUid" to item.uid.toString(),
+                "rtcChannel" to item.channel,
+                "rtcToken" to rtcToken
             )
+            if (setting.enableUserAccount) {
+                audioRtcMap["userAccount"] = item.account
+            }
+            val audioInput = mapOf("rtc" to audioRtcMap)
+
+            val videoRtcMap = mutableMapOf(
+                "rtcStringUid" to item.uid.toString(),
+                "rtcChannel" to item.channel,
+                "rtcToken" to rtcToken
+            )
+            if (setting.enableUserAccount) {
+                videoRtcMap["userAccount"] = item.account
+            }
             val videoInput = mapOf(
-                "rtc" to mapOf(
-                    "rtcChannel" to item.channel,
-                    "rtcUid" to item.uid,
-                    "rtcToken" to rtcToken,
-                ),
+                "rtc" to videoRtcMap,
                 "placeholderImageUrl" to null,
+                "fillMode" to "FIT",
                 "region" to mapOf(
                     "x" to item.x,
                     "y" to item.y,
                     "width" to item.width,
                     "height" to item.height,
-                    "zOrder" to 1,
+                    "zOrder" to 2,
                 )
             )
             audioInputs.add(audioInput)
             videoInputs.add(videoInput)
         }
-        return mapOf(
-            "services" to mapOf(
-                "cloudTranscoder" to mapOf(
-                    "serviceType" to "cloudTranscoderV2",
-                    "config" to mapOf(
-                        "transcoder" to mapOf(
-                            "idleTimeout" to 300,
-                            "audioInputs" to audioInputs,
-                            "canvas" to mapOf(
-                                "width" to setting.width,
-                                "height" to setting.height,
-                                "color" to 0,
-                                "backgroundImage" to null,
-                                "fillMode" to "FIT"
-                            ),
-                            "waterMarks" to null,
-                            "videoInputs" to videoInputs,
-                            "outputs" to listOf(
-                                mapOf(
-                                    "streamUrl" to setting.cdnURL,
-                                    "audioOption" to mapOf(
-                                        "profileType" to "AUDIO_PROFILE_MUSIC_STANDARD"
-                                    ),
-                                    "videoOption" to mapOf(
-                                        "fps" to setting.fps,
-                                        "codec" to "H265",
-                                        "bitrate" to setting.bitrate,
-                                        "width" to setting.width,
-                                        "height" to setting.height,
-                                        "lowBitrateHighQuality" to false,
-                                    ),
-                                    "seiOption" to mapOf(
-                                        "source" to emptyMap<String, Any>(),
-                                        "sink" to mapOf(
-                                            "type" to 100,
-                                            "aliyun" to true,
-                                            "info" to emptyMap<String, Any>()
-                                        )
-                                    ),
-                                )
+
+
+        val bodyMap = mutableMapOf(
+            "subscribeConfig" to mapOf(
+                "idleTimeout" to 100,
+                "streamProcessMode" to "mixer",
+                "audioInputs" to audioInputs,
+                "videoInputs" to videoInputs,
+                "canvas" to mapOf(
+                    "width" to setting.width,
+                    "height" to setting.height,
+                    "color" to 0,
+                    "backgroundImage" to null,
+                    "fillMode" to "FIT"
+                ),
+                "outputs" to listOf(
+                    mapOf(
+                        "audioOption" to mapOf("profileType" to "AUDIO_PROFILE_DEFAULT"),
+                        "videoOption" to mapOf(
+                            "fps" to setting.fps,
+                            "codec" to "H264",
+                            "bitrate" to setting.bitrate,
+                            "width" to setting.width,
+                            "height" to setting.height,
+                            "gop" to 31,
+                        ),
+                        "sinkPushStream" to setting.rtcChannel,
+                        "seiOption" to mapOf(
+                            "source" to emptyMap<String, Any>(),
+                            "sink" to mapOf(
+                                "type" to 100,
+                                "aliyun" to true,
+                                "info" to emptyMap<String, Any>()
                             )
+                        ),
+                    ),
+                    mapOf(
+                        "files" to listOf(
+                            mapOf("format" to "jpg", "captureInterval" to 10)
+                        ),
+                        "fileProcessMode" to "single",
+                        "audioOption" to mapOf("profileType" to "AUDIO_PROFILE_MUSIC_STANDARD"),
+                        "videoOption" to mapOf(
+                            "fps" to setting.fps / 2,
+                            "codec" to "H264",
+                            "bitrate" to setting.bitrate,
+                            "width" to setting.width,
+                            "height" to setting.height,
+                            "gop" to 16,
                         )
                     )
                 )
-            )
+            ),
+            "maxStreamHours" to 24,
         )
+        if (start) {
+            bodyMap["rtmpPusherConfig"] = listOf(
+                mapOf(
+                    "sourcePullStream" to setting.rtcChannel,
+                    "urls" to listOf(mapOf("url" to setting.cdnURL))
+                )
+            )
+            bodyMap["storageConfig"] = mapOf(
+                "accessKey" to AgoraRtcEngineInstance.transcoder.accessKey,
+                "region" to 3,
+                "bucket" to "recording-wayang",
+                "secretKey" to AgoraRtcEngineInstance.transcoder.secretKey,
+                "vendor" to 2,
+                "fileNamePrefix" to listOf(setting.rtcChannel, setting.uid.toString())
+            )
+        }
+        return bodyMap
     }
 }

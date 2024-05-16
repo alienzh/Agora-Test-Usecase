@@ -15,6 +15,7 @@ import io.agora.mediarelay.rtc.IAgoraRtcClient
 import io.agora.mediarelay.rtc.MPObserverAdapter
 import io.agora.mediarelay.rtc.RtcSettings
 import io.agora.mediarelay.rtc.SeiHelper
+import io.agora.mediarelay.rtc.transcoder.ChannelUid
 import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.FileUtils
 import io.agora.mediarelay.tools.GsonTools
@@ -84,13 +85,14 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
     }
 
     // 房主 account
-    private val ownerAccount
-        get() = channelName
+    private val ownerAccount get() = channelName
 
     //key account，value rtc-uid
     private val uidMapping = mutableMapOf<String, Int>()
 
     private val mVideoList: SparseIntArray = SparseIntArray()
+
+    private var frontCamera = true
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLiving3Binding {
         return FragmentLiving3Binding.inflate(inflater)
@@ -251,7 +253,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             val data = KeyCenter.mBitrateList
             ViewTool.showPop(cxt, binding.btBitrate, data, cdnPosition) { position, text ->
                 tempCdnPosition = position
-                mediaPlayer?.switchSrc(KeyCenter.getRtmpPullUrl(channelName, position), false)
+                mediaPlayer?.switchSrc(KeyCenter.getRtmpPullUrl(channelName, position), true)
             }
         }
         binding.btAlphaGift.setOnClickListener {
@@ -578,18 +580,26 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
 
     /**推流到CDN*/
     private fun setRtmpStreamEnable(enable: Boolean) {
+        val userId = uidMapping[userAccount] ?: return
         if (enable) {
             // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
             val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
             if (publishedRtmp) {
-                AgoraRtcEngineInstance.transcoder.stopRtmpStream(null)
+                AgoraRtcEngineInstance.transcoder.stopRtmpStream(userId, null)
                 publishedRtmp = false
+            }
+            val channelUids = mutableListOf<ChannelUid>()
+            mVideoList.forEach { key, uid ->
+                val account = getKey(uidMapping, uid)
+                channelUids.add(ChannelUid(channelName, uid, account))
             }
             AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(
                 TranscodeSetting.liveTranscoding3(
+                    RtcSettings.mEnableUserAccount,
+                    userId,
                     channelName,
                     pushUrl,
-                    mVideoList
+                    channelUids
                 )
             ) { succeed, code, message ->
                 if (succeed) {
@@ -601,7 +611,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             }
         } else {
             // 删除一个推流地址。
-            AgoraRtcEngineInstance.transcoder.stopRtmpStream { succeed, code, message ->
+            AgoraRtcEngineInstance.transcoder.stopRtmpStream(userId) { succeed, code, message ->
                 if (succeed) {
                     publishedRtmp = false
                 } else {
@@ -613,13 +623,21 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
 
     /**新主播进来，更新CDN推流*/
     private fun updateRtmpStreamEnable() {
+        val userId = uidMapping[userAccount] ?: return
         // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
         val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
+        val channelUids = mutableListOf<ChannelUid>()
+        mVideoList.forEach { key, uid ->
+            val account = getKey(uidMapping, uid)
+            channelUids.add(ChannelUid(channelName, uid, account))
+        }
         AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(
             TranscodeSetting.liveTranscoding3(
+                RtcSettings.mEnableUserAccount,
+                userId,
                 channelName,
                 pushUrl,
-                mVideoList
+                channelUids
             )
         ) { succeed, code, message ->
             if (succeed) {
@@ -727,9 +745,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             }
             if (uid == uidMapping[userAccount]) {
                 rtcEngine.setupLocalVideo(
-                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, uid).apply {
-                        mirrorMode = Constants.VIDEO_MIRROR_MODE_ENABLED
-                    }
+                    VideoCanvas(textureView, Constants.RENDER_MODE_HIDDEN, uid)
                 )
             } else {
                 rtcEngine.setupRemoteVideo(
@@ -850,7 +866,7 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
     private fun showGiftTexture() {
 //        val localTexture = mTextureVideos[0] ?: return
 //        val localContainter = (localTexture.parent as? ViewGroup) ?: return
-        val localContainter  = binding.root
+        val localContainter = binding.root
         val giftUrl = KeyCenter.alphaGiftList[tempGiftPosition].url
         localContainter.removeView(localGiftTexture)
         val childCount = localContainter.childCount

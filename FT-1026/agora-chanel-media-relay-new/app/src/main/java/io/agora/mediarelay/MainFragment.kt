@@ -35,9 +35,7 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         binding.enterRoom.setOnClickListener {
             checkGoLivePage()
         }
-        binding.appIdCustom.text = if (BuildConfig.CUSTOM_APP_ID.isNotEmpty()) {
-            BuildConfig.CUSTOM_APP_ID.substring(0, 9) + "***"
-        } else "Empty"
+//        binding.appIdCustom.text = "Empty"
         binding.etPushUrl.setText(KeyCenter.mPushUrl)
         binding.etPullUrl.setText(KeyCenter.mPullUrl)
         binding.etPushUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
@@ -190,13 +188,13 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 BuildConfig.AGORA_CUSTOMER_KEY,
                 BuildConfig.AGORA_CUSTOMER_SECRET
             )
-        } else {
+        } /*else {
             AgoraRtcEngineInstance.setAppKeys(
                 BuildConfig.CUSTOM_APP_ID,
                 BuildConfig.CUSTOM_CUSTOMER_KEY,
                 BuildConfig.CUSTOM_CUSTOMER_SECRET
             )
-        }
+        }*/
         setupVideoSettings()
         val args = Bundle().apply {
             putString(LivingFragment.KEY_CHANNEL_ID, channelId)

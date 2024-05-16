@@ -104,4 +104,8 @@ abstract class BaseUiFragment<B : ViewBinding> : Fragment() {
         val imm = editText.context.getSystemService(AppCompatActivity.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.showSoftInput(editText, 0)
     }
+
+    fun <K, V> getKey(hashMap: Map<K, V>, target: V): K {
+        return hashMap.filter { target == it.value }.keys.first()
+    }
 }

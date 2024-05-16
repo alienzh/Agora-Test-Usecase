@@ -79,8 +79,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     @Volatile
     private var audienceStatus: AudienceStatus = AudienceStatus.CDN_Audience
 
-    private val isInPk
-        get() = remotePkChannel.isNotEmpty()
+    private val isInPk get() = remotePkChannel.isNotEmpty()
 
     // pk 频道
     private var remotePkChannel = ""
@@ -91,11 +90,12 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     }
 
     // 房主 account
-    private val ownerAccount
-        get() = channelName
+    private val ownerAccount get() = channelName
 
     //key account，value rtc-uid
     private val uidMapping = mutableMapOf<String, Int>()
+
+    private var frontCamera = true
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLivingBinding {
         return FragmentLivingBinding.inflate(inflater)
@@ -141,7 +141,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 remotePkChannel = ""
                 stopPk()
                 uidMapping[userAccount]?.let { ownerUid ->
-                    val channelUid = ChannelUid(channelName, ownerUid)
+                    val channelUid = ChannelUid(channelName, ownerUid, userAccount)
                     updateRtmpStreamEnable(channelUid)
                 }
             } else {
@@ -170,6 +170,10 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
         binding.btSwitchCarma.setOnClickListener {
             rtcEngine.switchCamera()
+            frontCamera=!frontCamera
+            if (frontCamera){
+
+            }
         }
         binding.btMuteMic.setOnClickListener {
             if (muteLocalAudio) {
@@ -213,7 +217,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 tempCdnPosition = position
                 val pullUrl = KeyCenter.getRtmpPullUrl(channelName, position)
                 Log.d(TAG, "switchSrc $pullUrl")
-                mediaPlayer?.switchSrc(pullUrl, false)
+                mediaPlayer?.switchSrc(pullUrl, true)
             }
         }
         binding.btAlphaGift.setOnClickListener {
@@ -388,7 +392,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         onChannelJoined = { channel, uid ->
             if (isOwner) {
                 startSendRemoteChannel()
-                setRtmpStreamEnable(true, uid)
+                setRtmpStreamEnable(true)
                 startSendSei()
             } else {
                 //超级画质
@@ -487,19 +491,22 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     }
 
     /**推流到CDN*/
-    private fun setRtmpStreamEnable(enable: Boolean, uid: Int) {
+    private fun setRtmpStreamEnable(enable: Boolean) {
+        val userId = uidMapping[userAccount] ?: return
         if (enable) {
             // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
             val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
             if (publishedRtmp) {
-                AgoraRtcEngineInstance.transcoder.stopRtmpStream(null)
+                AgoraRtcEngineInstance.transcoder.stopRtmpStream(userId, null)
                 publishedRtmp = false
             }
             AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(
                 TranscodeSetting.liveTranscoding(
+                    RtcSettings.mEnableUserAccount,
+                    userId,
                     channelName,
                     pushUrl,
-                    ChannelUid(channelName, uid)
+                    ChannelUid(channelName, userId, userAccount)
                 )
             ) { succeed, code, message ->
                 if (succeed) {
@@ -511,7 +518,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             }
         } else {
             // 删除一个推流地址。
-            AgoraRtcEngineInstance.transcoder.stopRtmpStream { succeed, code, message ->
+            AgoraRtcEngineInstance.transcoder.stopRtmpStream(userId) { succeed, code, message ->
                 if (succeed) {
                     publishedRtmp = false
                 } else {
@@ -523,10 +530,13 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     /**新主播进来，更新CDN推流*/
     private fun updateRtmpStreamEnable(@Size(min = 1) vararg channelUids: ChannelUid) {
+        val userId = uidMapping[userAccount] ?: return
         // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
         val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
         AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(
             TranscodeSetting.liveTranscoding(
+                RtcSettings.mEnableUserAccount,
+                userId,
                 channelName,
                 pushUrl,
                 *channelUids
@@ -554,9 +564,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
             uidMapping[userAccount]?.let { uid ->
                 rtcEngine.setupLocalVideo(
-                    VideoCanvas(localTexture, Constants.RENDER_MODE_ADAPTIVE, uid).apply {
-                        mirrorMode = Constants.VIDEO_MIRROR_MODE_ENABLED
-                    }
+                    VideoCanvas(localTexture, Constants.RENDER_MODE_ADAPTIVE, uid)
                 )
             }
 
@@ -630,9 +638,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.layoutVideoContainer.removeAllViews()
         binding.layoutVideoContainer.addView(localTexture)
         rtcEngine.setupLocalVideo(
-            VideoCanvas(localTexture, Constants.RENDER_MODE_FIT, localUid).apply {
-                mirrorMode = Constants.VIDEO_MIRROR_MODE_ENABLED
-            }
+            VideoCanvas(localTexture, Constants.RENDER_MODE_FIT, localUid)
         )
     }
 
@@ -722,7 +728,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         if (isOwner) {
             stopSendSei()
             stopSendRemoteChannel()
-            setRtmpStreamEnable(false, -1)
+            setRtmpStreamEnable(false)
         } else {
             mediaPlayer?.apply {
                 unRegisterPlayerObserver(mediaPlayerObserver)
@@ -786,15 +792,22 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             LogTool.d(TAG, "remoteChannel onFirstRemoteVideoFrame uid:$uid,width:$width,height:$height")
         }
 
-        override fun onUserJoined(uid: Int, elapsed: Int) {
-            super.onUserJoined(uid, elapsed)
-            LogTool.d(TAG, "remoteChannel remoteChannel uid:$uid")
+        override fun onUserJoined(remoteUid: Int, elapsed: Int) {
+            super.onUserJoined(remoteUid, elapsed)
+            LogTool.d(TAG, "remoteChannel remoteChannel uid:$remoteUid")
             runOnMainThread {
-                updatePkMode(uid)
+                updatePkMode(remoteUid)
                 if (isOwner) {
                     uidMapping[userAccount]?.let { ownerUid ->
-                        val channelUid = ChannelUid(channelName, ownerUid)
-                        val remoteChannelUid = ChannelUid(remotePkChannel, uid)
+                        val channelUid = ChannelUid(channelName, ownerUid, userAccount)
+
+                        var remoteAccount = ""
+                        uidMapping.forEach { fAccount, fUid ->
+                            if (fUid == remoteUid) {
+                                remoteAccount = fAccount
+                            }
+                        }
+                        val remoteChannelUid = ChannelUid(remotePkChannel, remoteUid, remoteAccount)
                         val channelUids = arrayOf(channelUid, remoteChannelUid)
                         updateRtmpStreamEnable(*channelUids)
                     }

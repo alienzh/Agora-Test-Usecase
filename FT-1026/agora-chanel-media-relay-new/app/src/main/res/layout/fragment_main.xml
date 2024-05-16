@@ -67,14 +67,14 @@
                         android:textColor="@color/white"
                         android:textSize="13sp" />
 
-                    <androidx.appcompat.widget.AppCompatRadioButton
-                        android:id="@+id/app_id_custom"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:text="@string/cdn_custom"
-                        android:textColor="@color/white"
-                        android:textSize="13sp" />
+<!--                    <androidx.appcompat.widget.AppCompatRadioButton-->
+<!--                        android:id="@+id/app_id_custom"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:layout_marginStart="8dp"-->
+<!--                        android:text="@string/cdn_custom"-->
+<!--                        android:textColor="@color/white"-->
+<!--                        android:textSize="13sp" />-->
                 </RadioGroup>
             </androidx.constraintlayout.widget.ConstraintLayout>
 

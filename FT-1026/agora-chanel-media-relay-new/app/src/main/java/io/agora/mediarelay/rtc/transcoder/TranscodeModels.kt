@@ -1,17 +1,18 @@
 package io.agora.mediarelay.rtc.transcoder
 
-import android.util.SparseIntArray
 import androidx.annotation.Size
 import io.agora.rtc2.video.VideoEncoderConfiguration
 
 data class ChannelUid constructor(
     val channel: String,
-    val uid: Int
+    val uid: Int,
+    val userAccount: String
 )
 
 data class TransInputItem constructor(
     val channel: String,
     val uid: Int,
+    val account: String,
     val x: Int,
     val y: Int,
     val width: Int,
@@ -19,6 +20,8 @@ data class TransInputItem constructor(
 )
 
 data class TranscodeSetting constructor(
+    val enableUserAccount: Boolean,
+    val uid: Int,
     val rtcChannel: String,
     val cdnURL: String,
     val fps: Int,
@@ -33,12 +36,14 @@ data class TranscodeSetting constructor(
     // 1500
 
     companion object {
-         private val bitRate = 3072
+        private val bitRate = 3072
 
-         private val videoDimensions = VideoEncoderConfiguration.VD_1920x1080
+        private val videoDimensions = VideoEncoderConfiguration.VD_1920x1080
 
         /**旁路推流转码1v1*/
         fun liveTranscoding(
+            enableUserAccount: Boolean,
+            uid: Int,
             channel: String,
             cdn: String,
             @Size(min = 1) vararg channelUids: ChannelUid,
@@ -57,6 +62,7 @@ data class TranscodeSetting constructor(
                 val item = TransInputItem(
                     channel = it.channel,
                     uid = it.uid,
+                    account = it.userAccount,
                     x = totalX,
                     y = totalY,
                     width = fullWidth / channelUids.size,
@@ -67,6 +73,8 @@ data class TranscodeSetting constructor(
             }
             // 旁路推流，默认1080p24fps分辨率。
             return TranscodeSetting(
+                enableUserAccount,
+                uid,
                 channel,
                 cdn,
                 VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value,
@@ -78,7 +86,13 @@ data class TranscodeSetting constructor(
         }
 
         /**旁路推流转码1vn*/
-        fun liveTranscodingMulti(channel: String, cdn: String, videoUids: SparseIntArray): TranscodeSetting {
+        fun liveTranscodingMulti(
+            enableUserAccount:Boolean,
+            uid: Int,
+            channel: String,
+            cdn: String,
+            channelUids: List<ChannelUid>
+        ): TranscodeSetting {
             // 竖屏
             val fullWidth = videoDimensions.height
             val fullHeight = videoDimensions.width
@@ -88,14 +102,15 @@ data class TranscodeSetting constructor(
             val singleSize = fullWidth / 4
             var transcodingX = 0
             var transcodingY = 0
-            for (i in 0 until videoUids.size()) {
-                val videoUid = videoUids[i]
+            for (i in 0 until channelUids.size) {
+                val videoUid = channelUids[i].uid
                 if (videoUid == -1) continue
                 transcodingX = singleSize * (i % 4)
                 transcodingY = startY + singleSize * (i / 4)
                 val item = TransInputItem(
                     channel = channel,
                     uid = videoUid,
+                    account = channelUids[i].userAccount,
                     x = transcodingX,
                     y = transcodingY,
                     width = singleSize,
@@ -105,6 +120,8 @@ data class TranscodeSetting constructor(
             }
             // 旁路推流，默认1080p24fps分辨率。
             return TranscodeSetting(
+                enableUserAccount,
+                uid,
                 channel,
                 cdn,
                 VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15.value,
@@ -116,7 +133,13 @@ data class TranscodeSetting constructor(
         }
 
         /**旁路推流转码1v2*/
-        fun liveTranscoding3(channel: String, cdn: String, videoUids: SparseIntArray): TranscodeSetting {
+        fun liveTranscoding3(
+            enableUserAccount:Boolean,
+            uid: Int,
+            channel: String,
+            cdn: String,
+            channelUids: List<ChannelUid>
+        ): TranscodeSetting {
             // 竖屏
             val fullWidth = videoDimensions.height
             val fullHeight = videoDimensions.width
@@ -128,8 +151,8 @@ data class TranscodeSetting constructor(
             var singleHeight = 0
             var transcodingX = 0
             var transcodingY = 0
-            for (i in 0 until videoUids.size()) {
-                val videoUid = videoUids[i]
+            for (i in 0 until channelUids.size) {
+                val videoUid = channelUids[i].uid
                 if (videoUid == -1) continue
                 if (i == 0) {
                     singleWidth = unitSize
@@ -150,6 +173,7 @@ data class TranscodeSetting constructor(
                 val item = TransInputItem(
                     channel = channel,
                     uid = videoUid,
+                    account = channelUids[i].userAccount,
                     x = transcodingX,
                     y = transcodingY,
                     width = singleWidth,
@@ -159,6 +183,8 @@ data class TranscodeSetting constructor(
             }
             // 旁路推流，默认1080p24fps分辨率。
             return TranscodeSetting(
+                enableUserAccount,
+                uid,
                 channel,
                 cdn,
                 VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15.value,
@@ -170,7 +196,13 @@ data class TranscodeSetting constructor(
         }
 
         /**旁路推流转码1v3*/
-        fun liveTranscoding4(channel: String, cdn: String, videoUids: SparseIntArray): TranscodeSetting {
+        fun liveTranscoding4(
+            enableUserAccount: Boolean,
+            uid: Int,
+            channel: String,
+            cdn: String,
+            channelUids: List<ChannelUid>
+        ): TranscodeSetting {
             // 竖屏
             val fullWidth = videoDimensions.height
             val fullHeight = videoDimensions.width
@@ -180,14 +212,15 @@ data class TranscodeSetting constructor(
             val singleSize = fullWidth / 2
             var transcodingX = 0
             var transcodingY = 0
-            for (i in 0 until videoUids.size()) {
-                val videoUid = videoUids[i]
+            for (i in 0 until channelUids.size) {
+                val videoUid = channelUids[i].uid
                 if (videoUid == -1) continue
                 transcodingX = singleSize * (i % 2)
                 transcodingY = startY + singleSize * (i / 2)
                 val item = TransInputItem(
                     channel = channel,
                     uid = videoUid,
+                    account = channelUids[i].userAccount,
                     x = transcodingX,
                     y = transcodingY,
                     width = singleSize,
@@ -197,6 +230,8 @@ data class TranscodeSetting constructor(
             }
             // 旁路推流，默认1080p24fps分辨率。
             return TranscodeSetting(
+                enableUserAccount,
+                uid,
                 channel,
                 cdn,
                 VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_15.value,
