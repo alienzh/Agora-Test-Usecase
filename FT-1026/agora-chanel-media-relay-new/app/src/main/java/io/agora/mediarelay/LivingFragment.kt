@@ -696,9 +696,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private fun updateVideoEncoder() {
         if (isInPk && RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_1920x1080) {
             val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
+                mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_DISABLED
                 dimensions = VideoEncoderConfiguration.VD_1280x720
                 frameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value
-                mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_ENABLED
             }
             val ret =
                 rtcEngine.setParameters("{\"che.video.auto_adjust_resolution\":{\"auto_adjust_resolution_flag\":0}}")
