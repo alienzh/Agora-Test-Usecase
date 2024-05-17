@@ -319,23 +319,29 @@ class RestfulTranscoder constructor(
         val audioInputs = mutableListOf<Map<String, *>>()
         val videoInputs = mutableListOf<Map<String, *>>()
         setting.inputItems.forEach { item ->
-            val audioRtcMap = mutableMapOf(
-                "rtcStringUid" to item.uid.toString(),
+            val audioRtcMap = mutableMapOf<String, Any>(
                 "rtcChannel" to item.channel,
                 "rtcToken" to rtcToken
             )
             if (setting.enableUserAccount) {
-                audioRtcMap["userAccount"] = item.account
+                audioRtcMap["rtcStringUid"] = item.account
+                audioRtcMap["userAccount"] = "bot${item.account}" //转推机器人使用的StringUid
+            } else {
+                // int uid 服务会自己生成 机器人 uid
+                audioRtcMap["rtcUid"] = item.uid
             }
             val audioInput = mapOf("rtc" to audioRtcMap)
 
-            val videoRtcMap = mutableMapOf(
-                "rtcStringUid" to item.uid.toString(),
+            val videoRtcMap = mutableMapOf<String, Any>(
                 "rtcChannel" to item.channel,
                 "rtcToken" to rtcToken
             )
             if (setting.enableUserAccount) {
-                videoRtcMap["userAccount"] = item.account
+                videoRtcMap["rtcStringUid"] = item.account
+                videoRtcMap["userAccount"] = "bot${item.account}" //转推机器人使用的StringUid
+            } else {
+                // int uid 服务会自己生成 机器人 uid
+                videoRtcMap["rtcUid"] = item.uid
             }
             val videoInput = mapOf(
                 "rtc" to videoRtcMap,
