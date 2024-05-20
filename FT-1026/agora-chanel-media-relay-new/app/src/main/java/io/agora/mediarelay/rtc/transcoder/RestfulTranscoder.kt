@@ -110,7 +110,7 @@ class RestfulTranscoder constructor(
                 "uid" to uid.toString(),
             ),
             "testPort" to 4447,
-            "testIp" to "218.205.37.34",
+            "testIp" to "218.205.37.48",
         )
         val jsonString = gson.toJson(map)
         val requestBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())

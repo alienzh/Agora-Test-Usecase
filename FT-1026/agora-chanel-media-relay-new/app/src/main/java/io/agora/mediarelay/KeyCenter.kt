@@ -71,8 +71,11 @@ object KeyCenter {
 //    private const val AGORA_PUSH_URL = "rtmp://examplepush.agoramdn.com/live/"
 //    private const val AGORA_PULL_URL = "http://examplepull.agoramdn.com/live/"
 
-    private const val AGORA_PUSH_URL = "rtmp://push.webdemo.agoraio.cn/live/"
-    private const val AGORA_PULL_URL = "http://pull.webdemo.agoraio.cn/live/"
+//    private const val AGORA_PUSH_URL = "rtmp://push.webdemo.agoraio.cn/live/"
+//    private const val AGORA_PULL_URL = "http://pull.webdemo.agoraio.cn/live/"
+
+    private const val AGORA_PUSH_URL = "rtmp://examplepush.agoramdn.com/live/"
+    private const val AGORA_PULL_URL = "http://examplepull.agoramdn.com/live/"
 
     private const val push_huawei ="rtmp://push-hw.jacocdn.com/live/5036068430853962_main?hwSecret=756d6d31b288c173ee50beb4ac37528ec3dfe8a3fc3e15880340ea90228de807&hwTime=6657f41d"
     private const val push_tecent = "rtmp://tlive-push.jacocdn.com/tlive/5036068430853962_backup?txSecret=8981e94439a2e391f0a7b771acad8e23&txTime=6657F401"
@@ -94,9 +97,12 @@ object KeyCenter {
     var mBitrateList = arrayOf<String?>("1080p", "720p")
 
     private const val replaceChannel = "channle"
+
+    private const val urlPre = "agdemo"
+
     private val mAgoraCdnPullList = arrayOf(
-        CdnUrlModel("1080p", "${AGORA_PULL_URL}agdemo${replaceChannel}_las1080p.flv"),
-        CdnUrlModel("720p", "${AGORA_PULL_URL}agdemo${replaceChannel}.flv"),
+        CdnUrlModel("1080p", "$AGORA_PULL_URL$urlPre${replaceChannel}_1080p.flv"),
+        CdnUrlModel("720p", "$AGORA_PULL_URL$urlPre${replaceChannel}_720p.flv"),
     )
 
     private val mHuaweiCdnPullList = arrayOf(
@@ -164,8 +170,6 @@ object KeyCenter {
                 }
             }
         }
-
-    private const val urlPre = "agdemo"
 
     val MAX_META_SIZE = 1024
 
