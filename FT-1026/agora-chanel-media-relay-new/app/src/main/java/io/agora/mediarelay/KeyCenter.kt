@@ -74,21 +74,21 @@ object KeyCenter {
     private const val AGORA_PUSH_URL = "rtmp://push.webdemo.agoraio.cn/live/"
     private const val AGORA_PULL_URL = "http://pull.webdemo.agoraio.cn/live/"
 
-    private const val push_huawei ="rtmp://push-hw.jacocdn.com/live/5032563931251409_main?hwSecret=7e3ab2aed182b85f7be5e4f08a7030180d70b92449c0eedae3afca14b67183aa&hwTime=664b34e7"
-    private const val push_tecent = "rtmp://tlive-push.jacocdn.com/tlive/5032563931251409_backup?txSecret=aaf16e113f9303d55e16f8e1c615f315&txTime=664B34D5"
-    private const val push_ali ="rtmp://ali-push.jacocdn.com/live/5032563931251409_ali?auth_key=1716204714-0-0-6b010cea8f528ab172712529651e78b8"
+    private const val push_huawei ="rtmp://push-hw.jacocdn.com/live/5036068430853962_main?hwSecret=756d6d31b288c173ee50beb4ac37528ec3dfe8a3fc3e15880340ea90228de807&hwTime=6657f41d"
+    private const val push_tecent = "rtmp://tlive-push.jacocdn.com/tlive/5036068430853962_backup?txSecret=8981e94439a2e391f0a7b771acad8e23&txTime=6657F401"
+    private const val push_ali ="rtmp://ali-push.jacocdn.com/live/5036068430853962_ali?auth_key=1717040063-0-0-2c002815a52e15ada1ec82b25db056bc"
 
-    private const val pull_huawei_720p ="http://play-hw.jacocdn.com/live/5032563931251409_main_720P.flv?hwSecret=aaa5acf1ac5058bdbce3f889ae6d7cb8dc90e05aaba1ec8a106d4eb8e6a11905&hwTime=663f57a5"
-    private const val pull_huawei_540p ="http://play-hw.jacocdn.com/live/5032563931251409_main_540P.flv?hwSecret=e3b9e35cb2b37c795bcbd6b2b7c26c5bda0e21367dc8c3cc3dc572dc219594f3&hwTime=663f57a5"
-    private const val pull_huawei_1080p ="http://play-hw.jacocdn.com/live/5032563931251409_main.flv?hwSecret=a56a777233b1e21c808f62453e0e7e26d480cc1d8fd52059cdd993689a0023df&hwTime=663f57a5"
+    private const val pull_huawei_720p ="http://play-hw.jacocdn.com/live/5036068430853962_main_720P.flv?hwSecret=53fe5eefa05902a1ef93bfed5c144b793e373cde93b891a417b2d2c462190a57&hwTime=664c16c2"
+    private const val pull_huawei_540p ="http://play-hw.jacocdn.com/live/5036068430853962_main_540P.flv?hwSecret=4165758c72b5a26e175d0221833847c48c92fd68e4f16efd5affa407b726d25e&hwTime=664c16c2"
+    private const val pull_huawei_1080p ="http://play-hw.jacocdn.com/live/5036068430853962_main.flv?hwSecret=6e3a4d7190b972c679355318c80bc7ede3bdf1ac84491b0bb762d4e219cebcd5&hwTime=664c16c2"
 
-    private const val pull_tecent_720p ="http://tlive-play.jacocdn.com/tlive/5032563931251409_backup_720P.flv?txSecret=e2eebc01d8b4642062e0c7a79d5f29b7&txTime=663F57C4"
-    private const val pull_tecent_540p ="http://tlive-play.jacocdn.com/tlive/5032563931251409_backup_540P.flv?txSecret=9445a1a78d549ac4201a869f9a013b64&txTime=663F57C4"
-    private const val pull_tecent_1080p ="http://tlive-play.jacocdn.com/tlive/5032563931251409_backup.flv?txSecret=a0ff4c6b4ef6009f713a83fe9a3bf5cc&txTime=663F57C4"
+    private const val pull_tecent_720p ="http://tlive-play.jacocdn.com/tlive/5036068430853962_backup_720P.flv?txSecret=24dfe30862405ab56a1f26ce896bf23b&txTime=664C16EB"
+    private const val pull_tecent_540p ="http://tlive-play.jacocdn.com/tlive/5036068430853962_backup_540P.flv?txSecret=18eca7b5c5fdc3fef123fe10e8f8167e&txTime=664C16EB"
+    private const val pull_tecent_1080p ="http://tlive-play.jacocdn.com/tlive/5036068430853962_backup.flv?txSecret=e6c67395f19e9f4e6ab059bbfdf2acc7&txTime=664C16EB"
 
-    private const val pull_ali_720p ="http://ali-play.jacocdn.com/live/5032563931251409_ali_720P.flv?auth_key=1715427237-0-0-15dcf917baedf4ab6e0cead25d69ed76"
-    private const val pull_ali_540p ="http://ali-play.jacocdn.com/live/5032563931251409_ali_540P.flv?auth_key=1715427237-0-0-ff0cddb0f2817870fdf16ada19f32b8d"
-    private const val pull_ali_1080p ="http://ali-play.jacocdn.com/live/5032563931251409_ali.flv?auth_key=1715427237-0-0-5967a536a7c941b790a11673457ff41e"
+    private const val pull_ali_720p ="https://ali-play.jacocdn.com/live/5036068430853962_ali_720P.flv?auth_key=1716262594-0-0-f6d3059f059cf9b75ef77b8cf96a6c80"
+    private const val pull_ali_540p ="https://ali-play.jacocdn.com/live/5036068430853962_ali_540P.flv?auth_key=1716262594-0-0-b644f46357c7dea1b71af0fe6432db22"
+    private const val pull_ali_1080p ="https://ali-play.jacocdn.com/live/5036068430853962_ali.flv?auth_key=1716262594-0-0-d24f1f8dd3dd328bdc08bce7c4315fd9"
 
     // cdn 分辨率
     var mBitrateList = arrayOf<String?>("1080p", "720p")
