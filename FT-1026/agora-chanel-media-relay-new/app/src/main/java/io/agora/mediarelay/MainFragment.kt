@@ -71,13 +71,14 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         }
 
         // enable quic, 至针对直播流，主播隐藏，观众打开
-        binding.layoutQuic.isVisible = !isBroadcaster
-        binding.cbQuic.setChecked(RtcSettings.mEnableQuic)
-        binding.cbQuic.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (buttonView.isPressed) {
-                RtcSettings.mEnableQuic = isChecked
-            }
-        }
+        binding.layoutQuic.isVisible = false // 暂时隐藏
+//        binding.layoutQuic.isVisible = !isBroadcaster
+//        binding.cbQuic.setChecked(RtcSettings.mEnableQuic)
+//        binding.cbQuic.setOnCheckedChangeListener { buttonView, isChecked ->
+//            if (buttonView.isPressed) {
+//                RtcSettings.mEnableQuic = isChecked
+//            }
+//        }
 
         checkVideoSettingsVisible()
         // mode

@@ -105,7 +105,7 @@ abstract class BaseUiFragment<B : ViewBinding> : Fragment() {
         imm.showSoftInput(editText, 0)
     }
 
-    fun <K, V> getKey(hashMap: Map<K, V>, target: V): K {
-        return hashMap.filter { target == it.value }.keys.first()
+    fun <K, V> getKey(hashMap: Map<K, V>, target: V): K? {
+        return hashMap.entries.firstOrNull { it.value == target }?.key
     }
 }

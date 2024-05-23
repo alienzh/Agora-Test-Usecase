@@ -87,7 +87,7 @@ class RestfulTranscoder constructor(
     //    private val host = "https://api.sd-rtn.com"
 //    private val host = "http://112.13.168.202:16000"
 //    private val host = "http://183.131.160.228:16000"
-    private val host = "http://218.205.37.34:16000"
+    private val host = "http://98.98.237.22:16000"
 
     private val apiVersion = "/v1/projects/"
 
@@ -109,8 +109,8 @@ class RestfulTranscoder constructor(
                 "cname" to "rd-jaco",
                 "uid" to uid.toString(),
             ),
-            "testPort" to 4447,
-            "testIp" to "218.205.37.48",
+//            "testPort" to 4447,
+//            "testIp" to "218.205.37.34"
         )
         val jsonString = gson.toJson(map)
         val requestBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
@@ -321,7 +321,13 @@ class RestfulTranscoder constructor(
         setting.inputItems.forEach { item ->
             val audioRtcMap = mutableMapOf<String, Any>(
                 "rtcChannel" to item.channel,
-                "rtcToken" to rtcToken
+                "rtcToken" to rtcToken,
+                "parameters" to listOf(
+                    "{\"rtc.video.playout_delay_min\":500}",
+                    "{\"che.video.vpr.enable\":true}",
+                    "{\"che.video.vpr.method\":1}",
+                    "{\"rtc.video.frame_buffer_skip_delayed_frame\":false}"
+                )
             )
             if (setting.enableUserAccount) {
                 audioRtcMap["rtcStringUid"] = item.account
@@ -334,7 +340,13 @@ class RestfulTranscoder constructor(
 
             val videoRtcMap = mutableMapOf<String, Any>(
                 "rtcChannel" to item.channel,
-                "rtcToken" to rtcToken
+                "rtcToken" to rtcToken,
+                "parameters" to listOf(
+                    "{\"rtc.video.playout_delay_min\":500}",
+                    "{\"che.video.vpr.enable\":true}",
+                    "{\"che.video.vpr.method\":1}",
+                    "{\"rtc.video.frame_buffer_skip_delayed_frame\":false}"
+                )
             )
             if (setting.enableUserAccount) {
                 videoRtcMap["rtcStringUid"] = item.account

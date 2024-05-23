@@ -465,6 +465,9 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             if (existIndex != -1) return@IChannelEventListener
             val emptyIndex = fetchValidIndex(uid)
             if (emptyIndex == -1) return@IChannelEventListener
+            if (!RtcSettings.mEnableUserAccount){
+                uidMapping[uid.toString()]= uid
+            }
             mVideoList.put(emptyIndex, uid)
             notifyItemChanged(emptyIndex)
             if (isOwner) {
@@ -589,8 +592,9 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
             }
             val channelUids = mutableListOf<ChannelUid>()
             mVideoList.forEach { key, uid ->
-                val account = getKey(uidMapping, uid)
-                channelUids.add(ChannelUid(channelName, uid, account))
+                getKey(uidMapping, uid)?.let {
+                    channelUids.add(ChannelUid(channelName, uid, it))
+                }
             }
             AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(
                 TranscodeSetting.liveTranscoding4(
@@ -627,8 +631,9 @@ class Living4Fragment : BaseUiFragment<FragmentLiving4Binding>() {
         val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
         val channelUids = mutableListOf<ChannelUid>()
         mVideoList.forEach { key, uid ->
-            val account = getKey(uidMapping, uid)
-            channelUids.add(ChannelUid(channelName, uid, account))
+            getKey(uidMapping, uid)?.let {
+                channelUids.add(ChannelUid(channelName, uid, it))
+            }
         }
         AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(
             TranscodeSetting.liveTranscoding4(
