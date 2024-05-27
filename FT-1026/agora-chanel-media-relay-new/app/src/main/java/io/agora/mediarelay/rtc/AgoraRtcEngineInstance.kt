@@ -43,8 +43,8 @@ object AgoraRtcEngineInstance {
     private var innerTranscoder: RestfulTranscoder? = null
 
     var mAppId: String = BuildConfig.AGORA_APP_ID
-    private var mAccessKey: String = BuildConfig.AGORA_APP_ID
-    private var mSecretKey: String = BuildConfig.AGORA_APP_ID
+    private var mAccessKey: String =""
+    private var mSecretKey: String = ""
 
     private var mVideoInfoListener: IVideoInfoListener? = null
 

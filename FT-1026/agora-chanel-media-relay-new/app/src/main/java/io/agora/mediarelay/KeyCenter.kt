@@ -218,17 +218,4 @@ object KeyCenter {
             else -> mAgoraCdnPullList[position].url.replace(replaceChannel, channelId)
         }
     }
-
-    fun getRtcToken(channelId: String, uid: Int): String {
-        var rtcToken: String = ""
-        try {
-            rtcToken = RtcTokenBuilder().buildTokenWithUid(
-                BuildConfig.AGORA_APP_ID, BuildConfig.AGORA_CUSTOMER_SECRET, channelId, uid,
-                RtcTokenBuilder.Role.Role_Publisher, 0
-            )
-        } catch (e: Exception) {
-            LogTool.e("rtc token build error:${e.message}")
-        }
-        return rtcToken
-    }
 }
