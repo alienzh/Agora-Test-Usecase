@@ -286,9 +286,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED) {
                 mediaPlayer?.play()
             }
-            if (error != io.agora.mediaplayer.Constants.MediaPlayerReason.PLAYER_REASON_NONE) {
+            if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_FAILED) {
                 runOnMainThread {
-                    ToastTool.showToast("$error")
+                    ToastTool.showToast("state:$state \n error:$error")
                 }
             }
             if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING) {

@@ -53,7 +53,7 @@ object RtcSettings {
             LogTool.d("RtcSetting mEnableQuic：$newValue")
         }
 
-    var mSwitchSrcTimeout: Int = 2
+    var mSwitchSrcTimeout: Int = 20
         set(newValue) {
             if (newValue > 0) {
                 field = newValue
