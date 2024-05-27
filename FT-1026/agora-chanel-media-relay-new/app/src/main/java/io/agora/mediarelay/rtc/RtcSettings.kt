@@ -53,6 +53,14 @@ object RtcSettings {
             LogTool.d("RtcSetting mEnableQuic：$newValue")
         }
 
+    var mSwitchSrcTimeout: Int = 2
+        set(newValue) {
+            if (newValue > 0) {
+                field = newValue
+                LogTool.d("RtcSetting mSwitchSrcTimeout：$newValue")
+            }
+        }
+
     fun reset() {
         mVideoDimensionsAuto = false
         mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080

@@ -89,9 +89,9 @@ object KeyCenter {
     private const val pull_tecent_540p ="http://tlive-play.jacocdn.com/tlive/5036068430853962_backup_540P.flv?txSecret=18eca7b5c5fdc3fef123fe10e8f8167e&txTime=664C16EB"
     private const val pull_tecent_1080p ="http://tlive-play.jacocdn.com/tlive/5036068430853962_backup.flv?txSecret=e6c67395f19e9f4e6ab059bbfdf2acc7&txTime=664C16EB"
 
-    private const val pull_ali_720p ="https://ali-play.jacocdn.com/live/5036068430853962_ali_720P.flv?auth_key=1716262594-0-0-f6d3059f059cf9b75ef77b8cf96a6c80"
-    private const val pull_ali_540p ="https://ali-play.jacocdn.com/live/5036068430853962_ali_540P.flv?auth_key=1716262594-0-0-b644f46357c7dea1b71af0fe6432db22"
-    private const val pull_ali_1080p ="https://ali-play.jacocdn.com/live/5036068430853962_ali.flv?auth_key=1716262594-0-0-d24f1f8dd3dd328bdc08bce7c4315fd9"
+    private const val pull_ali_720p ="https://ali-play.jacocdn.com/live/5036068430853962_ali_720P.flv?auth_key=1716622392-0-0-4926ef1fd9174681145e0f50eb835696"
+    private const val pull_ali_540p ="https://ali-play.jacocdn.com/live/5036068430853962_ali_540P.flv?auth_key=1716622392-0-0-c7ff8a434be050c87102dccbc93dab8b"
+    private const val pull_ali_1080p ="https://ali-play.jacocdn.com/live/5036068430853962_ali.flv?auth_key=1716622392-0-0-90ec4ad7c06bd91ddf8614e1dcb923b5"
 
     // cdn 分辨率
     var mBitrateList = arrayOf<String?>("1080p", "720p")

@@ -170,8 +170,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
         binding.btSwitchCarma.setOnClickListener {
             rtcEngine.switchCamera()
-            frontCamera=!frontCamera
-            if (frontCamera){
+            frontCamera = !frontCamera
+            if (frontCamera) {
 
             }
         }
@@ -344,6 +344,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             setPlayerOption("play_speed_down_cache_duration", 0)
             setPlayerOption("open_timeout_until_success", 6000)
             setPlayerOption("enable_search_metadata", 1)
+            setPlayerOption("switch_src_timeout", RtcSettings.mSwitchSrcTimeout * 1000)
             if (RtcSettings.mEnableQuic) {
                 setPlayerOption("enable_quic", 1)
             }

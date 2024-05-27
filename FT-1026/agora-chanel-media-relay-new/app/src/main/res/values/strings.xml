@@ -28,6 +28,7 @@
     <string name="cdn_custom">Custom</string>
     <string name="user_account">User Account</string>
     <string name="quic">Quic</string>
+    <string name="switch_src_timeout">switch src timeout (Second)</string>
     <string name="switch_camera">Switch</string>
     <string name="scenes">Scenes:</string>
     <string name="scene_single">1 anchor</string>

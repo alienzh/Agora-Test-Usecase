@@ -67,14 +67,14 @@
                         android:textColor="@color/white"
                         android:textSize="13sp" />
 
-<!--                    <androidx.appcompat.widget.AppCompatRadioButton-->
-<!--                        android:id="@+id/app_id_custom"-->
-<!--                        android:layout_width="wrap_content"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:layout_marginStart="8dp"-->
-<!--                        android:text="@string/cdn_custom"-->
-<!--                        android:textColor="@color/white"-->
-<!--                        android:textSize="13sp" />-->
+                    <!--                    <androidx.appcompat.widget.AppCompatRadioButton-->
+                    <!--                        android:id="@+id/app_id_custom"-->
+                    <!--                        android:layout_width="wrap_content"-->
+                    <!--                        android:layout_height="wrap_content"-->
+                    <!--                        android:layout_marginStart="8dp"-->
+                    <!--                        android:text="@string/cdn_custom"-->
+                    <!--                        android:textColor="@color/white"-->
+                    <!--                        android:textSize="13sp" />-->
                 </RadioGroup>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -129,9 +129,9 @@
                     android:id="@+id/et_push_url"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:enabled="false"
                     android:inputType="textUri"
                     android:textColor="@color/white"
-                    android:enabled="false"
                     android:textCursorDrawable="@drawable/bg_edit_cursor"
                     android:textSize="13sp" />
 
@@ -159,9 +159,9 @@
                     android:id="@+id/et_pull_url"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:enabled="false"
                     android:inputType="textUri"
                     android:textColor="@color/white"
-                    android:enabled="false"
                     android:textCursorDrawable="@drawable/bg_edit_cursor"
                     android:textSize="13sp" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -263,40 +263,11 @@
                     android:id="@+id/cbUserAccount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:layout_constraintTop_toTopOf="parent"
-                    android:checked="false"
                     android:button="@drawable/cb_def_selector"
+                    android:checked="false"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/layout_quic"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                app:layout_constraintTop_toBottomOf="@id/layout_cdn">
-
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="@string/quic"
-                    android:textColor="#99FFFFFF"
-                    android:textSize="13sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
-
-                <androidx.appcompat.widget.AppCompatCheckBox
-                    android:id="@+id/cbQuic"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintTop_toTopOf="parent"
-                    android:checked="false"
-                    android:button="@drawable/cb_def_selector"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -324,8 +295,8 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/tv_mode"
-                    app:layout_constraintStart_toStartOf="parent">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_mode">
 
                     <androidx.appcompat.widget.AppCompatRadioButton
                         android:id="@+id/scene_single"
@@ -369,8 +340,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="8dp"
-                app:layout_constraintTop_toBottomOf="@id/layout_mode">
+                android:layout_marginTop="8dp">
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:layout_width="wrap_content"
@@ -406,12 +376,72 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:text="@string/role_audience"
                         android:checked="true"
+                        android:text="@string/role_audience"
                         android:textColor="@color/white"
                         android:textSize="13sp" />
                 </RadioGroup>
             </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_quic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                app:layout_constraintTop_toBottomOf="@id/layout_role">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/quic"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.appcompat.widget.AppCompatCheckBox
+                    android:id="@+id/cbQuic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:button="@drawable/cb_def_selector"
+                    android:checked="false"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layout_switch_stc_timeout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:hint="@string/switch_src_timeout"
+                android:textColorHint="#FFD34D"
+                app:boxBackgroundColor="#33A0C5FF"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="#FFD34D"
+                app:hintTextColor="#FFD34D"
+                app:layout_constraintTop_toBottomOf="@id/layout_quic">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_switch_src_timeout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLength="2"
+                    android:text="2"
+                    android:textColor="@color/white"
+                    android:textCursorDrawable="@drawable/bg_edit_cursor"
+                    android:textSize="13sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/layout_resolution"
@@ -438,8 +468,8 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/tv_resolution"
-                    app:layout_constraintStart_toStartOf="parent">
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_resolution">
 
                     <androidx.appcompat.widget.AppCompatRadioButton
                         android:id="@+id/resolution_1080p"
@@ -537,8 +567,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="220dp"
-                app:layout_constraintTop_toBottomOf="@id/layout_bitrate"
-                />
+                app:layout_constraintTop_toBottomOf="@id/layout_bitrate" />
         </LinearLayout>
     </ScrollView>
 
@@ -558,5 +587,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

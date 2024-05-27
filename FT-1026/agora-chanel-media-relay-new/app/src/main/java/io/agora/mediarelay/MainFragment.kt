@@ -72,13 +72,14 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
 
         // enable quic, 至针对直播流，主播隐藏，观众打开
         binding.layoutQuic.isVisible = false // 暂时隐藏
-//        binding.layoutQuic.isVisible = !isBroadcaster
-//        binding.cbQuic.setChecked(RtcSettings.mEnableQuic)
-//        binding.cbQuic.setOnCheckedChangeListener { buttonView, isChecked ->
-//            if (buttonView.isPressed) {
-//                RtcSettings.mEnableQuic = isChecked
-//            }
-//        }
+        binding.layoutQuic.isVisible = !isBroadcaster
+        binding.cbQuic.setChecked(RtcSettings.mEnableQuic)
+        binding.cbQuic.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (buttonView.isPressed) {
+                RtcSettings.mEnableQuic = isChecked
+            }
+        }
+        binding.etSwitchSrcTimeout.setText(RtcSettings.mSwitchSrcTimeout.toString())
 
         checkVideoSettingsVisible()
         // mode
@@ -125,6 +126,7 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             binding.layoutBitrate.isVisible = false
         }
         binding.layoutQuic.isVisible = !isBroadcaster
+        binding.layoutSwitchStcTimeout.isVisible = !isBroadcaster
     }
 
     private fun setupVideoSettings() {
@@ -204,6 +206,9 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
                 if (isBroadcaster) Constants.CLIENT_ROLE_BROADCASTER else Constants.CLIENT_ROLE_AUDIENCE
             )
         }
+
+        val switchSrcTimeout = binding.etSwitchSrcTimeout.text.toString().toIntOrNull() ?: 2
+        RtcSettings.mSwitchSrcTimeout = switchSrcTimeout
         // scene
         when (binding.groupAnchor.checkedRadioButtonId) {
             R.id.scene_single -> {
