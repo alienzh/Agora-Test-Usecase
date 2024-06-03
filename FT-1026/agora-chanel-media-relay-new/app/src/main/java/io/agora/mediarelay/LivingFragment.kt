@@ -760,6 +760,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         channelMediaOptions.autoSubscribeAudio = true
         channelMediaOptions.publishCameraTrack = false
         channelMediaOptions.publishMicrophoneTrack = false
+        channelMediaOptions.isInteractiveAudience = true
+        channelMediaOptions.audienceLatencyLevel = Constants.AUDIENCE_LATENCY_LEVEL_ULTRA_LOW_LATENCY
 
         updateVideoEncoder()
         if (RtcSettings.mEnableUserAccount) {

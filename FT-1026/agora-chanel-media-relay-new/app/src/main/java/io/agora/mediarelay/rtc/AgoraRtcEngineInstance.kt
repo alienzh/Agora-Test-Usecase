@@ -206,6 +206,7 @@ object AgoraRtcEngineInstance {
                     }
                 }
                 innerRtcEngine = (RtcEngine.create(config) as RtcEngineEx).apply {
+                    setParameters("{\"rtc.video.end2end_bwe\":false}") // 关闭端到端反馈
                     setLogFilter(65535)
                     enableVideo()
                 }
