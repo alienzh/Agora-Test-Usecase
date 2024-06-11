@@ -872,8 +872,6 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
     private var giftMediaPlayer: IMediaPlayer? = null
 
     private fun showGiftTexture() {
-//        val localTexture = mTextureVideos[0] ?: return
-//        val localContainter = (localTexture.parent as? ViewGroup) ?: return
         val localContainter = binding.root
         val giftUrl = KeyCenter.alphaGiftList[tempGiftPosition].url
         localContainter.removeView(localGiftTexture)
@@ -887,6 +885,13 @@ class Living3Fragment : BaseUiFragment<FragmentLiving3Binding>() {
             setView(localGiftTexture)
             open(giftUrl, 0)
         }
+        val giftVideoCanvas =
+            VideoCanvas(localGiftTexture, VideoCanvas.RENDER_MODE_HIDDEN, 0).apply {
+                enableAlphaMask = true
+                sourceType = Constants.VideoSourceType.VIDEO_SOURCE_MEDIA_PLAYER.value
+                mediaPlayerId = giftMediaPlayer?.mediaPlayerId ?: -1
+            }
+        rtcEngine.setupLocalVideo(giftVideoCanvas)
     }
 
     private val giftMediaPlayerObserver = object : MPObserverAdapter() {

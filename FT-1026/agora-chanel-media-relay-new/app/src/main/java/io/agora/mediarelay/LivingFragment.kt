@@ -27,6 +27,7 @@ import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.tools.ViewTool
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
+import io.agora.rtc2.Constants.VideoSourceType
 import io.agora.rtc2.DataStreamConfig
 import io.agora.rtc2.IMetadataObserver
 import io.agora.rtc2.IRtcEngineEventHandler
@@ -992,7 +993,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     private fun showGiftTexture() {
         val giftUrl = KeyCenter.alphaGiftList[tempGiftPosition].url
-//        val localContainter = (localTexture.parent as? ViewGroup)?:return
         val localContainter = binding.root
         localContainter.removeView(localGiftTexture)
         val childCount = localContainter.childCount
@@ -1005,6 +1005,13 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             setView(localGiftTexture)
             open(giftUrl, 0)
         }
+        val giftVideoCanvas =
+            VideoCanvas(localGiftTexture, VideoCanvas.RENDER_MODE_HIDDEN, 0).apply {
+                enableAlphaMask = true
+                sourceType = VideoSourceType.VIDEO_SOURCE_MEDIA_PLAYER.value
+                mediaPlayerId = giftMediaPlayer?.mediaPlayerId ?: -1
+            }
+        rtcEngine.setupLocalVideo(giftVideoCanvas)
     }
 
     private val giftMediaPlayerObserver = object : MPObserverAdapter() {

@@ -912,6 +912,13 @@ class LivingMultiFragment : BaseUiFragment<FragmentLivingMultiBinding>() {
             setView(localGiftTexture)
             open(giftUrl, 0)
         }
+        val giftVideoCanvas =
+            VideoCanvas(localGiftTexture, VideoCanvas.RENDER_MODE_HIDDEN, 0).apply {
+                enableAlphaMask = true
+                sourceType = Constants.VideoSourceType.VIDEO_SOURCE_MEDIA_PLAYER.value
+                mediaPlayerId = giftMediaPlayer?.mediaPlayerId ?: -1
+            }
+        rtcEngine.setupLocalVideo(giftVideoCanvas)
     }
 
     private val giftMediaPlayerObserver = object : MPObserverAdapter() {

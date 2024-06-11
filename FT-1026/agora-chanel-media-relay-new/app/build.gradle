@@ -100,8 +100,8 @@ dependencies {
     implementation 'com.github.mrmike:ok2curl:0.8.0'
     implementation 'com.google.code.gson:gson:2.9.0'
     // rtc
-    // http://10.80.1.174:8090/agora_sdk/develop/wfl/2024-06-01/android/full/Agora_Native_SDK_for_Android_wfl_60976_FULL_20240601_1442_308303.zip
-//    implementation 'io.agora.rtc:agora-special-full:4.3.1.131'
+    // https://download.agora.io/sdk/release/Agora_Native_SDK_for_Android_rel.v4.3.1.132_61161_FULL_20240607_1439_309850.zip
+//    implementation 'io.agora.rtc:agora-special-full:4.3.1.132'
     implementation 'io.agora:authentication:2.0.0'
     implementation 'commons-codec:commons-codec:1.16.0'
     implementation 'io.github.winskyan:Agora-LoggingService:1.0.9'
