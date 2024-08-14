@@ -40,6 +40,8 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             checkVideoSettingsVisible()
         }
 
+        binding.etAimatorDuation.setText(RtcSettings.mAnimatorDuration.toString())
+
         // video dimensions
         if (RtcSettings.mVideoDimensionsAuto) {
             RtcSettings.mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080
@@ -117,6 +119,9 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             )
         }
         setupVideoSettings()
+        val animatorDuration = binding.etAimatorDuation.text.toString().toLongOrNull() ?: 3000L
+        RtcSettings.mAnimatorDuration = animatorDuration
+
         val role = when (binding.groupRole.checkedRadioButtonId) {
             R.id.role_host -> 2
             R.id.role_broadcaster -> 1

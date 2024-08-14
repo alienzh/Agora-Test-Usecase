@@ -284,6 +284,36 @@
                     android:textSize="13sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutAnimatorDuration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="8dp"
+                android:hint="Animator duration"
+                android:textColorHint="#FFD34D"
+                app:boxBackgroundColor="#33A0C5FF"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="#FFD34D"
+                app:hintTextColor="#FFD34D">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etAimatorDuation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:maxLength="4"
+                    android:text="3000"
+                    android:textColor="@color/white"
+                    android:textCursorDrawable="@drawable/bg_edit_cursor"
+                    android:textSize="13sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="220dp"

@@ -1,6 +1,7 @@
 package io.agora.mediarelay
 
 import android.animation.Animator
+import android.animation.Animator.AnimatorListener
 import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.transition.AutoTransition
@@ -9,8 +10,8 @@ import android.util.Log
 import android.view.*
 import androidx.annotation.Size
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.get
 import androidx.core.view.isVisible
-import androidx.core.view.postDelayed
 import androidx.navigation.fragment.findNavController
 import com.blankj.utilcode.util.ThreadUtils
 import com.blankj.utilcode.util.ToastUtils
@@ -33,6 +34,7 @@ import io.agora.rtc2.video.VideoCanvas
 import io.agora.rtc2.video.VideoEncoderConfiguration
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+
 
 /**
  * @author create by zhangwei03
@@ -78,7 +80,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         ConstraintSet()
     }
 
-    private var isAnimatorLarger: Boolean = false
+    private var isAnimatorLarger: Boolean? = null
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLivingBinding {
         return FragmentLivingBinding.inflate(inflater)
@@ -91,6 +93,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     }
 
     private fun initView() {
+        scaleConstraintSet.clone(binding.rootContainer)
         when (role) {
             HOST -> {
                 binding.layoutChannel.isVisible = true
@@ -118,13 +121,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 binding.btSwitchCarma.isVisible = false
                 binding.btMuteMic.isVisible = false
                 binding.btMuteCarma.isVisible = false
-
-                binding.layoutVideoContainer.isVisible = false
-                binding.videoPKLayout.videoContainer.isVisible = true
-                binding.videoPKLayout.iPKTimeText.isVisible = false
-                scaleConstraintSet.clone(binding.videoPKLayout.videoContainer)
-                scaleConstraintSet.constrainPercentWidth(R.id.iBroadcasterAView, 1f)
-                scaleConstraintSet.applyTo(binding.videoPKLayout.videoContainer)
             }
         }
         val roleName = when (role) {
@@ -213,14 +209,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     val fromRtcUid = jsonMsg.getString("fromRtcUid").toInt()
                     if (remoteRtcUid > 0) return@IChannelEventListener
                     remoteRtcUid = fromRtcUid
-                    startPk(remoteRtcUid)
+                    updatePkMode(remoteRtcUid)
                 } else if (jsonMsg.getString("cmd") == "StopPk") {
                     if (remoteRtcUid <= 0) return@IChannelEventListener
                     remoteRtcUid = 0
                     stopPk()
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "onStreamMessage")
+                Log.e(TAG, "onStreamMessage parse error:${e.message}")
             }
         },
         onTranscodedStreamLayoutInfo = { uid, layoutInfo ->
@@ -234,59 +230,11 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         checkRequirePerms {
             AgoraRtcEngineInstance.eventListener = eventListener
             if (role == HOST || role == BROADCASTER) {
-                setupLocalVideo(curRtcUid)
+                setupLocalView()
             } else {
-//                setupRemoteVideo(transcodeUid)
+                // nothing
             }
             joinChannel(curRtcUid)
-        }
-    }
-
-    /**pk 模式,*/
-    private fun updatePkMode(remotePkUid: Int) {
-        val act = activity ?: return
-
-        if (role == HOST || role == BROADCASTER) { // 主播
-            binding.videoPKLayout.videoContainer.isVisible = true
-            binding.layoutVideoContainer.isVisible = false
-            binding.layoutVideoContainer.removeAllViews()
-            binding.btSubmitPk.text = getString(R.string.stop_pk)
-
-            binding.videoPKLayout.iBroadcasterAView.removeAllViews()
-            binding.videoPKLayout.iBroadcasterAView.addView(localTexture)
-            rtcEngine.setupLocalVideo(
-                VideoCanvas(localTexture, Constants.RENDER_MODE_FIT, curRtcUid)
-            )
-
-            val remoteTexture = TextureView(act)
-            binding.videoPKLayout.iBroadcasterBView.removeAllViews()
-            binding.videoPKLayout.iBroadcasterBView.addView(remoteTexture)
-
-            // pk 用户
-            rtcEngine.setupRemoteVideo(
-                VideoCanvas(remoteTexture, Constants.RENDER_MODE_FIT, remotePkUid).apply {
-                    mirrorMode = Constants.VIDEO_MIRROR_MODE_DISABLED
-                }
-            )
-
-        } else { // 观众
-            // nothing
-        }
-    }
-
-    /**单主播模式*/
-    private fun updateIdleMode() {
-        binding.videoPKLayout.videoContainer.isVisible = false
-        binding.layoutVideoContainer.isVisible = true
-        binding.videoPKLayout.iBroadcasterAView.removeAllViews()
-        binding.videoPKLayout.iBroadcasterBView.removeAllViews()
-        binding.btSubmitPk.text = getString(R.string.start_pk)
-        binding.etPkRtcUid.setText("")
-        remoteRtcUid = 0
-        if (role == HOST || role == BROADCASTER) {
-            setupLocalVideo(curRtcUid)
-        } else {
-            // 观众nothing,一直是订阅转码机器人
         }
     }
 
@@ -294,24 +242,88 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         TextureView(requireActivity())
     }
 
-    private fun setupLocalVideo(localUid: Int) {
-        activity ?: return
-        binding.layoutVideoContainer.removeAllViews()
-        binding.layoutVideoContainer.addView(localTexture)
+    private fun setupLocalView() {
+        if (binding.iBroadcasterAView.childCount > 0) {
+            binding.iBroadcasterAView.removeAllViews()
+        }
+        binding.iBroadcasterAView.addView(localTexture)
         rtcEngine.setupLocalVideo(
             VideoCanvas(localTexture, Constants.RENDER_MODE_FIT, 0)
         )
     }
 
-    private fun setupRemoteVideo(remoteUid: Int) {
-        val act = activity ?: return
-        val remoteTexture = TextureView(act)
-        binding.layoutVideoContainer.removeAllViews()
-        binding.layoutVideoContainer.addView(remoteTexture)
-
+    private fun setupRemoteView(remoteUid: Int) {
+        if (binding.iBroadcasterBView.childCount > 0) {
+            binding.iBroadcasterBView.removeAllViews()
+        }
+        val remoteTexture = TextureView(requireActivity())
         rtcEngine.setupRemoteVideo(
             VideoCanvas(remoteTexture, Constants.RENDER_MODE_FIT, remoteUid)
         )
+        binding.iBroadcasterBView.addView(remoteTexture)
+    }
+
+    /**pk 模式,*/
+    private fun updatePkMode(remotePkUid: Int) {
+        val act = activity ?: return
+        if (role == HOST || role == BROADCASTER) { // 主播
+            binding.btSubmitPk.text = getString(R.string.stop_pk)
+            setupRemoteView(remotePkUid)
+
+            scaleConstraintSet.constrainPercentWidth(R.id.iBroadcasterAView, 0.5f)
+            val transition = AutoTransition()
+            transition.duration = RtcSettings.mAnimatorDuration
+            TransitionManager.beginDelayedTransition(binding.rootContainer, transition)
+            scaleConstraintSet.applyTo(binding.rootContainer)
+
+            val animatorAlpha = ObjectAnimator.ofFloat(binding.iBroadcasterBView, "alpha", 0.3f, 1f)
+            animatorAlpha.duration = RtcSettings.mAnimatorDuration
+            animatorAlpha.start()
+
+            binding.iPKTimeText.isVisible = true
+        }
+    }
+
+    /**单主播模式*/
+    private fun updateIdleMode() {
+        binding.iPKTimeText.isVisible = false
+        binding.btSubmitPk.text = getString(R.string.start_pk)
+        remoteRtcUid = 0
+        if (role == HOST || role == BROADCASTER) {
+            scaleConstraintSet.constrainPercentWidth(R.id.iBroadcasterAView, 1f)
+            val transition = AutoTransition()
+            transition.duration = RtcSettings.mAnimatorDuration
+            TransitionManager.beginDelayedTransition(binding.rootContainer, transition)
+            scaleConstraintSet.applyTo(binding.rootContainer)
+
+
+            val animatorAlpha = ObjectAnimator.ofFloat(binding.iBroadcasterBView, "alpha", 1f, 0.3f)
+            animatorAlpha.duration = RtcSettings.mAnimatorDuration
+            animatorAlpha.addListener(object : AnimatorListener {
+                override fun onAnimationStart(animation: Animator) {
+
+                }
+
+                override fun onAnimationEnd(animation: Animator) {
+                    if (binding.iBroadcasterBView.childCount > 0) {
+                        val firstView = binding.iBroadcasterBView.getChildAt(0)
+                        if (firstView is TextureView) {
+                            val canvas = VideoCanvas(firstView)
+                            canvas.setupMode = VideoCanvas.VIEW_SETUP_MODE_REMOVE
+                            rtcEngine.setupRemoteVideo(canvas)
+                        }
+                    }
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                }
+
+                override fun onAnimationRepeat(animation: Animator) {
+                }
+
+            })
+            animatorAlpha.start()
+        }
     }
 
     private fun joinChannel(rtcUid: Int) {
@@ -401,38 +413,39 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         updateVideoEncoder()
     }
 
-    private val remoteHostTexture by lazy {
-        TextureView(requireActivity())
-    }
-    private val remotePkTexture by lazy {
-        TextureView(requireActivity())
-    }
-
     private fun animateToScaleFrame(scaleLarger: Boolean) {
-        val percent = if (scaleLarger) 1.0f else 0.5f
-        scaleConstraintSet.constrainPercentWidth(R.id.iBroadcasterAView, percent)
+        if (scaleLarger) {
+            scaleConstraintSet.constrainPercentWidth(R.id.iBroadcasterAView, 1f)
+        } else {
+            scaleConstraintSet.constrainPercentWidth(R.id.iBroadcasterAView, 0.5f)
+        }
 
         val transition = AutoTransition()
-        transition.duration = 3000 // 设置动画持续时间为 3000 毫秒
+        transition.duration = RtcSettings.mAnimatorDuration
 
-        TransitionManager.beginDelayedTransition(binding.videoPKLayout.videoContainer, transition)
-        scaleConstraintSet.applyTo(binding.videoPKLayout.videoContainer)
+        TransitionManager.beginDelayedTransition(binding.rootContainer, transition)
+        scaleConstraintSet.applyTo(binding.rootContainer)
 
         isAnimatorLarger = scaleLarger
-
-        val animator = if (scaleLarger) {
-            ObjectAnimator.ofFloat(remotePkTexture, "alpha", 1f, 0.3f)
+        val animatorAlpha: ObjectAnimator = if (scaleLarger) {
+            ObjectAnimator.ofFloat(binding.iBroadcasterBView, "alpha", 1f, 0.3f)
         } else {
-            ObjectAnimator.ofFloat(remotePkTexture, "alpha", 0.3f, 1f)
+            ObjectAnimator.ofFloat(binding.iBroadcasterBView, "alpha", 0.3f, 1f)
         }
-        animator.duration = 3000
-        animator.addListener(object : Animator.AnimatorListener {
+        animatorAlpha.duration = RtcSettings.mAnimatorDuration
+        animatorAlpha.addListener(object : AnimatorListener {
             override fun onAnimationStart(animation: Animator) {
+
             }
 
             override fun onAnimationEnd(animation: Animator) {
-                if (scaleLarger) {
-                    binding.videoPKLayout.iBroadcasterBView.removeAllViews()
+                if (scaleLarger && binding.iBroadcasterBView.childCount > 0) {
+                    val firstView = binding.iBroadcasterBView.getChildAt(0)
+                    if (firstView is TextureView) {
+                        val canvas = VideoCanvas(firstView)
+                        canvas.setupMode = VideoCanvas.VIEW_SETUP_MODE_REMOVE
+                        rtcEngine.setupRemoteVideo(canvas)
+                    }
                 }
             }
 
@@ -441,43 +454,77 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
             override fun onAnimationRepeat(animation: Animator) {
             }
+
         })
-        animator.start()
+        animatorAlpha.start()
     }
 
+    private val mUserViews = mutableMapOf<Int, TextureView>()
 
+    // only for audience
     private fun setupRemoteSubviewVideo(uid: Int, layoutInfo: VideoLayoutInfo) {
         val act = activity ?: return
+        val blackVideoList = layoutInfo.layoutList.filter { it.videoState == 2 }
+        // 有一路子视频流黑帧
+        if (blackVideoList.size > 1) return
         val layoutList = layoutInfo.layoutList
-        if (layoutList.isEmpty()) {
+
+        if (layoutList.isEmpty() || layoutList.size > 2) {
             return
         }
-        if (layoutList.size == 1) {
-            binding.videoPKLayout.iBroadcasterAView.removeAllViews()
-            rtcEngine.setupRemoteVideo(
-                VideoCanvas(remoteHostTexture, Constants.RENDER_MODE_FIT, uid, layoutList[0].uid)
-            )
-            binding.videoPKLayout.iBroadcasterAView.addView(remoteHostTexture)
 
-            if (!isAnimatorLarger) {
-                animateToScaleFrame(true)
+        for ((index, videoLayout) in layoutList.withIndex()) {
+            val subviewUid = videoLayout.uid
+            if (mUserViews.containsKey(subviewUid)) {
+                continue;
             }
-        } else {
-            binding.videoPKLayout.iBroadcasterAView.removeAllViews()
-            rtcEngine.setupRemoteVideo(
-                VideoCanvas(remoteHostTexture, Constants.RENDER_MODE_FIT, uid, layoutList[0].uid)
-            )
-            binding.videoPKLayout.iBroadcasterAView.addView(remoteHostTexture)
-
-            binding.videoPKLayout.iBroadcasterBView.removeAllViews()
-            rtcEngine.setupRemoteVideo(
-                VideoCanvas(remotePkTexture, Constants.RENDER_MODE_FIT, uid, layoutList[1].uid)
-            )
-            binding.videoPKLayout.iBroadcasterBView.addView(remotePkTexture)
-
-            if (isAnimatorLarger) {
-                animateToScaleFrame(false)
+            if (index == 0) {
+                val remoteHostTexture = TextureView(act)
+                mUserViews[videoLayout.uid] = remoteHostTexture
+                if (binding.iBroadcasterAView.childCount > 0) {
+                    binding.iBroadcasterAView.removeAllViews()
+                }
+                rtcEngine.setupRemoteVideo(
+                    VideoCanvas(remoteHostTexture, Constants.RENDER_MODE_FIT, uid, subviewUid)
+                )
+                binding.iBroadcasterAView.addView(remoteHostTexture)
+            } else if (index == 1) {
+                val remotePkTexture = TextureView(act)
+                mUserViews[videoLayout.uid] = remotePkTexture
+                if (binding.iBroadcasterBView.childCount > 0) {
+                    binding.iBroadcasterBView.removeAllViews()
+                }
+                rtcEngine.setupRemoteVideo(
+                    VideoCanvas(remotePkTexture, Constants.RENDER_MODE_FIT, uid, subviewUid)
+                )
+                binding.iBroadcasterBView.addView(remotePkTexture)
             }
+        }
+//        val newUids = layoutList.map { it.uid }
+//        val removeLayoutList = oldLayoutList.filter { it.uid !in newUids }
+//
+//        oldLayoutList.clear()
+//        oldLayoutList.addAll(layoutList)
+//
+//        if (removeLayoutList.isNotEmpty()) { // 有用户退出
+//            for ((index, videoLayout) in removeLayoutList.withIndex()) {
+//                // 如果要删除某一路子视频流，则添加以下代码
+//                val textureView = mUserViews[videoLayout.uid] ?: continue
+//                // 此处的 textureview 设置为需要删除的 view
+//                val canvas = VideoCanvas(textureView)
+//                canvas.uid = uid
+//                canvas.subviewUid = videoLayout.uid
+//                canvas.setupMode = VideoCanvas.VIEW_SETUP_MODE_REMOVE
+//                rtcEngine.setupRemoteVideo(canvas)
+//                mUserViews.remove(videoLayout.uid)
+//            }
+//        }
+
+
+        if (layoutList.size == 1 && (isAnimatorLarger == null || isAnimatorLarger == false)) {
+            animateToScaleFrame(true)
+        } else if (layoutList.size == 2 && (isAnimatorLarger == true)) {
+            animateToScaleFrame(false)
         }
     }
 

@@ -99,6 +99,7 @@ object AgoraRtcEngineInstance {
                     override fun onUserOffline(uid: Int, reason: Int) {
                         super.onUserOffline(uid, reason)
                         LogTool.d(TAG, "onUserOffline: $uid")
+                        layoutInfoMap.remove(uid)
                         ThreadUtils.runOnUiThread {
                             eventListener?.onUserOffline?.invoke(uid)
                         }

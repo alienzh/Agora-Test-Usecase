@@ -41,6 +41,14 @@ object RtcSettings {
             LogTool.d("RtcSetting BitRate：$newValue")
         }
 
+    var mAnimatorDuration: Long = 1500L
+        set(newValue) {
+            if (newValue > 0) {
+                field = newValue
+                LogTool.d("RtcSetting mAnimatorDuration：$newValue")
+            }
+        }
+
     fun reset() {
         mVideoDimensionsAuto = false
         mVideoDimensions = VideoEncoderConfiguration.VD_1920x1080

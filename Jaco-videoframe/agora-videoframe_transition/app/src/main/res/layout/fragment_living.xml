@@ -7,18 +7,52 @@
     android:background="@color/black"
     tools:context=".LivingFragment">
 
-    <FrameLayout
-        android:id="@+id/layout_video_container"
+<!--    <FrameLayout-->
+<!--        android:id="@+id/layout_video_container"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent" />-->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/rootContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
 
-    <include
-        android:id="@+id/videoPKLayout"
-        layout="@layout/view_video_pk"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        tools:visibility="visible" />
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/iPKTimeText"
+            android:layout_width="98dp"
+            android:layout_height="23dp"
+            android:layout_marginTop="150dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/bg_pk_title"
+            android:gravity="center"
+            android:text="@string/pk"
+            android:textColor="@color/white"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/iBroadcasterAView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <FrameLayout
+            android:id="@+id/iBroadcasterBView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="9:16"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.5" />
+
+        <FrameLayout
+            android:id="@+id/iBroadcasterAView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="9:16"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="1" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 
 <!--    <include-->
 <!--        android:id="@+id/videoAudience"-->
