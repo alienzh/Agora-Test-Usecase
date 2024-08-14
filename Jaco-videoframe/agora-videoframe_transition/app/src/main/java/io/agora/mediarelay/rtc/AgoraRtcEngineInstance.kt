@@ -16,7 +16,7 @@ import java.util.concurrent.Executors
 object AgoraRtcEngineInstance {
 
     val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
-        orientationMode = VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_ADAPTIVE
+        orientationMode = VideoEncoderConfiguration.ORIENTATION_MODE.ORIENTATION_MODE_FIXED_PORTRAIT
         mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_DISABLED
         dimensions = RtcSettings.mVideoDimensions
         frameRate = RtcSettings.mFrameRate

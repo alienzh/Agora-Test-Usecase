@@ -1,5 +1,7 @@
 package io.agora.mediarelay
 
+import android.animation.Animator
+import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.transition.AutoTransition
 import android.transition.TransitionManager
@@ -8,6 +10,7 @@ import android.view.*
 import androidx.annotation.Size
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
+import androidx.core.view.postDelayed
 import androidx.navigation.fragment.findNavController
 import com.blankj.utilcode.util.ThreadUtils
 import com.blankj.utilcode.util.ToastUtils
@@ -120,12 +123,13 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 binding.videoPKLayout.videoContainer.isVisible = true
                 binding.videoPKLayout.iPKTimeText.isVisible = false
                 scaleConstraintSet.clone(binding.videoPKLayout.videoContainer)
-                animateToScaleFrame(true)
+                scaleConstraintSet.constrainPercentWidth(R.id.iBroadcasterAView, 1f)
+                scaleConstraintSet.applyTo(binding.videoPKLayout.videoContainer)
             }
         }
         val roleName = when (role) {
             HOST -> "host"
-            BROADCASTER -> "speaker"
+            BROADCASTER -> "broadcaster"
             else -> "audience"
         }
         binding.tvChannelId.text = "$roleName:$channelName-$curRtcUid"
@@ -220,6 +224,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             }
         },
         onTranscodedStreamLayoutInfo = { uid, layoutInfo ->
+            if (role != AUDIENCE) return@IChannelEventListener
             layoutInfo ?: return@IChannelEventListener
             setupRemoteSubviewVideo(uid, layoutInfo)
         }
@@ -231,7 +236,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             if (role == HOST || role == BROADCASTER) {
                 setupLocalVideo(curRtcUid)
             } else {
-
 //                setupRemoteVideo(transcodeUid)
             }
             joinChannel(curRtcUid)
@@ -251,7 +255,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             binding.videoPKLayout.iBroadcasterAView.removeAllViews()
             binding.videoPKLayout.iBroadcasterAView.addView(localTexture)
             rtcEngine.setupLocalVideo(
-                VideoCanvas(localTexture, Constants.RENDER_MODE_ADAPTIVE, curRtcUid)
+                VideoCanvas(localTexture, Constants.RENDER_MODE_FIT, curRtcUid)
             )
 
             val remoteTexture = TextureView(act)
@@ -295,7 +299,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.layoutVideoContainer.removeAllViews()
         binding.layoutVideoContainer.addView(localTexture)
         rtcEngine.setupLocalVideo(
-            VideoCanvas(localTexture, Constants.RENDER_MODE_FIT, localUid)
+            VideoCanvas(localTexture, Constants.RENDER_MODE_FIT, 0)
         )
     }
 
@@ -408,16 +412,37 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         val percent = if (scaleLarger) 1.0f else 0.5f
         scaleConstraintSet.constrainPercentWidth(R.id.iBroadcasterAView, percent)
 
-        val alpha = if (scaleLarger) 0.0f else 1.0f
-        scaleConstraintSet.setAlpha(R.id.iBroadcasterBView, alpha)
-
         val transition = AutoTransition()
         transition.duration = 3000 // 设置动画持续时间为 3000 毫秒
 
-        TransitionManager.beginDelayedTransition(binding.videoPKLayout.videoContainer)
+        TransitionManager.beginDelayedTransition(binding.videoPKLayout.videoContainer, transition)
         scaleConstraintSet.applyTo(binding.videoPKLayout.videoContainer)
 
         isAnimatorLarger = scaleLarger
+
+        val animator = if (scaleLarger) {
+            ObjectAnimator.ofFloat(remotePkTexture, "alpha", 1f, 0.3f)
+        } else {
+            ObjectAnimator.ofFloat(remotePkTexture, "alpha", 0.3f, 1f)
+        }
+        animator.duration = 3000
+        animator.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator) {
+            }
+
+            override fun onAnimationEnd(animation: Animator) {
+                if (scaleLarger) {
+                    binding.videoPKLayout.iBroadcasterBView.removeAllViews()
+                }
+            }
+
+            override fun onAnimationCancel(animation: Animator) {
+            }
+
+            override fun onAnimationRepeat(animation: Animator) {
+            }
+        })
+        animator.start()
     }
 
 
@@ -428,7 +453,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             return
         }
         if (layoutList.size == 1) {
-            binding.videoPKLayout.iBroadcasterBView.removeAllViews()
             binding.videoPKLayout.iBroadcasterAView.removeAllViews()
             rtcEngine.setupRemoteVideo(
                 VideoCanvas(remoteHostTexture, Constants.RENDER_MODE_FIT, uid, layoutList[0].uid)

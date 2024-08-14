@@ -276,7 +276,7 @@ class CloudTranscoderApi {
                         "backgroundImage" to null,
                         "fillMode" to "FIT"
                     ),
-                    "waterMarks" to waterMarks,
+//                    "waterMarks" to waterMarks,
                     "outputs" to outputs,
                 ),
             ),
