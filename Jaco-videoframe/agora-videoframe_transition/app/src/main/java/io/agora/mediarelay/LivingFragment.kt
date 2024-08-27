@@ -210,10 +210,12 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     if (remoteRtcUid > 0) return@IChannelEventListener
                     remoteRtcUid = fromRtcUid
                     updatePkMode(remoteRtcUid)
+                    updateVideoEncoder()
                 } else if (jsonMsg.getString("cmd") == "StopPk") {
                     if (remoteRtcUid <= 0) return@IChannelEventListener
                     remoteRtcUid = 0
                     stopPk()
+                    updateVideoEncoder()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "onStreamMessage parse error:${e.message}")
@@ -365,7 +367,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         if (remoteRtcUid > 0 && RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_1920x1080) {
             val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
                 mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_DISABLED
-                dimensions = VideoEncoderConfiguration.VD_1280x720
+                dimensions = VideoEncoderConfiguration.VD_960x540
                 frameRate = VideoEncoderConfiguration.FRAME_RATE.FRAME_RATE_FPS_24.value
             }
             val ret =
@@ -405,6 +407,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         val remoteChannelUid = ChannelUid(channelName, remoteRtcUid)
         val channelUids = arrayOf(channelUid, remoteChannelUid)
         updateCloudTranscode(*channelUids)
+        updateVideoEncoder()
     }
 
     // 主播退出对方频道
