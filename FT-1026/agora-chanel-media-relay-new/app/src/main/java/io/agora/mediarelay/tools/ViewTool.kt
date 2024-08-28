@@ -11,8 +11,7 @@ import io.agora.mediarelay.widget.PopAdapter.OnItemClickListener
 
 object ViewTool {
 
-    fun showPop(context: Context, view: View, data: Array<out String?>, selectIndex: Int, listener:
-    OnItemClickListener) {
+    fun showPop(context: Context, view: View, data: Array<out String?>, selectIndex: Int, listener: OnItemClickListener) {
         val location = IntArray(2)
         view.getLocationInWindow(location)
         val width = view.width

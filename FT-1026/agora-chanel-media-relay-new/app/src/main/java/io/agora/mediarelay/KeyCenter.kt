@@ -1,8 +1,11 @@
 package io.agora.mediarelay
 
-import io.agora.media.RtcTokenBuilder
-import io.agora.mediarelay.tools.LogTool
 import java.util.*
+
+enum class Vendor {
+    Agora,
+    Zego,
+}
 
 enum class AudienceStatus {
     CDN_Audience,
@@ -232,4 +235,6 @@ object KeyCenter {
             else -> mAgoraCdnPullList[position].url.replace(replaceChannel, channelId)
         }
     }
+
+    var vendor: Vendor =Vendor.Agora
 }

@@ -1,6 +1,6 @@
 package io.agora.mediarelay.rtc
 
-import io.agora.mediarelay.tools.TimeUtils
+import com.blankj.utilcode.util.TimeUtils
 
 object SeiHelper {
 
@@ -32,7 +32,7 @@ object SeiHelper {
             ),
             "stream" to streamList,
             "ver" to "1.0.0.20220915",
-            "ts" to TimeUtils.currentTimeMillis(),
+            "ts" to TimeUtils.getNowMills(),
             "source" to "aliyun",
             "info" to mapOf(
                 "mcu_room_state" to mapOf(

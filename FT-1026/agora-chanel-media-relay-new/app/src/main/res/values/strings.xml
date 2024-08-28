@@ -24,8 +24,6 @@
     <string name="bitrate">Bitrate(kbps)</string>
     <string name="app_id">AppID:</string>
     <string name="select_cdn">CDN:</string>
-    <string name="cdn_agora">Agora</string>
-    <string name="cdn_custom">Custom</string>
     <string name="user_account">User Account</string>
     <string name="quic">Quic</string>
     <string name="switch_src_timeout">switch src timeout (Second)</string>

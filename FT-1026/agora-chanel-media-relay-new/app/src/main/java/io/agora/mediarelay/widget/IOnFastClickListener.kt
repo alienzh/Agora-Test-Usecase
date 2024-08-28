@@ -2,7 +2,7 @@ package io.agora.mediarelay.widget
 
 import android.util.Log
 import android.view.View
-import io.agora.mediarelay.tools.ToastTool
+import com.blankj.utilcode.util.ToastUtils
 
 abstract class OnFastClickListener constructor(val delay: Long = 1500L, val message: String? = null) :
     View.OnClickListener {
@@ -17,7 +17,7 @@ abstract class OnFastClickListener constructor(val delay: Long = 1500L, val mess
             onClickJacking(v)
         } else {
             message?.let {
-                ToastTool.showToast(it)
+                ToastUtils.showShort(it)
             }
             Log.d("OnFastClickListener", "Click time is too short")
         }

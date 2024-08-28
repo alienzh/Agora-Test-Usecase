@@ -21,10 +21,10 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "AGORA_APP_ID", "\"${properties.getProperty("AGORA_APP_ID", "")}\"")
-        buildConfigField("String", "AGORA_CUSTOMER_KEY", "\"${properties.getProperty("AGORA_CUSTOMER_KEY", "")}\"")
-        buildConfigField("String", "AGORA_CUSTOMER_SECRET", "\"${properties.getProperty("AGORA_CUSTOMER_SECRET", "")}\"")
         buildConfigField("String", "AGORA_ACCESS_KEY", "\"${properties.getProperty("AGORA_ACCESS_KEY", "")}\"")
         buildConfigField("String", "AGORA_SECRET_KEY", "\"${properties.getProperty("AGORA_SECRET_KEY", "")}\"")
+        buildConfigField("String", "ZEGO_APP_ID", "\"${properties.getProperty("ZEGO_APP_ID", "")}\"")
+        buildConfigField("String", "ZEGO_APP_SIGN", "\"${properties.getProperty("ZEGO_APP_SIGN", "")}\"")
 
 //        buildConfigField("String", "CUSTOM_APP_ID", "\"${properties.getProperty("CUSTOM_APP_ID", "")}\"")
 //        buildConfigField("String", "CUSTOM_CUSTOMER_KEY", "\"${properties.getProperty("CUSTOM_CUSTOMER_KEY", "")}\"")
@@ -105,4 +105,6 @@ dependencies {
     implementation 'io.agora:authentication:2.0.0'
     implementation 'commons-codec:commons-codec:1.16.0'
     implementation 'io.github.winskyan:Agora-LoggingService:1.0.9'
+    implementation 'im.zego:express-private:3.15.0.39650'
+    implementation 'com.blankj:utilcodex:1.31.1'
 }

@@ -6,7 +6,12 @@ import android.view.*
 import androidx.annotation.Size
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
-import com.google.gson.JsonObject
+import com.blankj.utilcode.util.GsonUtils
+import com.blankj.utilcode.util.ThreadUtils
+import com.blankj.utilcode.util.TimeUtils
+import com.blankj.utilcode.util.ToastUtils
+import com.blankj.utilcode.util.Utils
+import com.google.gson.reflect.TypeToken
 import io.agora.mediaplayer.IMediaPlayer
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentLivingBinding
@@ -18,11 +23,7 @@ import io.agora.mediarelay.rtc.SeiHelper
 import io.agora.mediarelay.rtc.transcoder.ChannelUid
 import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.FileUtils
-import io.agora.mediarelay.tools.GsonTools
 import io.agora.mediarelay.tools.LogTool
-import io.agora.mediarelay.tools.ThreadTool
-import io.agora.mediarelay.tools.TimeUtils
-import io.agora.mediarelay.tools.ToastTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.tools.ViewTool
 import io.agora.rtc2.ChannelMediaOptions
@@ -38,8 +39,6 @@ import io.agora.rtc2.video.VideoCanvas
 import io.agora.rtc2.video.VideoEncoderConfiguration
 import org.json.JSONObject
 import java.nio.charset.Charset
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 /**
@@ -247,9 +246,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 if (cdnPosition >= 0 && cdnPosition < KeyCenter.mBitrateList.size) {
                     binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
                 }
-                ToastTool.showToast(R.string.switch_src_success)
+                 ToastUtils.showShort(R.string.switch_src_success)
             } else {
-                ToastTool.showToast(R.string.switch_src_failed)
+                 ToastUtils.showShort(R.string.switch_src_failed)
             }
         }
     }
@@ -289,7 +288,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             }
             if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_FAILED) {
                 runOnMainThread {
-                    ToastTool.showToast("state:$state \n error:$error")
+                     ToastUtils.showShort("state:$state \n error:$error")
                 }
             }
             if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING) {
@@ -306,13 +305,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         override fun onMetaData(type: io.agora.mediaplayer.Constants.MediaPlayerMetadataType?, data: ByteArray?) {
             super.onMetaData(type, data)
             data ?: return
-            val seiMap = GsonTools.strToMap(String(data))
+            val seiMap: Map<String, Any> =
+                GsonUtils.fromJson(String(data), object : TypeToken<Map<String, Any>>() {}.type)
             runOnMainThread {
                 seiMap["ts"]?.let { ts ->
                     if (ts is Long) {
-                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.getNowMills() - ts}ms"
                     } else if (ts is Int) {
-                        binding.cdnDiffTime.text = "diff:${TimeUtils.currentTimeMillis() - ts}ms"
+                        binding.cdnDiffTime.text = "diff:${TimeUtils.getNowMills() - ts}ms"
                     }
                 }
             }
@@ -386,7 +386,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     private fun checkChannelId(channelId: String): Boolean {
         if (channelId.isEmpty()) {
-            ToastTool.showToast("Please enter pk channel id")
+             ToastUtils.showShort("Please enter pk channel id")
             return true
         }
         return false
@@ -397,7 +397,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             if (isOwner) {
                 startSendRemoteChannel()
                 setRtmpStreamEnable(true)
-                startSendSei()
+                // TODO: 隐藏 sei
+                // startSendSei()
             } else {
                 //超级画质
                 val ret1 = rtcEngine.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}}")
@@ -425,12 +426,12 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             when (state) {
                 Constants.RTMP_STREAM_PUBLISH_STATE_RUNNING -> {
                     if (code == Constants.RTMP_STREAM_PUBLISH_REASON_OK) {
-                        ToastTool.showToast("rtmp stream publish state running")
+                         ToastUtils.showShort("rtmp stream publish state running")
                     }
                 }
 
                 Constants.RTMP_STREAM_PUBLISH_STATE_FAILURE -> {
-                    ToastTool.showToast("rtmp stream publish state failure: $code")
+                     ToastUtils.showShort("rtmp stream publish state failure: $code")
                 }
             }
         },
@@ -515,9 +516,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             ) { succeed, code, message ->
                 if (succeed) {
                     publishedRtmp = true
-                    ToastTool.showToast("start rtmp stream success！")
+                     ToastUtils.showShort("start rtmp stream success！")
                 } else {
-                    ToastTool.showToast("start rtmp stream error, $code, $message")
+                     ToastUtils.showShort("start rtmp stream error, $code, $message")
                 }
             }
         } else {
@@ -526,7 +527,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 if (succeed) {
                     publishedRtmp = false
                 } else {
-                    ToastTool.showToast("stop rtmp stream error, $code, $message")
+                     ToastUtils.showShort("stop rtmp stream error, $code, $message")
                 }
             }
         }
@@ -548,9 +549,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         ) { succeed, code, message ->
             if (succeed) {
                 publishedRtmp = true
-                ToastTool.showToast("update rtmp stream success！")
+                 ToastUtils.showShort("update rtmp stream success！")
             } else {
-                ToastTool.showToast("update rtmp stream error, $code, $message")
+                 ToastUtils.showShort("update rtmp stream error, $code, $message")
             }
         }
     }
@@ -845,29 +846,26 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     // 开始发送 remoteChannel
     @Volatile
     private var mStopRemoteChannel = true
-    private var remoteChannelFuture: ScheduledFuture<*>? = null
-    private val remoteChannelTask = object : Runnable {
-        override fun run() {
-            if (mStopRemoteChannel) return
-            if (!isOwner) return
-            sendRemoteChannel(remotePkChannel)
+
+    private val remoteChannelTask = object : Utils.Task<Boolean>(Utils.Consumer {
+        if (mStopRemoteChannel) return@Consumer
+        if (!isOwner) return@Consumer
+        sendRemoteChannel(remotePkChannel)
+    }) {
+        override fun doInBackground(): Boolean {
+            return true
         }
     }
 
     private fun startSendRemoteChannel() {
         mStopRemoteChannel = false
-        remoteChannelFuture =
-            ThreadTool.scheduledThreadPool.scheduleAtFixedRate(remoteChannelTask, 0, 1, TimeUnit.SECONDS)
+        ThreadUtils.executeBySingleAtFixRate(remoteChannelTask, 0, 1, TimeUnit.SECONDS)
     }
 
     // 停止发送remote channel
     private fun stopSendRemoteChannel() {
         mStopRemoteChannel = true
-        remoteChannelFuture?.cancel(true)
-        remoteChannelFuture = null
-        if (ThreadTool.scheduledThreadPool is ScheduledThreadPoolExecutor) {
-            ThreadTool.scheduledThreadPool.remove(remoteChannelTask)
-        }
+        remoteChannelTask.cancel()
     }
 
     private val dataStreamId: Int by lazy {
@@ -889,34 +887,30 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private fun sendMetaSei() {
         val curUid = uidMapping[userAccount] ?: return
         val map = SeiHelper.buildSei(channelName, curUid)
-        val jsonString = GsonTools.beanToString(map) ?: return
+        val jsonString = GsonUtils.toJson(map)
         metadata = jsonString.toByteArray()
     }
 
     // 开始发送 sei
-    @Volatile
     private var mStopSei = true
-    private var seiFuture: ScheduledFuture<*>? = null
-    private val seiTask = object : Runnable {
-        override fun run() {
-            if (mStopSei) return
-            if (isOwner) sendMetaSei()
+    private val seiTask = object : Utils.Task<Boolean>(Utils.Consumer {
+        if (mStopSei) return@Consumer
+        if (isOwner || audienceStatus == AudienceStatus.RTC_Broadcaster) sendMetaSei()
+    }) {
+        override fun doInBackground(): Boolean {
+            return true
         }
     }
 
     private fun startSendSei() {
         mStopSei = false
-        seiFuture = ThreadTool.scheduledThreadPool.scheduleAtFixedRate(seiTask, 0, 1, TimeUnit.SECONDS)
+        ThreadUtils.executeBySingleAtFixRate(seiTask, 0, 1, TimeUnit.SECONDS)
     }
 
     // 停止发送 sei
     private fun stopSendSei() {
         mStopSei = true
-        seiFuture?.cancel(true)
-        seiFuture = null
-        if (ThreadTool.scheduledThreadPool is ScheduledThreadPoolExecutor) {
-            ThreadTool.scheduledThreadPool.remove(seiTask)
-        }
+        seiTask.cancel()
     }
 
     private var metadata: ByteArray? = null
@@ -976,9 +970,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 if (giftPosition >= 0 && giftPosition < KeyCenter.alphaGiftList.size) {
                     binding.btAlphaGift.text = KeyCenter.alphaGiftList[giftPosition].name
                 }
-                ToastTool.showToast(R.string.play_gift_success)
+                 ToastUtils.showShort(R.string.play_gift_success)
             } else {
-                ToastTool.showToast(R.string.play_gift_failed)
+                 ToastUtils.showShort(R.string.play_gift_failed)
             }
         }
     }

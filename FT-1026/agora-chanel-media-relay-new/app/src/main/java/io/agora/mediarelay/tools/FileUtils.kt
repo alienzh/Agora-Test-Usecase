@@ -3,6 +3,8 @@ package io.agora.mediarelay.tools
 import android.content.Context
 import android.content.res.AssetManager
 import android.text.TextUtils
+import com.blankj.utilcode.util.FileUtils
+import com.blankj.utilcode.util.Utils
 import io.agora.mediarelay.MApp
 import java.io.File
 import java.io.FileOutputStream
@@ -11,7 +13,7 @@ import java.io.InputStream
 
 object FileUtils {
     val baseStrPath: String
-        get() = MApp.instance().getExternalFilesDir("")!!.getAbsolutePath() + File.separator + "image"
+        get() = Utils.getApp().getExternalFilesDir("")!!.absolutePath + File.separator + "image"
 
     val blackImage:String
         get() = baseStrPath + File.separator + "black.png"
@@ -39,6 +41,7 @@ object FileUtils {
         } catch (e: IOException) {
             return null
         }
+
         return storageFilePath
     }
 

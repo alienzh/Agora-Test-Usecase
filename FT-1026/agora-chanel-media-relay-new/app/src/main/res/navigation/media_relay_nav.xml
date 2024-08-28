@@ -31,6 +31,9 @@
         <action
             android:id="@+id/action_mainFragment_to_living4Fragment"
             app:destination="@id/living4Fragment" />
+        <action
+            android:id="@+id/action_mainFragment_to_livingZegoFragment"
+            app:destination="@id/livingZegoFragment" />
     </fragment>
 
     <fragment
@@ -65,7 +68,7 @@
     <fragment
         android:id="@+id/living3Fragment"
         android:name="io.agora.mediarelay.Living3Fragment"
-        android:label="Living3Fragment" >
+        android:label="Living3Fragment">
         <action
             android:id="@+id/action_living3Fragment_to_mainFragment"
             app:destination="@id/mainFragment" />
@@ -73,9 +76,18 @@
     <fragment
         android:id="@+id/living4Fragment"
         android:name="io.agora.mediarelay.Living4Fragment"
-        android:label="Living4Fragment" >
+        android:label="Living4Fragment">
         <action
             android:id="@+id/action_living4Fragment_to_mainFragment"
+            app:destination="@id/mainFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/livingZegoFragment"
+        android:name="io.agora.mediarelay.zego.ZegoLivingFragment"
+        android:label="Living4Fragment">
+        <action
+            android:id="@+id/action_ZegoLivingFragment_to_mainFragment"
             app:destination="@id/mainFragment" />
     </fragment>
 </navigation>

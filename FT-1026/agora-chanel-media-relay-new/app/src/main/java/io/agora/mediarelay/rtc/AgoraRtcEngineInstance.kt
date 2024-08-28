@@ -2,8 +2,8 @@ package io.agora.mediarelay.rtc
 
 import android.os.Handler
 import android.os.Looper
+import com.blankj.utilcode.util.Utils
 import io.agora.mediarelay.BuildConfig
-import io.agora.mediarelay.MApp
 import io.agora.mediarelay.rtc.transcoder.RestfulTranscoder
 import io.agora.mediarelay.tools.LogTool
 import io.agora.rtc2.ClientRoleOptions
@@ -42,9 +42,9 @@ object AgoraRtcEngineInstance {
 
     private var innerTranscoder: RestfulTranscoder? = null
 
-    var mAppId: String = BuildConfig.AGORA_APP_ID
-    private var mAccessKey: String =""
-    private var mSecretKey: String = ""
+    val mAppId: String = BuildConfig.AGORA_APP_ID
+    private var mAccessKey: String = BuildConfig.AGORA_ACCESS_KEY
+    private var mSecretKey: String = BuildConfig.AGORA_SECRET_KEY
 
     private var mVideoInfoListener: IVideoInfoListener? = null
 
@@ -52,11 +52,6 @@ object AgoraRtcEngineInstance {
 
     var eventListener: IAgoraRtcClient.IChannelEventListener? = null
 
-    fun setAppKeys(appId: String, accessKey: String, secretKey: String) {
-        mAppId = appId
-        mAccessKey = accessKey
-        mSecretKey = secretKey
-    }
 
     fun setVideoInfoListener(listener: IVideoInfoListener?) {
         mVideoInfoListener = listener
@@ -74,7 +69,7 @@ object AgoraRtcEngineInstance {
         get() {
             if (innerRtcEngine == null) {
                 val config = RtcEngineConfig()
-                config.mContext = MApp.instance()
+                config.mContext = Utils.getApp()
                 config.mAppId = mAppId
                 config.mEventHandler = object : IRtcEngineEventHandler() {
 
