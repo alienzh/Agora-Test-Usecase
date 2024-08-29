@@ -236,7 +236,7 @@ object KeyCenter {
         }
     }
 
-    var vendor: Vendor =Vendor.Agora
+    var vendor: Vendor = Vendor.Agora
 
-    var testIp:String = "http://101.64.234.51:16000"
+    var testIp: String = "60.191.137.21:16667"
 }

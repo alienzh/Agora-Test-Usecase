@@ -55,8 +55,7 @@ class AgoraZegoRestfulTranscoder constructor(
 
     private var builderToken: String? = null
 
-    //    private val host = "http://101.64.234.51:16000"
-    private val testIp: String get() = KeyCenter.testIp
+    private val host = "http://101.64.234.51:16000"
 
     private val apiVersion = "/v1/projects/"
 
@@ -71,13 +70,15 @@ class AgoraZegoRestfulTranscoder constructor(
             return
         }
         val api = "/rtsc/stream-converter/builderTokens"
+        val testHost = KeyCenter.testIp.split(":")[0]
+        val testPort = KeyCenter.testIp.split(":")[1]
         val map = mapOf(
             "taskLabels" to mapOf(
                 "cname" to "rd-jaco",
                 "uid" to uid,
             ),
-            "testIp" to "60.191.137.21",
-            "testPort" to 16667,
+            "testIp" to testHost,
+            "testPort" to testPort,
             "testVersion" to "v3.12.5-s",
         )
         val jsonString = gson.toJson(map)
@@ -295,7 +296,7 @@ class AgoraZegoRestfulTranscoder constructor(
     }
 
     private fun getURL(api: String): String {
-        return "$testIp$apiVersion$appId$api"
+        return "$host$apiVersion$appId$api"
     }
 
     private fun agoraDataMapFromSetting(setting: AgoraTranscodeSetting): Map<String, Any> {

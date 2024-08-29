@@ -64,8 +64,8 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
 //            binding.etPullUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
 //        }
         binding.etTestIp.setInputType(InputType.TYPE_CLASS_NUMBER)
-        val digits = "https0123456789.:"
-        binding.etTestIp.setKeyListener(DigitsKeyListener.getInstance(digits))
+        val digits = "0123456789.:"
+        binding.etTestIp.keyListener = DigitsKeyListener.getInstance(digits)
 
         binding.etTestIp.setText(KeyCenter.testIp)
         // enable user account
