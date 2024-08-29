@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import com.blankj.utilcode.util.Utils
 import io.agora.mediarelay.BuildConfig
+import io.agora.mediarelay.rtc.transcoder.AgoraZegoRestfulTranscoder
 import io.agora.mediarelay.rtc.transcoder.RestfulTranscoder
 import io.agora.mediarelay.tools.LogTool
 import io.agora.rtc2.ClientRoleOptions
@@ -42,6 +43,8 @@ object AgoraRtcEngineInstance {
 
     private var innerTranscoder: RestfulTranscoder? = null
 
+    private var innerAgoraZegoTranscoder: AgoraZegoRestfulTranscoder? = null
+
     val mAppId: String = BuildConfig.AGORA_APP_ID
     private var mAccessKey: String = BuildConfig.AGORA_ACCESS_KEY
     private var mSecretKey: String = BuildConfig.AGORA_SECRET_KEY
@@ -63,6 +66,14 @@ object AgoraRtcEngineInstance {
                 innerTranscoder = RestfulTranscoder(mAppId, mAccessKey, mSecretKey)
             }
             return innerTranscoder!!
+        }
+
+    val agoraZegoTranscoder: AgoraZegoRestfulTranscoder
+        get() {
+            if (innerAgoraZegoTranscoder == null) {
+                innerAgoraZegoTranscoder = AgoraZegoRestfulTranscoder(mAppId, mAccessKey, mSecretKey)
+            }
+            return innerAgoraZegoTranscoder!!
         }
 
     val rtcEngine: RtcEngineEx

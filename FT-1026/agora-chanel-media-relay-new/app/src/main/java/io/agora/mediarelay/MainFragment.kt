@@ -1,6 +1,8 @@
 package io.agora.mediarelay
 
 import android.os.Bundle
+import android.text.InputType
+import android.text.method.DigitsKeyListener
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +18,7 @@ import io.agora.mediarelay.zego.ZegoLivingFragment
 import io.agora.mediarelay.zego.ZegoSettings
 import io.agora.rtc2.Constants
 import io.agora.rtc2.video.VideoEncoderConfiguration
+
 
 /**
  * @author create by zhangwei03
@@ -34,32 +37,37 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         binding.enterRoom.setOnClickListener {
             checkGoLivePage()
         }
-        binding.etPushUrl.setText(KeyCenter.mPushUrl)
-        binding.etPullUrl.setText(KeyCenter.mPullUrl)
-        binding.etPushUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
-        binding.etPullUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
+//        binding.etPushUrl.setText(KeyCenter.mPushUrl)
+//        binding.etPullUrl.setText(KeyCenter.mPullUrl)
+//        binding.etPushUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
+//        binding.etPullUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
 
-        when (KeyCenter.cdnMakes) {
-            CdnMakes.Huawei -> binding.groupCdn.check(R.id.cdn_huawei)
-            CdnMakes.Tecent -> binding.groupCdn.check(R.id.cdn_tecent)
-            CdnMakes.Ali -> binding.groupCdn.check(R.id.cdn_ali)
-            CdnMakes.Custom -> binding.groupCdn.check(R.id.cdn_custom)
-            else -> binding.groupCdn.check(R.id.cdn_agora)
-        }
+//        when (KeyCenter.cdnMakes) {
+//            CdnMakes.Huawei -> binding.groupCdn.check(R.id.cdn_huawei)
+//            CdnMakes.Tecent -> binding.groupCdn.check(R.id.cdn_tecent)
+//            CdnMakes.Ali -> binding.groupCdn.check(R.id.cdn_ali)
+//            CdnMakes.Custom -> binding.groupCdn.check(R.id.cdn_custom)
+//            else -> binding.groupCdn.check(R.id.cdn_agora)
+//        }
 
-        binding.groupCdn.setOnCheckedChangeListener { radioGroup, checkedId ->
-            when (checkedId) {
-                R.id.cdn_huawei -> KeyCenter.cdnMakes = CdnMakes.Huawei
-                R.id.cdn_tecent -> KeyCenter.cdnMakes = CdnMakes.Tecent
-                R.id.cdn_ali -> KeyCenter.cdnMakes = CdnMakes.Ali
-                R.id.cdn_custom -> KeyCenter.cdnMakes = CdnMakes.Custom
-                else -> KeyCenter.cdnMakes = CdnMakes.Agora
-            }
-            binding.etPushUrl.setText(KeyCenter.mPushUrl)
-            binding.etPullUrl.setText(KeyCenter.mPullUrl)
-            binding.etPushUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
-            binding.etPullUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
-        }
+//        binding.groupCdn.setOnCheckedChangeListener { radioGroup, checkedId ->
+//            when (checkedId) {
+//                R.id.cdn_huawei -> KeyCenter.cdnMakes = CdnMakes.Huawei
+//                R.id.cdn_tecent -> KeyCenter.cdnMakes = CdnMakes.Tecent
+//                R.id.cdn_ali -> KeyCenter.cdnMakes = CdnMakes.Ali
+//                R.id.cdn_custom -> KeyCenter.cdnMakes = CdnMakes.Custom
+//                else -> KeyCenter.cdnMakes = CdnMakes.Agora
+//            }
+//            binding.etPushUrl.setText(KeyCenter.mPushUrl)
+//            binding.etPullUrl.setText(KeyCenter.mPullUrl)
+//            binding.etPushUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
+//            binding.etPullUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
+//        }
+        binding.etTestIp.setInputType(InputType.TYPE_CLASS_NUMBER)
+        val digits = "https0123456789.:"
+        binding.etTestIp.setKeyListener(DigitsKeyListener.getInstance(digits))
+
+        binding.etTestIp.setText(KeyCenter.testIp)
         // enable user account
         binding.cbUserAccount.setChecked(RtcSettings.mEnableUserAccount)
         binding.cbUserAccount.setOnCheckedChangeListener { buttonView, isChecked ->
@@ -158,16 +166,23 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
     }
 
     private fun checkGoLivePage() {
-        if (KeyCenter.cdnMakes == CdnMakes.Custom) {
-            val inputPushUrl = binding.etPushUrl.text?.trim().toString()
-            KeyCenter.setCustomPushUrl(inputPushUrl)
-            val inputPullUrl = binding.etPullUrl.text?.trim().toString()
-            KeyCenter.setCustomPullUrl(inputPullUrl)
+//        if (KeyCenter.cdnMakes == CdnMakes.Custom) {
+//            val inputPushUrl = binding.etPushUrl.text?.trim().toString()
+//            KeyCenter.setCustomPushUrl(inputPushUrl)
+//            val inputPullUrl = binding.etPullUrl.text?.trim().toString()
+//            KeyCenter.setCustomPullUrl(inputPullUrl)
+//        }
+
+        val testIp = binding.etTestIp.text?.trim().toString()
+        if (testIp.isEmpty()) {
+            ToastUtils.showShort("Please input testIp")
+            return
         }
+        KeyCenter.testIp = testIp
 
         val channelId = binding.etChannel.text.toString()
         if (channelId.isEmpty()) {
-            ToastUtils.showShort("Please enter channel id")
+            ToastUtils.showShort("Please input channel id")
             return
         }
         val args = Bundle().apply {

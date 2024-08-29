@@ -24,9 +24,9 @@
         android:id="@+id/btn_back"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
         android:background="@android:color/transparent"
         android:padding="12dp"
-        android:layout_marginTop="25dp"
         android:src="@drawable/ic_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -58,11 +58,11 @@
         app:layout_constraintGuide_percent="0.7" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/layout_channel"
+        android:id="@+id/layout_roomId"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:hint="@string/enter_pk_channel_id"
+        android:layout_marginStart="20dp"
+        android:hint="Enter pk roomId"
         android:textColorHint="#FFD34D"
         app:boxBackgroundColor="#33A0C5FF"
         app:boxBackgroundMode="outline"
@@ -76,7 +76,7 @@
         app:layout_constraintTop_toBottomOf="@id/horizontal70">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_pk_channel"
+            android:id="@+id/et_pk_roomId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="number"
@@ -99,22 +99,82 @@
         android:text="@string/start_pk"
         android:textColor="#282828"
         android:textSize="13sp"
-        app:layout_constraintBottom_toBottomOf="@id/layout_channel"
-        app:layout_constraintStart_toEndOf="@id/layout_channel"
-        app:layout_constraintTop_toTopOf="@id/layout_channel" />
+        app:layout_constraintBottom_toBottomOf="@id/layout_roomId"
+        app:layout_constraintStart_toEndOf="@id/layout_roomId"
+        app:layout_constraintTop_toTopOf="@id/layout_roomId" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/group_pk"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="layout_roomId,bt_submit_pk" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layout_agora"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:hint="Enter Agora Channel"
+        android:textColorHint="#FFD34D"
+        app:boxBackgroundColor="#33A0C5FF"
+        app:boxBackgroundMode="outline"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusTopStart="12dp"
+        app:boxStrokeColor="#FFD34D"
+        app:hintTextColor="#FFD34D"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_roomId">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_agora_channel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:maxLength="7"
+            android:textColor="@color/white"
+            android:textCursorDrawable="@drawable/bg_edit_cursor"
+            android:textSize="12sp"
+            tools:text="123" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/bt_pk_agora"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/bg_btn_primary_r24"
+        android:gravity="center"
+        android:paddingHorizontal="10dp"
+        android:text="StartPk Agora"
+        android:textColor="#282828"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@id/layout_agora"
+        app:layout_constraintStart_toEndOf="@id/layout_agora"
+        app:layout_constraintTop_toTopOf="@id/layout_agora" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/group_pk_agora"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="layout_agora,bt_pk_agora" />
 
     <TextView
         android:id="@+id/bt_switch_carma"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="15dp"
         android:drawableTop="@drawable/ic_camera"
-        app:layout_constraintBottom_toBottomOf="@id/btn_back"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingHorizontal="12dp"
         android:text="@string/switch_camera"
         android:textColor="@color/white"
         android:textSize="14sp"
-        android:paddingHorizontal="12dp"
-        android:layout_marginEnd="15dp"
+        app:layout_constraintBottom_toBottomOf="@id/btn_back"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/btn_back" />
 
     <ImageView
@@ -136,4 +196,11 @@
         app:layout_constraintBottom_toBottomOf="@id/btn_back"
         app:layout_constraintEnd_toStartOf="@+id/bt_mute_mic"
         app:layout_constraintTop_toTopOf="@id/btn_back" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupBroadcaster"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="bt_mute_carma,bt_mute_mic,bt_switch_carma,
+layout_roomId,bt_submit_pk,layout_agora,bt_pk_agora" />
 </androidx.constraintlayout.widget.ConstraintLayout>

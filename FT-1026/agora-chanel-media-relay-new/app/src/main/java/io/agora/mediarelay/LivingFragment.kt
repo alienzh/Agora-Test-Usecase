@@ -12,6 +12,7 @@ import com.blankj.utilcode.util.TimeUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.blankj.utilcode.util.Utils
 import com.google.gson.reflect.TypeToken
+import im.zego.zegoexpress.entity.ZegoUser
 import io.agora.mediaplayer.IMediaPlayer
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentLivingBinding
@@ -20,12 +21,14 @@ import io.agora.mediarelay.rtc.IAgoraRtcClient
 import io.agora.mediarelay.rtc.MPObserverAdapter
 import io.agora.mediarelay.rtc.RtcSettings
 import io.agora.mediarelay.rtc.SeiHelper
+import io.agora.mediarelay.rtc.transcoder.AgoraTranscodeSetting
 import io.agora.mediarelay.rtc.transcoder.ChannelUid
-import io.agora.mediarelay.rtc.transcoder.TranscodeSetting
 import io.agora.mediarelay.tools.FileUtils
 import io.agora.mediarelay.tools.LogTool
 import io.agora.mediarelay.widget.DashboardFragment
 import io.agora.mediarelay.tools.ViewTool
+import io.agora.mediarelay.widget.OnFastClickListener
+import io.agora.mediarelay.zego.ZegoEngineInstance
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
 import io.agora.rtc2.Constants.VideoSourceType
@@ -79,7 +82,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     @Volatile
     private var audienceStatus: AudienceStatus = AudienceStatus.CDN_Audience
 
-    private val isInPk get() = remotePkChannel.isNotEmpty()
+    private val isInPk get() = remotePkChannel.isNotEmpty() || remoteZegoRoomId.isNotEmpty()
 
     // pk 频道
     private var remotePkChannel = ""
@@ -95,7 +98,8 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     //key account，value rtc-uid
     private val uidMapping = mutableMapOf<String, Int>()
 
-    private var frontCamera = true
+    // zego 频道
+    private var remoteZegoRoomId = ""
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLivingBinding {
         return FragmentLivingBinding.inflate(inflater)
@@ -109,26 +113,37 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     private fun initView() {
         if (isOwner) {
-            binding.layoutChannel.isVisible = true
-            binding.btSubmitPk.isVisible = true
-            binding.btSwitchStream.isVisible = false
-            binding.btSwitchCarma.isVisible = true
-            binding.btMuteMic.isVisible = true
+//            binding.layoutChannel.isVisible = true
+//            binding.btSubmitPk.isVisible = true
+//            binding.layoutZego.isVisible = true
+//            binding.btPkZego.isVisible = true
+//            binding.btSwitchCarma.isVisible = true
+//            binding.btMuteMic.isVisible = true
+//            binding.btMuteCarma.isVisible = true
+
             binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
-            binding.btMuteCarma.isVisible = true
             binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
+            binding.btSwitchStream.isVisible = false
             binding.btBitrate.isVisible = false
             binding.btAlphaGift.isVisible = true
+
+            binding.groupBroadcaster.isVisible = true
         } else {
-            binding.layoutChannel.isVisible = false
-            binding.btSubmitPk.isVisible = false
+//            binding.layoutChannel.isVisible = false
+//            binding.btSubmitPk.isVisible = false
+//            binding.layoutZego.isVisible = false
+//            binding.btPkZego.isVisible = false
+//
+//
+//            binding.btMuteMic.isVisible = false
+//            binding.btMuteCarma.isVisible = false
+
             binding.btSwitchStream.isVisible = true
-            binding.btSwitchCarma.isVisible = false
-            binding.btMuteMic.isVisible = false
-            binding.btMuteCarma.isVisible = false
             binding.btBitrate.isVisible = true
             binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
             binding.btAlphaGift.isVisible = false
+
+            binding.groupBroadcaster.isVisible = false
         }
         binding.tvChannelId.text = "$channelName(${KeyCenter.cdnMakes})"
         binding.btnBack.setOnClickListener {
@@ -144,11 +159,17 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     val channelUid = ChannelUid(channelName, ownerUid, userAccount)
                     updateRtmpStreamEnable(channelUid)
                 }
+                binding.groupPkZego.isVisible = true
             } else {
                 val channelId = binding.etPkChannel.text.toString()
-                if (checkChannelId(channelId)) return@setOnClickListener
+                if (channelId.isEmpty()) {
+                    ToastUtils.showShort("Please enter pk channel id")
+                    return@setOnClickListener
+                }
                 remotePkChannel = channelId
                 startPk(channelId)
+
+                binding.groupPkZego.isVisible = false
             }
         }
         binding.btSwitchStream.setOnClickListener {
@@ -170,10 +191,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
         binding.btSwitchCarma.setOnClickListener {
             rtcEngine.switchCamera()
-            frontCamera = !frontCamera
-            if (frontCamera) {
-
-            }
         }
         binding.btMuteMic.setOnClickListener {
             if (muteLocalAudio) {
@@ -233,6 +250,33 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 showGiftTexture()
             }
         }
+        binding.btPkZego.setOnClickListener(object :
+            OnFastClickListener(message = getString(R.string.click_too_fast)) {
+            override fun onClickJacking(view: View) {
+
+                if (remoteZegoRoomId.isNotEmpty()) { // pk 中停止pk
+                    binding.btPkZego.text = "StartPK zego"
+                    binding.etZegoRoomid.setText("")
+                    remoteZegoRoomId = ""
+                    stopPk()
+                    uidMapping[userAccount]?.let { ownerUid ->
+                        val channelUid = ChannelUid(channelName, ownerUid, userAccount)
+                        updateRtmpStreamEnable(channelUid)
+                    }
+                    binding.groupPk.isVisible = true
+                } else {
+                    val zegoRoomId = binding.etZegoRoomid.text.toString()
+                    if (zegoRoomId.isEmpty()) {
+                        ToastUtils.showShort("Please enter pk zego room id")
+                        return
+                    }
+                    binding.btPkZego.text = "StopPK zego"
+                    remoteZegoRoomId = zegoRoomId
+                    startPk(zegoRoomId)
+                    binding.groupPk.isVisible = false
+                }
+            }
+        })
     }
 
     // 临时变量，切换成功则修改
@@ -246,9 +290,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 if (cdnPosition >= 0 && cdnPosition < KeyCenter.mBitrateList.size) {
                     binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
                 }
-                 ToastUtils.showShort(R.string.switch_src_success)
+                ToastUtils.showShort(R.string.switch_src_success)
             } else {
-                 ToastUtils.showShort(R.string.switch_src_failed)
+                ToastUtils.showShort(R.string.switch_src_failed)
             }
         }
     }
@@ -288,7 +332,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             }
             if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_FAILED) {
                 runOnMainThread {
-                     ToastUtils.showShort("state:$state \n error:$error")
+                    ToastUtils.showShort("state:$state \n error:$error")
                 }
             }
             if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING) {
@@ -384,14 +428,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         findNavController().popBackStack()
     }
 
-    private fun checkChannelId(channelId: String): Boolean {
-        if (channelId.isEmpty()) {
-             ToastUtils.showShort("Please enter pk channel id")
-            return true
-        }
-        return false
-    }
-
     private val eventListener = IAgoraRtcClient.IChannelEventListener(
         onChannelJoined = { channel, uid ->
             if (isOwner) {
@@ -399,6 +435,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 setRtmpStreamEnable(true)
                 // TODO: 隐藏 sei
                 // startSendSei()
+                startPushToZego()
             } else {
                 //超级画质
                 val ret1 = rtcEngine.setParameters("{\"rtc.video.enable_sr\":{\"enabled\":true, \"mode\": 2}}")
@@ -426,12 +463,12 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             when (state) {
                 Constants.RTMP_STREAM_PUBLISH_STATE_RUNNING -> {
                     if (code == Constants.RTMP_STREAM_PUBLISH_REASON_OK) {
-                         ToastUtils.showShort("rtmp stream publish state running")
+                        ToastUtils.showShort("rtmp stream publish state running")
                     }
                 }
 
                 Constants.RTMP_STREAM_PUBLISH_STATE_FAILURE -> {
-                     ToastUtils.showShort("rtmp stream publish state failure: $code")
+                    ToastUtils.showShort("rtmp stream publish state failure: $code")
                 }
             }
         },
@@ -442,6 +479,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         },
         onStreamMessage = { uid, streamId, data ->
             try {
+                if (isOwner) return@IChannelEventListener
                 val strMsg = String(data)
                 val jsonMsg = JSONObject(strMsg)
                 if (jsonMsg.getString("cmd") == "StartPk") { //同步远端 remotePk
@@ -470,7 +508,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     joinChannel(userCount, uid)
                 }
             } else {
-                switchCdnAudience(cdnPosition)
+                switchRtcAudience()
             }
         }
     }
@@ -497,63 +535,65 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     /**推流到CDN*/
     private fun setRtmpStreamEnable(enable: Boolean) {
-        val userId = uidMapping[userAccount] ?: return
-        if (enable) {
-            // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
-            val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
-            if (publishedRtmp) {
-                AgoraRtcEngineInstance.transcoder.stopRtmpStream(userId, null)
-                publishedRtmp = false
-            }
-            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(
-                TranscodeSetting.liveTranscoding(
-                    RtcSettings.mEnableUserAccount,
-                    userId,
-                    channelName,
-                    pushUrl,
-                    ChannelUid(channelName, userId, userAccount)
-                )
-            ) { succeed, code, message ->
-                if (succeed) {
-                    publishedRtmp = true
-                     ToastUtils.showShort("start rtmp stream success！")
-                } else {
-                     ToastUtils.showShort("start rtmp stream error, $code, $message")
-                }
-            }
-        } else {
-            // 删除一个推流地址。
-            AgoraRtcEngineInstance.transcoder.stopRtmpStream(userId) { succeed, code, message ->
-                if (succeed) {
-                    publishedRtmp = false
-                } else {
-                     ToastUtils.showShort("stop rtmp stream error, $code, $message")
-                }
-            }
-        }
+        // TODO: 暂停推 cdn
+//        val userId = uidMapping[userAccount] ?: return
+//        if (enable) {
+//            // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
+//            val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
+//            if (publishedRtmp) {
+//                AgoraRtcEngineInstance.transcoder.stopRtmpStream(userId, null)
+//                publishedRtmp = false
+//            }
+//            AgoraRtcEngineInstance.transcoder.startRtmpStreamWithTranscoding(
+//                TranscodeSetting.liveTranscoding(
+//                    RtcSettings.mEnableUserAccount,
+//                    userId,
+//                    channelName,
+//                    pushUrl,
+//                    ChannelUid(channelName, userId, userAccount)
+//                )
+//            ) { succeed, code, message ->
+//                if (succeed) {
+//                    publishedRtmp = true
+//                     ToastUtils.showShort("start rtmp stream success！")
+//                } else {
+//                     ToastUtils.showShort("start rtmp stream error, $code, $message")
+//                }
+//            }
+//        } else {
+//            // 删除一个推流地址。
+//            AgoraRtcEngineInstance.transcoder.stopRtmpStream(userId) { succeed, code, message ->
+//                if (succeed) {
+//                    publishedRtmp = false
+//                } else {
+//                     ToastUtils.showShort("stop rtmp stream error, $code, $message")
+//                }
+//            }
+//        }
     }
 
     /**新主播进来，更新CDN推流*/
     private fun updateRtmpStreamEnable(@Size(min = 1) vararg channelUids: ChannelUid) {
-        val userId = uidMapping[userAccount] ?: return
-        // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
-        val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
-        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(
-            TranscodeSetting.liveTranscoding(
-                RtcSettings.mEnableUserAccount,
-                userId,
-                channelName,
-                pushUrl,
-                *channelUids
-            )
-        ) { succeed, code, message ->
-            if (succeed) {
-                publishedRtmp = true
-                 ToastUtils.showShort("update rtmp stream success！")
-            } else {
-                 ToastUtils.showShort("update rtmp stream error, $code, $message")
-            }
-        }
+        // TODO: 暂停推 cdn
+//        val userId = uidMapping[userAccount] ?: return
+//        // CDN 推流转码属性配置。注意：调用这个接口前提是需要转码；否则，就不要调用这个接口。
+//        val pushUrl = KeyCenter.getRtmpPushUrl(channelName)
+//        AgoraRtcEngineInstance.transcoder.updateRtmpTranscoding(
+//            TranscodeSetting.liveTranscoding(
+//                RtcSettings.mEnableUserAccount,
+//                userId,
+//                channelName,
+//                pushUrl,
+//                *channelUids
+//            )
+//        ) { succeed, code, message ->
+//            if (succeed) {
+//                publishedRtmp = true
+//                 ToastUtils.showShort("update rtmp stream success！")
+//            } else {
+//                 ToastUtils.showShort("update rtmp stream error, $code, $message")
+//            }
+//        }
     }
 
     /**pk 模式,*/
@@ -623,6 +663,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.videoPKLayout.iBroadcasterAView.removeAllViews()
         binding.videoPKLayout.iBroadcasterBView.removeAllViews()
         binding.btSubmitPk.text = getString(R.string.start_pk)
+        binding.btPkZego.text = getString(R.string.start_pk_zego)
         if (isOwner) {
             uidMapping[userAccount]?.let { uid ->
                 setupLocalVideo(uid)
@@ -734,6 +775,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             stopSendSei()
             stopSendRemoteChannel()
             setRtmpStreamEnable(false)
+            stopPushToZego()
         } else {
             mediaPlayer?.apply {
                 unRegisterPlayerObserver(mediaPlayerObserver)
@@ -970,9 +1012,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 if (giftPosition >= 0 && giftPosition < KeyCenter.alphaGiftList.size) {
                     binding.btAlphaGift.text = KeyCenter.alphaGiftList[giftPosition].name
                 }
-                 ToastUtils.showShort(R.string.play_gift_success)
+                ToastUtils.showShort(R.string.play_gift_success)
             } else {
-                 ToastUtils.showShort(R.string.play_gift_failed)
+                ToastUtils.showShort(R.string.play_gift_failed)
             }
         }
     }
@@ -1041,5 +1083,33 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 switchGiftSuccess(false)
             }
         }
+    }
+
+    private fun startPushToZego() {
+        uidMapping[userAccount]?.let { ownerUid ->
+            val channelUid = ChannelUid(channelName, ownerUid, userAccount)
+            AgoraRtcEngineInstance.agoraZegoTranscoder.startAgoraStreamWithTranscoding(
+                AgoraTranscodeSetting.cloudAgoraTranscoding(
+                    enableUserAccount = RtcSettings.mEnableUserAccount,
+                    zegoAppId = BuildConfig.ZEGO_APP_ID.toLong(),
+                    zegoAppSign = BuildConfig.ZEGO_APP_SIGN,
+                    zegoRoomId = channelName,
+                    zegoUser = ZegoUser(ZegoEngineInstance.userId),
+                    zegoPublishStreamId = channelName,
+                    channelUid = channelUid
+                ),
+                completion = { succeed, code, message ->
+                    if (succeed) {
+                        ToastUtils.showShort("push to zego success")
+                    } else {
+                        ToastUtils.showShort("push to zego error: $code, $message")
+                    }
+                }
+            )
+        }
+    }
+
+    private fun stopPushToZego() {
+        AgoraRtcEngineInstance.agoraZegoTranscoder.stopRtmpStream(userAccount, null)
     }
 }

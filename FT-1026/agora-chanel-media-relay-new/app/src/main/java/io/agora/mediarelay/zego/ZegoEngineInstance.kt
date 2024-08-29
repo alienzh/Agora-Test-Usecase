@@ -10,6 +10,7 @@ import im.zego.zegoexpress.constants.ZegoVideoConfigPreset
 import im.zego.zegoexpress.entity.ZegoEngineProfile
 import im.zego.zegoexpress.entity.ZegoVideoConfig
 import io.agora.mediarelay.BuildConfig
+import io.agora.mediarelay.rtc.transcoder.AgoraZegoRestfulTranscoder
 import java.util.Random
 
 object ZegoEngineInstance {
@@ -25,6 +26,16 @@ object ZegoEngineInstance {
     }
 
     private var innerUserId = ""
+
+    private var innerAgoraZegoTranscoder: AgoraZegoRestfulTranscoder? = null
+
+    val agoraZegoRestfulTranscoder: AgoraZegoRestfulTranscoder
+        get() {
+            if (innerAgoraZegoTranscoder == null) {
+                innerAgoraZegoTranscoder = AgoraZegoRestfulTranscoder()
+            }
+            return innerAgoraZegoTranscoder!!
+        }
 
     val userId: String
         get() {

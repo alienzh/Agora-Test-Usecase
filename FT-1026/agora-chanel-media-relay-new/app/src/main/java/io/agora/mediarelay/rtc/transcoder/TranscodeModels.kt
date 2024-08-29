@@ -6,7 +6,7 @@ import io.agora.rtc2.video.VideoEncoderConfiguration
 data class ChannelUid constructor(
     val channel: String,
     val uid: Int,
-    val userAccount: String
+    val stringUid: String
 )
 
 data class TransInputItem constructor(
@@ -62,7 +62,7 @@ data class TranscodeSetting constructor(
                 val item = TransInputItem(
                     channel = it.channel,
                     uid = it.uid,
-                    account = it.userAccount,
+                    account = it.stringUid,
                     x = totalX,
                     y = totalY,
                     width = fullWidth / channelUids.size,
@@ -110,7 +110,7 @@ data class TranscodeSetting constructor(
                 val item = TransInputItem(
                     channel = channel,
                     uid = videoUid,
-                    account = channelUids[i].userAccount,
+                    account = channelUids[i].stringUid,
                     x = transcodingX,
                     y = transcodingY,
                     width = singleSize,
@@ -173,7 +173,7 @@ data class TranscodeSetting constructor(
                 val item = TransInputItem(
                     channel = channel,
                     uid = videoUid,
-                    account = channelUids[i].userAccount,
+                    account = channelUids[i].stringUid,
                     x = transcodingX,
                     y = transcodingY,
                     width = singleWidth,
@@ -220,7 +220,7 @@ data class TranscodeSetting constructor(
                 val item = TransInputItem(
                     channel = channel,
                     uid = videoUid,
-                    account = channelUids[i].userAccount,
+                    account = channelUids[i].stringUid,
                     x = transcodingX,
                     y = transcodingY,
                     width = singleSize,

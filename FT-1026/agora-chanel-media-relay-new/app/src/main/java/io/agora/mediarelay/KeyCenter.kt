@@ -237,4 +237,6 @@ object KeyCenter {
     }
 
     var vendor: Vendor =Vendor.Agora
+
+    var testIp:String = "http://101.64.234.51:16000"
 }

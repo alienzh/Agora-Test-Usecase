@@ -41,7 +41,7 @@ object RtcSettings {
             LogTool.d("RtcSetting BitRate：$newValue")
         }
 
-    var mEnableUserAccount: Boolean = false
+    var mEnableUserAccount: Boolean = true
         set(newValue) {
             field = newValue
             LogTool.d("RtcSetting mEnableUserAccount：$newValue")
