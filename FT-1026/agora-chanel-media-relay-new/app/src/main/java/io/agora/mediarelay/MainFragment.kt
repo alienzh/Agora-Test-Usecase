@@ -63,14 +63,26 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
 //            binding.etPushUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
 //            binding.etPullUrl.isEnabled = KeyCenter.cdnMakes == CdnMakes.Custom
 //        }
+        binding.cbTestIp.setOnCheckedChangeListener { buttonView, isChecked ->
+            binding.layoutTestIp.isEnabled = isChecked
+            binding.layoutTestIp.alpha = if (isChecked) 1f else 0.5f
+            binding.layoutTestVersion.alpha = if (isChecked) 1f else 0.5f
+            KeyCenter.userTestIp = isChecked
+        }
+        binding.cbTestIp.setChecked(KeyCenter.userTestIp)
+        binding.layoutTestIp.alpha = if (KeyCenter.userTestIp) 1f else 0.5f
+        binding.layoutTestVersion.alpha = if (KeyCenter.userTestIp) 1f else 0.5f
+
         binding.etTestIp.setInputType(InputType.TYPE_CLASS_NUMBER)
         val digits = "0123456789.:"
         binding.etTestIp.keyListener = DigitsKeyListener.getInstance(digits)
 
         binding.etTestIp.setText(KeyCenter.testIp)
+        binding.etTestVersion.setText(KeyCenter.testVersion)
+
         // enable user account
         binding.cbUserAccount.setChecked(RtcSettings.mEnableUserAccount)
-        binding.cbUserAccount.setOnCheckedChangeListener { buttonView, isChecked ->
+        binding.cbUserAccount.setOnCheckedChangeListener{ buttonView, isChecked ->
             if (buttonView.isPressed) {
                 RtcSettings.mEnableUserAccount = isChecked
             }
@@ -78,7 +90,7 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
 
         checkVideoSettingsVisible()
         // role
-        binding.groupRole.setOnCheckedChangeListener { _, _ ->
+        binding.groupRole.setOnCheckedChangeListener{ _, _ ->
             checkVideoSettingsVisible()
         }
 
@@ -93,7 +105,7 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
         } else if (RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_960x540) {
             binding.groupResolution.check(R.id.resolution_540p)
         }
-        binding.groupResolution.setOnCheckedChangeListener { _, checkedId ->
+        binding.groupResolution.setOnCheckedChangeListener{ _, checkedId ->
         }
 
         // frame rate
@@ -173,12 +185,22 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
 //            KeyCenter.setCustomPullUrl(inputPullUrl)
 //        }
 
-        val testIp = binding.etTestIp.text?.trim().toString()
-        if (testIp.isEmpty()) {
-            ToastUtils.showShort("Please input testIp")
-            return
+        if (KeyCenter.userTestIp){
+            val testIp = binding.etTestIp.text?.trim().toString()
+            if (testIp.isEmpty()) {
+                ToastUtils.showShort("Please input testIp")
+                return
+            }
+            KeyCenter.testIp = testIp
+
+            val testVersion = binding.etTestVersion.text?.trim().toString()
+            if (testVersion.isEmpty()) {
+                ToastUtils.showShort("Please input testVersion")
+                return
+            }
+            KeyCenter.testVersion = testVersion
         }
-        KeyCenter.testIp = testIp
+
 
         val channelId = binding.etChannel.text.toString()
         if (channelId.isEmpty()) {

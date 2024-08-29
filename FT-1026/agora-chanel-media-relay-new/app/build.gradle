@@ -12,7 +12,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "io.agora.demo.mediarelay"
+        applicationId "io.agora.demo.rtsc_agora_zego"
         minSdk 24
         targetSdk 33
         versionCode 1
@@ -80,7 +80,7 @@ android {
     applicationVariants.all {
         variant ->
             variant.outputs.all { output ->
-                outputFileName = new File("AGDemo_Media_Relay_" +
+                outputFileName = new File("AGDemo_RSTC_AGORA_ZEGO" +
                         "v" + defaultConfig.versionName + "_" +
                         new Date().format("yyyyMMddHHmm") + "_" +
                         buildType.name + ".apk")

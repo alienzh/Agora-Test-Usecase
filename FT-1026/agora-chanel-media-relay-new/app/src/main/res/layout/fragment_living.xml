@@ -62,7 +62,7 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:hint="@string/enter_pk_channel_id"
+        android:hint="Enter Agora ChannelId"
         android:textColorHint="#FFD34D"
         app:boxBackgroundColor="#33A0C5FF"
         app:boxBackgroundMode="outline"
@@ -76,7 +76,7 @@
         app:layout_constraintTop_toBottomOf="@id/horizontal70">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_pk_channel"
+            android:id="@+id/et_pk_agora_channel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="number"
@@ -88,7 +88,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
-        android:id="@+id/bt_submit_pk"
+        android:id="@+id/bt_pk_agora"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:layout_centerHorizontal="true"
@@ -97,7 +97,7 @@
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
         android:paddingHorizontal="10dp"
-        android:text="@string/start_pk"
+        android:text="@string/start_pk_agora"
         android:textColor="#282828"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@id/layout_channel"
@@ -108,7 +108,7 @@
         android:id="@+id/group_pk"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="layout_channel,bt_submit_pk"/>
+        app:constraint_referenced_ids="layout_channel,bt_pk_agora"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_zego"
@@ -130,7 +130,7 @@
         app:layout_constraintTop_toBottomOf="@id/layout_channel">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_zego_roomid"
+            android:id="@+id/et_pk_zego_roomid"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="number"
@@ -151,7 +151,7 @@
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
         android:paddingHorizontal="10dp"
-        android:text="StartPk Zego"
+        android:text="@string/start_pk_zego"
         android:textColor="#282828"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@id/layout_zego"
@@ -163,23 +163,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:constraint_referenced_ids="layout_zego,bt_pk_zego"/>
-
-    <TextView
-        android:id="@+id/bt_switch_stream"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginEnd="15dp"
-        android:background="@drawable/bg_btn_primary_r24"
-        android:gravity="center"
-        android:paddingHorizontal="12dp"
-        android:text="@string/cdn_audience"
-        android:textColor="#282828"
-        android:textSize="12sp"
-        tools:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="@id/btn_back"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btn_back" />
 
     <TextView
         android:id="@+id/bt_switch_carma"
@@ -225,44 +208,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_back" />
 
-    <TextView
-        android:id="@+id/bt_bitrate"
-        android:layout_width="80dp"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="4dp"
-        android:text="720p"
-        android:textColor="@color/white"
-        android:drawableEnd="@drawable/ic_arrow_down"
-        app:layout_constraintStart_toEndOf="@id/bt_dashboard"
-        app:layout_constraintTop_toTopOf="@id/bt_dashboard"
-        app:layout_constraintBottom_toBottomOf="@id/bt_dashboard"/>
-
-    <TextView
-        android:id="@+id/bt_alpha_gift"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:paddingHorizontal="12dp"
-        android:layout_marginStart="8dp"
-        android:paddingVertical="4dp"
-        android:text="send gift"
-        android:drawablePadding="4dp"
-        android:drawableEnd="@drawable/ic_arrow_down"
-        android:textColor="@color/white"
-        app:layout_constraintStart_toEndOf="@id/bt_bitrate"
-        app:layout_constraintTop_toTopOf="@id/bt_dashboard"
-        app:layout_constraintBottom_toBottomOf="@id/bt_dashboard"/>
-
-    <TextView
-        android:id="@+id/cdnDiffTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/bt_dashboard"
-        android:layout_marginEnd="30dp"
-        android:textColor="@color/white"
-        app:layout_constraintBottom_toBottomOf="@id/bt_dashboard"/>
-
     <FrameLayout
         android:id="@+id/fl_dashboard"
         android:layout_width="match_parent"
@@ -271,14 +216,13 @@
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/bt_dashboard"
-        tools:visibility="visible"
-        />
+        tools:visibility="visible" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/groupBroadcaster"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:constraint_referenced_ids="bt_mute_carma,bt_mute_mic,bt_switch_carma,
-layout_channel,bt_submit_pk,layout_zego,bt_pk_zego" />
+layout_channel,bt_pk_agora,layout_zego,bt_pk_zego" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

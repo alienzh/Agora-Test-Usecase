@@ -238,5 +238,8 @@ object KeyCenter {
 
     var vendor: Vendor = Vendor.Agora
 
+    var userTestIp = false
+
     var testIp: String = "60.191.137.21:16667"
+    var testVersion: String = "v3.12.5-s"
 }

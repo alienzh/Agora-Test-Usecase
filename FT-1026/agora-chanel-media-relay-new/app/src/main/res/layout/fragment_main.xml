@@ -107,13 +107,61 @@
                     android:textSize="13sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_test_ip"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="12dp"
+                    android:hint="test ip"
+                    android:textColorHint="#FFD34D"
+                    app:boxBackgroundColor="#33A0C5FF"
+                    app:boxBackgroundMode="outline"
+                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:boxStrokeColor="#FFD34D"
+                    app:hintTextColor="#FFD34D"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/cbTestIp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_test_ip"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:textColor="@color/white"
+                        android:textCursorDrawable="@drawable/bg_edit_cursor"
+                        android:textSize="13sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <androidx.appcompat.widget.AppCompatCheckBox
+                    android:id="@+id/cbTestIp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:button="@drawable/cb_def_selector"
+                    android:checked="false"
+                    app:layout_constraintBottom_toBottomOf="@id/layout_test_ip"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/layout_test_ip" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/layout_test_ip"
+                android:id="@+id/layout_test_version"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="8dp"
-                android:hint="test ip"
+                android:hint="test version"
                 android:textColorHint="#FFD34D"
                 app:boxBackgroundColor="#33A0C5FF"
                 app:boxBackgroundMode="outline"
@@ -122,11 +170,10 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxStrokeColor="#FFD34D"
-                app:hintTextColor="#FFD34D"
-                app:layout_constraintTop_toBottomOf="@id/layout_app_id">
+                app:hintTextColor="#FFD34D">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_test_ip"
+                    android:id="@+id/et_test_version"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text"
@@ -134,6 +181,7 @@
                     android:textCursorDrawable="@drawable/bg_edit_cursor"
                     android:textSize="13sp" />
             </com.google.android.material.textfield.TextInputLayout>
+
 
             <!--            <com.google.android.material.textfield.TextInputLayout-->
             <!--                android:id="@+id/layout_push"-->

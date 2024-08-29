@@ -58,11 +58,11 @@
         app:layout_constraintGuide_percent="0.7" />
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/layout_roomId"
+        android:id="@+id/layout_zego"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:hint="Enter pk roomId"
+        android:hint="Enter Zego RoomId"
         android:textColorHint="#FFD34D"
         app:boxBackgroundColor="#33A0C5FF"
         app:boxBackgroundMode="outline"
@@ -76,7 +76,7 @@
         app:layout_constraintTop_toBottomOf="@id/horizontal70">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_pk_roomId"
+            android:id="@+id/et_pk_zego_roomId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="number"
@@ -87,7 +87,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
-        android:id="@+id/bt_submit_pk"
+        android:id="@+id/bt_pk_zego"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         android:layout_centerHorizontal="true"
@@ -96,18 +96,18 @@
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
         android:paddingHorizontal="10dp"
-        android:text="@string/start_pk"
+        android:text="@string/start_pk_zego"
         android:textColor="#282828"
         android:textSize="13sp"
-        app:layout_constraintBottom_toBottomOf="@id/layout_roomId"
-        app:layout_constraintStart_toEndOf="@id/layout_roomId"
-        app:layout_constraintTop_toTopOf="@id/layout_roomId" />
+        app:layout_constraintBottom_toBottomOf="@id/layout_zego"
+        app:layout_constraintStart_toEndOf="@id/layout_zego"
+        app:layout_constraintTop_toTopOf="@id/layout_zego" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group_pk"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="layout_roomId,bt_submit_pk" />
+        app:constraint_referenced_ids="layout_zego,bt_pk_zego" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_agora"
@@ -115,7 +115,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
         android:layout_marginTop="10dp"
-        android:hint="Enter Agora Channel"
+        android:hint="Enter Agora ChannelId"
         android:textColorHint="#FFD34D"
         app:boxBackgroundColor="#33A0C5FF"
         app:boxBackgroundMode="outline"
@@ -126,7 +126,7 @@
         app:boxStrokeColor="#FFD34D"
         app:hintTextColor="#FFD34D"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layout_roomId">
+        app:layout_constraintTop_toBottomOf="@id/layout_zego">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_agora_channel"
@@ -150,7 +150,7 @@
         android:background="@drawable/bg_btn_primary_r24"
         android:gravity="center"
         android:paddingHorizontal="10dp"
-        android:text="StartPk Agora"
+        android:text="@string/start_pk_agora"
         android:textColor="#282828"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@id/layout_agora"
@@ -202,5 +202,5 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:constraint_referenced_ids="bt_mute_carma,bt_mute_mic,bt_switch_carma,
-layout_roomId,bt_submit_pk,layout_agora,bt_pk_agora" />
+layout_zego,bt_pk_zego,layout_agora,bt_pk_agora" />
 </androidx.constraintlayout.widget.ConstraintLayout>

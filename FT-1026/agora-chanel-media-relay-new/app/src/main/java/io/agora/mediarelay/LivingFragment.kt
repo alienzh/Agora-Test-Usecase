@@ -6,34 +6,25 @@ import android.view.*
 import androidx.annotation.Size
 import androidx.core.view.isVisible
 import androidx.navigation.fragment.findNavController
-import com.blankj.utilcode.util.GsonUtils
 import com.blankj.utilcode.util.ThreadUtils
-import com.blankj.utilcode.util.TimeUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.blankj.utilcode.util.Utils
-import com.google.gson.reflect.TypeToken
 import im.zego.zegoexpress.entity.ZegoUser
-import io.agora.mediaplayer.IMediaPlayer
 import io.agora.mediarelay.baseui.BaseUiFragment
 import io.agora.mediarelay.databinding.FragmentLivingBinding
 import io.agora.mediarelay.rtc.AgoraRtcEngineInstance
 import io.agora.mediarelay.rtc.IAgoraRtcClient
-import io.agora.mediarelay.rtc.MPObserverAdapter
 import io.agora.mediarelay.rtc.RtcSettings
-import io.agora.mediarelay.rtc.SeiHelper
 import io.agora.mediarelay.rtc.transcoder.AgoraTranscodeSetting
 import io.agora.mediarelay.rtc.transcoder.ChannelUid
 import io.agora.mediarelay.tools.FileUtils
 import io.agora.mediarelay.tools.LogTool
 import io.agora.mediarelay.widget.DashboardFragment
-import io.agora.mediarelay.tools.ViewTool
 import io.agora.mediarelay.widget.OnFastClickListener
 import io.agora.mediarelay.zego.ZegoEngineInstance
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
-import io.agora.rtc2.Constants.VideoSourceType
 import io.agora.rtc2.DataStreamConfig
-import io.agora.rtc2.IMetadataObserver
 import io.agora.rtc2.IRtcEngineEventHandler
 import io.agora.rtc2.RtcConnection
 import io.agora.rtc2.UserInfo
@@ -41,7 +32,6 @@ import io.agora.rtc2.video.ImageTrackOptions
 import io.agora.rtc2.video.VideoCanvas
 import io.agora.rtc2.video.VideoEncoderConfiguration
 import org.json.JSONObject
-import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
 /**
@@ -69,8 +59,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         get() = role == Constants.CLIENT_ROLE_BROADCASTER
 
     private val rtcEngine by lazy { AgoraRtcEngineInstance.rtcEngine }
-
-    private var mediaPlayer: IMediaPlayer? = null
 
     /**
      * cdn 链接 码率 index
@@ -123,10 +111,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
             binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
             binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-            binding.btSwitchStream.isVisible = false
-            binding.btBitrate.isVisible = false
-            binding.btAlphaGift.isVisible = true
-
             binding.groupBroadcaster.isVisible = true
         } else {
 //            binding.layoutChannel.isVisible = false
@@ -137,22 +121,16 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 //
 //            binding.btMuteMic.isVisible = false
 //            binding.btMuteCarma.isVisible = false
-
-            binding.btSwitchStream.isVisible = true
-            binding.btBitrate.isVisible = true
-            binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
-            binding.btAlphaGift.isVisible = false
-
             binding.groupBroadcaster.isVisible = false
         }
         binding.tvChannelId.text = "$channelName(${KeyCenter.cdnMakes})"
         binding.btnBack.setOnClickListener {
-            goBack()
+            findNavController().popBackStack()
         }
-        binding.btSubmitPk.setOnClickListener {
+        binding.btPkAgora.setOnClickListener {
             if (remotePkChannel.isNotEmpty()) { // pk 中停止pk
-                binding.btSubmitPk.text = getString(R.string.start_pk)
-                binding.etPkChannel.setText("")
+                binding.btPkAgora.text = getString(R.string.start_pk_agora)
+                binding.etPkAgoraChannel.setText("")
                 remotePkChannel = ""
                 stopPk()
                 uidMapping[userAccount]?.let { ownerUid ->
@@ -161,32 +139,16 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 }
                 binding.groupPkZego.isVisible = true
             } else {
-                val channelId = binding.etPkChannel.text.toString()
+                val channelId = binding.etPkAgoraChannel.text.toString()
                 if (channelId.isEmpty()) {
-                    ToastUtils.showShort("Please enter pk channel id")
+                    ToastUtils.showShort("Please enter agora channelId")
                     return@setOnClickListener
                 }
+                binding.btPkAgora.text = getString(R.string.stop_pk_agora)
                 remotePkChannel = channelId
                 startPk(channelId)
 
                 binding.groupPkZego.isVisible = false
-            }
-        }
-        binding.btSwitchStream.setOnClickListener {
-            when (audienceStatus) {
-                AudienceStatus.CDN_Audience -> {// cdn 观众--> rtc 观众
-                    audienceStatus = AudienceStatus.RTC_Audience
-                    switchRtcAudience()
-                }
-
-                AudienceStatus.RTC_Audience -> { // rtc 观众 --> cdn 观众
-                    audienceStatus = AudienceStatus.CDN_Audience
-                    switchCdnAudience(cdnPosition)
-                }
-
-                AudienceStatus.RTC_Broadcaster -> {
-                    // nothing
-                }
             }
         }
         binding.btSwitchCarma.setOnClickListener {
@@ -227,36 +189,12 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             dashboardFragment.setOn(it.isSelected)
             binding.flDashboard.isVisible = it.isSelected
         }
-        binding.btBitrate.setOnClickListener {
-            val cxt = context ?: return@setOnClickListener
-            val data = KeyCenter.mBitrateList
-            ViewTool.showPop(cxt, binding.btBitrate, data, cdnPosition) { position, text ->
-                tempCdnPosition = position
-                val pullUrl = KeyCenter.getRtmpPullUrl(channelName, position)
-                Log.d(TAG, "switchSrc $pullUrl")
-                mediaPlayer?.switchSrc(pullUrl, true)
-            }
-        }
-        binding.btAlphaGift.setOnClickListener {
-            val cxt = context ?: return@setOnClickListener
-            val alphaGiftList = KeyCenter.alphaGiftList
-            val data: Array<String?> = arrayOfNulls<String>(alphaGiftList.size)
-
-            for (i in alphaGiftList.indices) {
-                data[i] = alphaGiftList[i].name
-            }
-            ViewTool.showPop(cxt, binding.btAlphaGift, data, giftPosition) { position, text ->
-                tempGiftPosition = position
-                showGiftTexture()
-            }
-        }
         binding.btPkZego.setOnClickListener(object :
             OnFastClickListener(message = getString(R.string.click_too_fast)) {
             override fun onClickJacking(view: View) {
-
                 if (remoteZegoRoomId.isNotEmpty()) { // pk 中停止pk
-                    binding.btPkZego.text = "StartPK zego"
-                    binding.etZegoRoomid.setText("")
+                    binding.btPkZego.text = getString(R.string.start_pk_zego)
+                    binding.etPkZegoRoomid.setText("")
                     remoteZegoRoomId = ""
                     stopPk()
                     uidMapping[userAccount]?.let { ownerUid ->
@@ -265,12 +203,12 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     }
                     binding.groupPk.isVisible = true
                 } else {
-                    val zegoRoomId = binding.etZegoRoomid.text.toString()
+                    val zegoRoomId = binding.etPkZegoRoomid.text.toString()
                     if (zegoRoomId.isEmpty()) {
-                        ToastUtils.showShort("Please enter pk zego room id")
+                        ToastUtils.showShort("Please enter zego roomId")
                         return
                     }
-                    binding.btPkZego.text = "StopPK zego"
+                    binding.btPkZego.text =  getString(R.string.stop_pk_zego)
                     remoteZegoRoomId = zegoRoomId
                     startPk(zegoRoomId)
                     binding.groupPk.isVisible = false
@@ -279,162 +217,14 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         })
     }
 
-    // 临时变量，切换成功则修改
-    private var tempCdnPosition = -1
-
-    private fun switchSrcSuccess(ret: Boolean) {
-        runOnMainThread {
-            if (ret) {
-                cdnPosition = tempCdnPosition
-                tempCdnPosition = -1
-                if (cdnPosition >= 0 && cdnPosition < KeyCenter.mBitrateList.size) {
-                    binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
-                }
-                ToastUtils.showShort(R.string.switch_src_success)
-            } else {
-                ToastUtils.showShort(R.string.switch_src_failed)
-            }
-        }
-    }
-
     private var muteLocalAudio = false
     private var muteLocalVideo = false
-
-    private val mediaPlayerObserver = object : MPObserverAdapter() {
-        override fun onPlayerEvent(
-            eventCode: io.agora.mediaplayer.Constants.MediaPlayerEvent?,
-            elapsedTime: Long,
-            message: String?
-        ) {
-            super.onPlayerEvent(eventCode, elapsedTime, message)
-            Log.d(TAG, "onPlayerEvent: $eventCode，$elapsedTime,$message")
-            when (eventCode) {
-                io.agora.mediaplayer.Constants.MediaPlayerEvent.PLAYER_EVENT_SWITCH_COMPLETE -> {
-                    switchSrcSuccess(true)
-                }
-
-                io.agora.mediaplayer.Constants.MediaPlayerEvent.PLAYER_EVENT_SWITCH_ERROR -> {
-                    switchSrcSuccess(false)
-                    Log.d(TAG, "getPlaySrc:${mediaPlayer?.playSrc}")
-                }
-
-                else -> {}
-            }
-        }
-
-        override fun onPlayerStateChanged(
-            state: io.agora.mediaplayer.Constants.MediaPlayerState?,
-            error: io.agora.mediaplayer.Constants.MediaPlayerReason?
-        ) {
-            super.onPlayerStateChanged(state, error)
-            if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED) {
-                mediaPlayer?.play()
-            }
-            if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_FAILED) {
-                runOnMainThread {
-                    ToastUtils.showShort("state:$state \n error:$error")
-                }
-            }
-            if (state == io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING) {
-                mediaPlayer?.let {
-                    val streamCount = it.streamCount
-                    Log.d(TAG, "streamInfo: $streamCount")
-                    for (i in 0 until streamCount) {
-                        Log.d(TAG, "streamInfo: ${it.getStreamInfo(i)}")
-                    }
-                }
-            }
-        }
-
-        override fun onMetaData(type: io.agora.mediaplayer.Constants.MediaPlayerMetadataType?, data: ByteArray?) {
-            super.onMetaData(type, data)
-            data ?: return
-            val seiMap: Map<String, Any> =
-                GsonUtils.fromJson(String(data), object : TypeToken<Map<String, Any>>() {}.type)
-            runOnMainThread {
-                seiMap["ts"]?.let { ts ->
-                    if (ts is Long) {
-                        binding.cdnDiffTime.text = "diff:${TimeUtils.getNowMills() - ts}ms"
-                    } else if (ts is Int) {
-                        binding.cdnDiffTime.text = "diff:${TimeUtils.getNowMills() - ts}ms"
-                    }
-                }
-            }
-        }
-    }
-
-    private fun switchCdnAudience(cdnPosition: Int) {
-        val act = activity ?: return
-        val rtmpPullUrl = KeyCenter.getRtmpPullUrl(channelName, cdnPosition)
-        binding.btBitrate.text = KeyCenter.mBitrateList[cdnPosition]
-
-        remoteRtcConnection?.let {
-            rtcEngine.leaveChannelEx(it)
-            remoteRtcConnection = null
-        }
-        remotePkChannel = ""
-        rtcEngine.leaveChannel()
-
-        binding.btSwitchStream.text = getString(R.string.rtc_audience)
-        binding.layoutVideoContainer.isVisible = true
-        binding.videoPKLayout.videoContainer.isVisible = false
-        binding.btBitrate.isVisible = true
-
-        val textureView = TextureView(act)
-        binding.layoutVideoContainer.removeAllViews()
-        binding.layoutVideoContainer.addView(textureView)
-        mediaPlayer = rtcEngine.createMediaPlayer()
-        mediaPlayer?.apply {
-            setPlayerOption("is_live_source", 1)
-            setPlayerOption("play_speed_down_cache_duration", 0)
-            setPlayerOption("open_timeout_until_success", 6000)
-            setPlayerOption("enable_search_metadata", 1)
-            if (RtcSettings.mSwitchSrcTimeout != 20) {
-                setPlayerOption("switch_src_timeout", RtcSettings.mSwitchSrcTimeout * 1000)
-            }
-            if (RtcSettings.mEnableQuic) {
-                setPlayerOption("enable_quic", 1)
-            }
-            registerPlayerObserver(mediaPlayerObserver)
-            setView(textureView)
-            Log.d(TAG, "rtmpPullUrl $rtmpPullUrl")
-            open(rtmpPullUrl, 0)
-        }
-
-    }
-
-    //切换到rtc 观众
-    private fun switchRtcAudience() {
-        mediaPlayer?.let {
-            it.unRegisterPlayerObserver(mediaPlayerObserver)
-            it.stop()
-            it.setView(null)
-            it.destroy()
-            mediaPlayer = null
-        }
-
-        binding.cdnDiffTime.text = ""
-        binding.btSwitchStream.text = getString(R.string.cdn_audience)
-        binding.layoutVideoContainer.isVisible = true
-        binding.videoPKLayout.videoContainer.isVisible = false
-        binding.btBitrate.isVisible = false
-
-        registerAccount { uid, userAccount ->
-            joinChannel(userAccount, uid)
-        }
-    }
-
-    private fun goBack() {
-        findNavController().popBackStack()
-    }
 
     private val eventListener = IAgoraRtcClient.IChannelEventListener(
         onChannelJoined = { channel, uid ->
             if (isOwner) {
                 startSendRemoteChannel()
                 setRtmpStreamEnable(true)
-                // TODO: 隐藏 sei
-                // startSendSei()
                 startPushToZego()
             } else {
                 //超级画质
@@ -508,7 +298,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                     joinChannel(userCount, uid)
                 }
             } else {
-                switchRtcAudience()
+                registerAccount { uid, userAccount ->
+                    joinChannel(userAccount, uid)
+                }
             }
         }
     }
@@ -602,7 +394,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.videoPKLayout.videoContainer.isVisible = true
         binding.layoutVideoContainer.isVisible = false
         binding.layoutVideoContainer.removeAllViews()
-        binding.btSubmitPk.text = getString(R.string.stop_pk)
         if (isOwner) { // 主播
             binding.videoPKLayout.iBroadcasterAView.removeAllViews()
             binding.videoPKLayout.iBroadcasterAView.addView(localTexture)
@@ -662,8 +453,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         binding.layoutVideoContainer.isVisible = true
         binding.videoPKLayout.iBroadcasterAView.removeAllViews()
         binding.videoPKLayout.iBroadcasterBView.removeAllViews()
-        binding.btSubmitPk.text = getString(R.string.start_pk)
-        binding.btPkZego.text = getString(R.string.start_pk_zego)
         if (isOwner) {
             uidMapping[userAccount]?.let { uid ->
                 setupLocalVideo(uid)
@@ -730,8 +519,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         // TODO: 注释 264 1  265 2
         rtcEngine.setParameters("{\"che.video.videoCodecIndex\":2}")
         rtcEngine.setDefaultAudioRoutetoSpeakerphone(true)
-        val code: Int = rtcEngine.registerMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
-        Log.d(TAG, "registerMediaMetadataObserver code:$code")
         if (RtcSettings.mEnableUserAccount) {
             rtcEngine.joinChannelWithUserAccount(null, channelName, userAccount, channelMediaOptions)
         } else {
@@ -769,27 +556,10 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     }
 
     override fun onDestroy() {
-        val code: Int = rtcEngine.unregisterMediaMetadataObserver(iMetadataObserver, IMetadataObserver.VIDEO_METADATA)
-        Log.d(TAG, "unregisterMediaMetadataObserver code:$code")
         if (isOwner) {
-            stopSendSei()
             stopSendRemoteChannel()
             setRtmpStreamEnable(false)
             stopPushToZego()
-        } else {
-            mediaPlayer?.apply {
-                unRegisterPlayerObserver(mediaPlayerObserver)
-                stop()
-                destroy()
-                mediaPlayer = null
-            }
-        }
-        giftMediaPlayer?.let {
-            it.unRegisterPlayerObserver(giftMediaPlayerObserver)
-            it.stop()
-            it.setView(null)
-            it.destroy()
-            giftMediaPlayer = null
         }
         rtcEngine.leaveChannel()
         AgoraRtcEngineInstance.destroy()
@@ -924,165 +694,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         }
         val jsonMsg = JSONObject(msg)
         rtcEngine.sendStreamMessage(dataStreamId, jsonMsg.toString().toByteArray())
-    }
-
-    private fun sendMetaSei() {
-        val curUid = uidMapping[userAccount] ?: return
-        val map = SeiHelper.buildSei(channelName, curUid)
-        val jsonString = GsonUtils.toJson(map)
-        metadata = jsonString.toByteArray()
-    }
-
-    // 开始发送 sei
-    private var mStopSei = true
-    private val seiTask = object : Utils.Task<Boolean>(Utils.Consumer {
-        if (mStopSei) return@Consumer
-        if (isOwner || audienceStatus == AudienceStatus.RTC_Broadcaster) sendMetaSei()
-    }) {
-        override fun doInBackground(): Boolean {
-            return true
-        }
-    }
-
-    private fun startSendSei() {
-        mStopSei = false
-        ThreadUtils.executeBySingleAtFixRate(seiTask, 0, 1, TimeUnit.SECONDS)
-    }
-
-    // 停止发送 sei
-    private fun stopSendSei() {
-        mStopSei = true
-        seiTask.cancel()
-    }
-
-    private var metadata: ByteArray? = null
-
-    private val iMetadataObserver: IMetadataObserver = object : IMetadataObserver {
-        /**Returns the maximum data size of Metadata */
-        override fun getMaxMetadataSize(): Int {
-            return KeyCenter.MAX_META_SIZE
-        }
-
-        /**Occurs when the SDK is ready to receive and send metadata.
-         * You need to specify the metadata in the return value of this callback.
-         * @param timeStampMs The timestamp (ms) of the current metadata.
-         * @return The metadata that you want to send in the format of byte[]. Ensure that you set the return value.
-         * PS: Ensure that the size of the metadata does not exceed the value set in the getMaxMetadataSize callback.
-         */
-        override fun onReadyToSendMetadata(timeStampMs: Long, sourceType: Int): ByteArray? {
-            /**Check if the metadata is empty. */
-
-            if (metadata == null) {
-                return null
-            }
-//            Log.i(TAG, "There is metadata to send!")
-            /**Recycle metadata objects. */
-            val toBeSend: ByteArray = metadata!!
-            metadata = null
-            if (toBeSend.size > KeyCenter.MAX_META_SIZE) {
-                Log.e(TAG, String.format("Metadata exceeding max length %d!", KeyCenter.MAX_META_SIZE))
-                return null
-            }
-            val data = String(toBeSend, Charset.forName("UTF-8"))
-//            Log.i(TAG, String.format("Metadata sent successfully! The content is %s", data))
-            return toBeSend
-        }
-
-        /**Occurs when the local user receives the metadata.
-         * @param buffer The received metadata.
-         * @param uid The ID of the user who sent the metadata.
-         * @param timeStampMs The timestamp (ms) of the received metadata.
-         */
-        override fun onMetadataReceived(buffer: ByteArray, uid: Int, timeStampMs: Long) {
-            val data = String(buffer, Charset.forName("UTF-8"))
-//            Log.i(TAG, "onMetadataReceived:$data")
-        }
-    }
-
-    private var giftPosition: Int = -1
-
-    // 临时变量，切换成功则修改
-    private var tempGiftPosition = -1
-
-    private fun switchGiftSuccess(ret: Boolean) {
-        runOnMainThread {
-            if (ret) {
-                giftPosition = tempGiftPosition
-                tempGiftPosition = -1
-                if (giftPosition >= 0 && giftPosition < KeyCenter.alphaGiftList.size) {
-                    binding.btAlphaGift.text = KeyCenter.alphaGiftList[giftPosition].name
-                }
-                ToastUtils.showShort(R.string.play_gift_success)
-            } else {
-                ToastUtils.showShort(R.string.play_gift_failed)
-            }
-        }
-    }
-
-    private val localGiftTexture by lazy {
-        TextureView(requireActivity()).apply {
-            isOpaque = false
-        }
-    }
-
-    private var giftMediaPlayer: IMediaPlayer? = null
-
-    private fun showGiftTexture() {
-        val giftUrl = KeyCenter.alphaGiftList[tempGiftPosition].url
-        val localContainter = binding.root
-        localContainter.removeView(localGiftTexture)
-        val childCount = localContainter.childCount
-        localContainter.addView(localGiftTexture, childCount)
-        giftMediaPlayer = rtcEngine.createMediaPlayer()
-        giftMediaPlayer?.apply {
-            val mode = KeyCenter.alphaGiftList[tempGiftPosition].mode
-            setPlayerOption("alpha_stitch_mode", mode)
-            registerPlayerObserver(giftMediaPlayerObserver)
-            setView(localGiftTexture)
-            open(giftUrl, 0)
-        }
-        val giftVideoCanvas =
-            VideoCanvas(localGiftTexture, VideoCanvas.RENDER_MODE_HIDDEN, 0).apply {
-                enableAlphaMask = true
-                sourceType = VideoSourceType.VIDEO_SOURCE_MEDIA_PLAYER.value
-                mediaPlayerId = giftMediaPlayer?.mediaPlayerId ?: -1
-            }
-        rtcEngine.setupLocalVideo(giftVideoCanvas)
-    }
-
-    private val giftMediaPlayerObserver = object : MPObserverAdapter() {
-
-        override fun onPlayerStateChanged(
-            state: io.agora.mediaplayer.Constants.MediaPlayerState?,
-            error: io.agora.mediaplayer.Constants.MediaPlayerReason?
-        ) {
-            super.onPlayerStateChanged(state, error)
-            Log.d(TAG, "gift onPlayerStateChanged: $state，$error")
-            when (state) {
-                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_OPEN_COMPLETED -> {
-                    giftMediaPlayer?.play()
-                }
-
-                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYING -> {
-                    switchGiftSuccess(true)
-                }
-
-                io.agora.mediaplayer.Constants.MediaPlayerState.PLAYER_STATE_PLAYBACK_ALL_LOOPS_COMPLETED -> {
-                    runOnMainThread {
-                        binding.btAlphaGift.text = "send gift"
-                        giftPosition = -1
-//                       val localContainter = (localTexture.parent as? ViewGroup)?:return@runOnMainThread
-                        val localContainter = binding.root
-                        localContainter.removeView(localGiftTexture)
-                    }
-                }
-
-                else -> {}
-            }
-            if (error != io.agora.mediaplayer.Constants.MediaPlayerReason.PLAYER_REASON_NONE) {
-                switchGiftSuccess(false)
-            }
-        }
     }
 
     private fun startPushToZego() {

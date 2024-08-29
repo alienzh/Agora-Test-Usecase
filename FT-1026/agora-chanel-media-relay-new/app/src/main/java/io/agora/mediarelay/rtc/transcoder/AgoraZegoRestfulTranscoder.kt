@@ -72,15 +72,17 @@ class AgoraZegoRestfulTranscoder constructor(
         val api = "/rtsc/stream-converter/builderTokens"
         val testHost = KeyCenter.testIp.split(":")[0]
         val testPort = KeyCenter.testIp.split(":")[1]
-        val map = mapOf(
+        val map = mutableMapOf<String,Any>(
             "taskLabels" to mapOf(
                 "cname" to "rd-jaco",
                 "uid" to uid,
             ),
-            "testIp" to testHost,
-            "testPort" to testPort,
-            "testVersion" to "v3.12.5-s",
         )
+        if (KeyCenter.userTestIp){
+            map["testIp"] = testHost
+            map["testPort"] = testPort.toLong()
+            map["testVersion"] = KeyCenter.testVersion
+        }
         val jsonString = gson.toJson(map)
         val requestBody = jsonString.toRequestBody("application/json".toMediaTypeOrNull())
         val request = Request.Builder()
