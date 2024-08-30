@@ -85,7 +85,7 @@
     <fragment
         android:id="@+id/livingZegoFragment"
         android:name="io.agora.mediarelay.zego.ZegoLivingFragment"
-        android:label="Living4Fragment">
+        android:label="LivingZegoFragment">
         <action
             android:id="@+id/action_ZegoLivingFragment_to_mainFragment"
             app:destination="@id/mainFragment" />

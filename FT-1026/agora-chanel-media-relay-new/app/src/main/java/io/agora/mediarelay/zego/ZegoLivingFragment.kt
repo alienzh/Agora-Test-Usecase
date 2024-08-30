@@ -202,6 +202,10 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
             if (isBroadcaster) {
                 startPublish()
                 startSendRemoteChannel()
+
+                ThreadUtils.runOnUiThread {
+                    startPushToAgora()
+                }
             } else {
                 startPlay(ownerPublishStreamId)
             }
@@ -292,10 +296,6 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
             override fun onPublisherCapturedVideoFirstFrame(channel: ZegoPublishChannel?) {
                 super.onPublisherCapturedVideoFirstFrame(channel)
                 LogTool.d(TAG, "onPublisherCapturedVideoFirstFrame: channel = $channel")
-                // 采集第一帧后转推
-                ThreadUtils.runOnUiThread {
-                    startPushToAgora()
-                }
             }
 
             override fun onPublisherVideoSizeChanged(width: Int, height: Int, channel: ZegoPublishChannel?) {

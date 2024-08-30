@@ -89,7 +89,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+//    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
@@ -101,7 +101,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.9.0'
     // rtc
     // https://download.agora.io/sdk/release/Agora_Native_SDK_for_Android_rel.v4.3.1.132_61161_FULL_20240607_1439_309850.zip
-//    implementation 'io.agora.rtc:agora-special-full:4.3.1.132'
+    implementation 'io.agora.rtc:agora-special-full:4.3.2.4'
     implementation 'io.agora:authentication:2.0.0'
     implementation 'commons-codec:commons-codec:1.16.0'
     implementation 'io.github.winskyan:Agora-LoggingService:1.0.9'

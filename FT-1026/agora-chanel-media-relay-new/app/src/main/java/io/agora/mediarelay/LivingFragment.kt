@@ -513,6 +513,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         val ret1 = rtcEngine.setParameters("{\"engine.video.enable_hw_decoder\":\"true\"}")
         val ret2 = rtcEngine.setParameters("{\"engine.video.decoder_out_byte_frame\":\"true\"}")
 
+        rtcEngine.setParameters("{\"che.video.keyFrameInterval\":2}")
+        rtcEngine.setParameters("{\"che.video.has_intra_request\":false}")
+
         val score = rtcEngine.queryDeviceScore()
         Log.d(TAG, "queryDeviceScore $score")
         // 265
