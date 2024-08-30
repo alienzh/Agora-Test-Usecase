@@ -80,8 +80,8 @@ android {
     applicationVariants.all {
         variant ->
             variant.outputs.all { output ->
-                outputFileName = new File("AGDemo_RSTC_AGORA_ZEGO" +
-                        "v" + defaultConfig.versionName + "_" +
+                outputFileName = new File("RSTC_AGORA_VS_ZEGO" +
+                        "_v" + defaultConfig.versionName + "_" +
                         new Date().format("yyyyMMddHHmm") + "_" +
                         buildType.name + ".apk")
             }
