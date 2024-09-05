@@ -4,6 +4,7 @@
     <string name="enter_room">Enter Room</string>
     <string name="select_role">Role:</string>
     <string name="role_broadcaster">Broadcaster</string>
+    <string name="role_muted_broadcaster">Muted Broadcaster</string>
     <string name="role_audience">Audience</string>
     <string name="confirm">Confirm</string>
     <string name="pk">PK</string>

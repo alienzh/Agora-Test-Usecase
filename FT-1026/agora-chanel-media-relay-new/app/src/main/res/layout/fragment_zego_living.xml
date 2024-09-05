@@ -32,15 +32,27 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tv_channel_id"
+        android:id="@+id/tv_vendor"
         android:layout_width="wrap_content"
-        android:layout_height="60dp"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:textColor="@color/white"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@id/btn_back"
+        android:textSize="11sp"
+        android:layout_marginTop="8dp"
         app:layout_constraintStart_toEndOf="@id/btn_back"
         app:layout_constraintTop_toTopOf="@id/btn_back"
+        tools:text="123" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_channel_uid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="11sp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="@id/btn_back"
+        app:layout_constraintStart_toEndOf="@id/btn_back"
         tools:text="123" />
 
     <androidx.constraintlayout.widget.Guideline

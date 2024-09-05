@@ -33,6 +33,7 @@ import io.agora.mediarelay.rtc.transcoder.ChannelUid
 import io.agora.mediarelay.rtc.transcoder.ZegoTranscodeSetting
 import io.agora.mediarelay.tools.LogTool
 import io.agora.mediarelay.widget.OnFastClickListener
+import io.agora.rtc2.Constants
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
@@ -50,6 +51,12 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
     private val channelName by lazy { arguments?.getString(KEY_CHANNEL_ID) ?: "" }
 
     private val isBroadcaster by lazy { arguments?.getBoolean(KEY_IS_BROADCASTER, false) ?: false }
+
+    private val isMutedBroadcaster by lazy {
+        arguments?.getBoolean(KeyCenter.KEY_IS_MUTED, false) ?: false
+    }
+
+    private val isOwner: Boolean get() = isBroadcaster && !isMutedBroadcaster
 
     private val zegoEngine by lazy { ZegoEngineInstance.engine }
 
@@ -80,31 +87,21 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
     }
 
     private fun initView() {
-        if (isBroadcaster) {
-//            binding.layoutRoomId.isVisible = true
-//            binding.btSubmitPk.isVisible = true
-//            binding.layoutAgora.isVisible = true
-//            binding.btPkAgora.isVisible = true
-//
-//            binding.btSwitchCarma.isVisible = true
-//            binding.btMuteMic.isVisible = true
-//            binding.btMuteCarma.isVisible = true
+        if (isOwner) {
             binding.groupBroadcaster.isVisible = true
             binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
             binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
         } else {
-//            binding.layoutRoomId.isVisible = false
-//            binding.btSubmitPk.isVisible = false
-//            binding.layoutAgora.isVisible = false
-//            binding.btPkAgora.isVisible = false
-//
-//            binding.btSwitchCarma.isVisible = false
-//            binding.btMuteMic.isVisible = false
-//            binding.btMuteCarma.isVisible = false
-
             binding.groupBroadcaster.isVisible = false
         }
-        binding.tvChannelId.text = "$channelName(${KeyCenter.vendor})"
+        if (isOwner) {
+            binding.tvVendor.text = KeyCenter.vendor.name + "-Broadcaster"
+        } else if (isMutedBroadcaster) {
+            binding.tvVendor.text = KeyCenter.vendor.name + "-muted broadcaster"
+        } else {
+            binding.tvVendor.text = KeyCenter.vendor.name + "-Audience"
+        }
+        binding.tvChannelUid.text = "$channelName-${zegoUser.userID}"
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
@@ -147,11 +144,13 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
             if (muteLocalVideo) {
                 muteLocalVideo = false
                 binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-                zegoEngine.startPreview(ZegoCanvas(localTexture))
+//                zegoEngine.startPreview(ZegoCanvas(localTexture))
+                zegoEngine.enableCamera(true)
             } else {
                 muteLocalVideo = true
                 binding.btMuteCarma.setImageResource(R.drawable.ic_camera_off)
-                zegoEngine.stopPreview()
+//                zegoEngine.stopPreview()
+                zegoEngine.enableCamera(false)
             }
         }
 
@@ -160,7 +159,7 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
             override fun onClickJacking(view: View) {
 
                 if (!remoteAgoraChannel.isNullOrEmpty()) { // pk 中停止pk
-                    binding.btPkAgora.text =getString(R.string.start_pk_agora)
+                    binding.btPkAgora.text = getString(R.string.start_pk_agora)
                     binding.etAgoraChannel.setText("")
                     remoteAgoraChannel = ""
                     stopPk()
@@ -171,7 +170,7 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
                         ToastUtils.showShort("Please enter agora channelId")
                         return
                     }
-                    binding.btPkAgora.text =getString(R.string.stop_pk_agora)
+                    binding.btPkAgora.text = getString(R.string.stop_pk_agora)
                     remoteAgoraChannel = agoraChannel
                     remotePublishStreamId = agoraChannel
                     startPk(agoraChannel)
@@ -199,7 +198,7 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
             }
 
             if (!isSuccess) return@loginRoom
-            if (isBroadcaster) {
+            if (isOwner) {
                 startPublish()
                 startSendRemoteChannel()
 
@@ -207,15 +206,18 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
                     startPushToAgora()
                 }
             } else {
+                if (isMutedBroadcaster) {
+                    startMutedPublish()
+                }
                 startPlay(ownerPublishStreamId)
             }
         }
         //enable the camera
-        zegoEngine.enableCamera(isBroadcaster)
+        zegoEngine.enableCamera(isOwner || isMutedBroadcaster)
         //enable the microphone
-        zegoEngine.muteMicrophone(!isBroadcaster)
+        zegoEngine.muteMicrophone(!isOwner)
         //enable the speaker
-        zegoEngine.muteSpeaker(!isBroadcaster)
+        zegoEngine.muteSpeaker(!isOwner)
 
         zegoEngine.setEventHandler(object : IZegoEventHandler() {
 
@@ -234,7 +236,7 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
                 LogTool.d(TAG, "onRecvRoomTransparentMessage: roomID = $roomID, message = $message")
                 val data = message?.content ?: return
                 if (roomID != channelName) return
-                if (isBroadcaster) return
+                if (isOwner) return
                 runOnMainThread {
                     try {
                         val strMsg = String(data)
@@ -310,12 +312,19 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
 
     // 推流
     private fun startPublish() {
-        if (!isBroadcaster) return
+        if (!isOwner) return
         binding.layoutVideoContainer.removeAllViews()
         binding.layoutVideoContainer.addView(localTexture)
         zegoEngine.startPreview(ZegoCanvas(localTexture))
         // Start publishing stream
         zegoEngine.startPublishingStream(publishStreamId)
+    }
+
+    // 推流
+    private fun startMutedPublish() {
+        if (!isMutedBroadcaster) return
+        // Start publishing stream
+        zegoEngine.startPublishingStream(zegoUser.userID)
     }
 
     // 拉流
@@ -327,12 +336,15 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
     }
 
     override fun onDestroy() {
-        if (isBroadcaster) {
+        if (isOwner) {
             stopSendRemoteChannel()
             zegoEngine.stopPreview()
             zegoEngine.stopPublishingStream()
             stopPushToZego()
         } else {
+            if (isMutedBroadcaster) {
+                zegoEngine.stopPublishingStream()
+            }
             zegoEngine.stopPlayingStream(ownerPublishStreamId)
         }
         ZegoEngineInstance.destroy()
@@ -360,7 +372,7 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
 
     private val remoteChannelTask = object : Utils.Task<Boolean>(Utils.Consumer {
         if (mStopRemoteChannel) return@Consumer
-        if (!isBroadcaster) return@Consumer
+        if (!isOwner) return@Consumer
         sendRemoteChannel(remoteZegoRoomId ?: "")
     }) {
         override fun doInBackground(): Boolean {
@@ -417,7 +429,7 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
         binding.videoPKLayout.videoContainer.isVisible = true
         binding.layoutVideoContainer.isVisible = false
         binding.layoutVideoContainer.removeAllViews()
-        if (isBroadcaster) { // 主播
+        if (isOwner) { // 主播
             binding.videoPKLayout.iBroadcasterAView.removeAllViews()
             binding.videoPKLayout.iBroadcasterAView.addView(localTexture)
 
@@ -447,7 +459,7 @@ class ZegoLivingFragment : BaseUiFragment<FragmentZegoLivingBinding>() {
         binding.layoutVideoContainer.isVisible = true
         binding.videoPKLayout.iBroadcasterAView.removeAllViews()
         binding.videoPKLayout.iBroadcasterBView.removeAllViews()
-        if (isBroadcaster) {
+        if (isOwner) {
             binding.layoutVideoContainer.removeAllViews()
             binding.layoutVideoContainer.addView(localTexture)
         } else {

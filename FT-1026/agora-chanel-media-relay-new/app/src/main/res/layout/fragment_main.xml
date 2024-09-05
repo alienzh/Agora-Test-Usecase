@@ -354,13 +354,13 @@
                 android:layout_marginTop="8dp">
 
                 <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tv_role"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="@string/select_role"
                     android:textColor="#99FFFFFF"
                     android:textSize="13sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
@@ -371,8 +371,9 @@
                     android:layout_marginEnd="8dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent">
+                    app:layout_constraintTop_toBottomOf="@+id/tv_role">
 
                     <androidx.appcompat.widget.AppCompatRadioButton
                         android:id="@+id/role_broadcaster"
@@ -380,7 +381,15 @@
                         android:layout_height="wrap_content"
                         android:text="@string/role_broadcaster"
                         android:textColor="@color/white"
-                        android:textSize="13sp" />
+                        android:textSize="11sp" />
+
+                    <androidx.appcompat.widget.AppCompatRadioButton
+                        android:id="@+id/role_muted_broadcaster"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/role_muted_broadcaster"
+                        android:textColor="@color/white"
+                        android:textSize="11sp" />
 
                     <androidx.appcompat.widget.AppCompatRadioButton
                         android:id="@+id/role_audience"
@@ -390,7 +399,7 @@
                         android:checked="true"
                         android:text="@string/role_audience"
                         android:textColor="@color/white"
-                        android:textSize="13sp" />
+                        android:textSize="11sp" />
                 </RadioGroup>
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -429,7 +438,7 @@
                         android:checked="true"
                         android:text="@string/resolution_1080p"
                         android:textColor="@color/white"
-                        android:textSize="13sp" />
+                        android:textSize="11sp" />
 
                     <androidx.appcompat.widget.AppCompatRadioButton
                         android:id="@+id/resolution_720p"
@@ -437,7 +446,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/resolution_720p"
                         android:textColor="@color/white"
-                        android:textSize="13sp" />
+                        android:textSize="11sp" />
 
                     <androidx.appcompat.widget.AppCompatRadioButton
                         android:id="@+id/resolution_540p"
@@ -445,7 +454,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/resolution_540p"
                         android:textColor="@color/white"
-                        android:textSize="13sp" />
+                        android:textSize="11sp" />
 
                     <androidx.appcompat.widget.AppCompatRadioButton
                         android:id="@+id/resolution_auto"
@@ -453,7 +462,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/resolution_auto"
                         android:textColor="@color/white"
-                        android:textSize="13sp" />
+                        android:textSize="11sp" />
                 </RadioGroup>
             </androidx.constraintlayout.widget.ConstraintLayout>
 

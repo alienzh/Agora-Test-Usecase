@@ -242,4 +242,8 @@ object KeyCenter {
 
     var testIp: String = "60.191.137.21:16667"
     var testVersion: String = "v3.12.5-s"
+
+    const val KEY_CHANNEL_ID: String = "key_channel_id"
+    const val KEY_ROLE: String = "key_role"
+    const val KEY_IS_MUTED: String = "key_is_muted"
 }

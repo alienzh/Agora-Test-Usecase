@@ -40,23 +40,23 @@ import java.util.concurrent.TimeUnit
 class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     companion object {
         private const val TAG = "LivingFragment"
-
-        const val KEY_CHANNEL_ID: String = "key_channel_id"
-        const val KEY_ROLE: String = "key_role"
     }
 
     // 推流状态
     @Volatile
     private var publishedRtmp = false
 
-    private val channelName by lazy { arguments?.getString(KEY_CHANNEL_ID) ?: "" }
+    private val channelName by lazy { arguments?.getString(KeyCenter.KEY_CHANNEL_ID) ?: "" }
 
     private val role by lazy {
-        arguments?.getInt(KEY_ROLE, Constants.CLIENT_ROLE_BROADCASTER) ?: Constants.CLIENT_ROLE_BROADCASTER
+        arguments?.getInt(KeyCenter.KEY_ROLE, Constants.CLIENT_ROLE_BROADCASTER) ?: Constants.CLIENT_ROLE_BROADCASTER
     }
 
-    private val isOwner: Boolean
-        get() = role == Constants.CLIENT_ROLE_BROADCASTER
+    private val isMutedBroadcaster by lazy {
+        arguments?.getBoolean(KeyCenter.KEY_IS_MUTED, false) ?: false
+    }
+
+    private val isOwner: Boolean get() = role == Constants.CLIENT_ROLE_BROADCASTER && !isMutedBroadcaster
 
     private val rtcEngine by lazy { AgoraRtcEngineInstance.rtcEngine }
 
@@ -101,29 +101,20 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     private fun initView() {
         if (isOwner) {
-//            binding.layoutChannel.isVisible = true
-//            binding.btSubmitPk.isVisible = true
-//            binding.layoutZego.isVisible = true
-//            binding.btPkZego.isVisible = true
-//            binding.btSwitchCarma.isVisible = true
-//            binding.btMuteMic.isVisible = true
-//            binding.btMuteCarma.isVisible = true
-
             binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
             binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
             binding.groupBroadcaster.isVisible = true
         } else {
-//            binding.layoutChannel.isVisible = false
-//            binding.btSubmitPk.isVisible = false
-//            binding.layoutZego.isVisible = false
-//            binding.btPkZego.isVisible = false
-//
-//
-//            binding.btMuteMic.isVisible = false
-//            binding.btMuteCarma.isVisible = false
             binding.groupBroadcaster.isVisible = false
         }
-        binding.tvChannelId.text = "$channelName(${KeyCenter.cdnMakes})"
+        if (isOwner) {
+            binding.tvVendor.text = KeyCenter.vendor.name + "-Broadcaster"
+        } else if (isMutedBroadcaster) {
+            binding.tvVendor.text = KeyCenter.vendor.name + "-muted broadcaster"
+        } else {
+            binding.tvVendor.text = KeyCenter.vendor.name + "-Audience"
+        }
+        binding.tvChannelUid.text = "$channelName-${userAccount}"
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
@@ -208,7 +199,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                         ToastUtils.showShort("Please enter zego roomId")
                         return
                     }
-                    binding.btPkZego.text =  getString(R.string.stop_pk_zego)
+                    binding.btPkZego.text = getString(R.string.stop_pk_zego)
                     remoteZegoRoomId = zegoRoomId
                     startPk(zegoRoomId)
                     binding.groupPk.isVisible = false
@@ -495,7 +486,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
         channelMediaOptions.clientRoleType = role
         channelMediaOptions.autoSubscribeVideo = true
         channelMediaOptions.autoSubscribeAudio = true
-        channelMediaOptions.publishCameraTrack = isOwner
+        channelMediaOptions.publishCameraTrack = isOwner || isMutedBroadcaster
         channelMediaOptions.publishMicrophoneTrack = isOwner
         if (isOwner) {
             rtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING)

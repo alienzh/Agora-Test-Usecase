@@ -117,15 +117,27 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
     private val isBroadcaster: Boolean
         get() = binding.groupRole.checkedRadioButtonId == R.id.role_broadcaster
 
+    private val isMutedBroadcaster: Boolean
+        get() = binding.groupRole.checkedRadioButtonId == R.id.role_muted_broadcaster
+
+
     private fun checkVideoSettingsVisible() {
-        if (isBroadcaster) {
-            binding.layoutResolution.isVisible = true
-            binding.layoutFps.isVisible = true
-            binding.layoutBitrate.isVisible = true
-        } else {
-            binding.layoutResolution.isVisible = false
-            binding.layoutFps.isVisible = false
-            binding.layoutBitrate.isVisible = false
+        when(binding.groupRole.checkedRadioButtonId){
+            R.id.role_broadcaster ->{
+                binding.layoutResolution.isVisible = true
+                binding.layoutFps.isVisible = true
+                binding.layoutBitrate.isVisible = true
+            }
+            R.id.role_muted_broadcaster ->{
+                binding.layoutResolution.isVisible = true
+                binding.layoutFps.isVisible = true
+                binding.layoutBitrate.isVisible = true
+            }
+            else ->{
+                binding.layoutResolution.isVisible = false
+                binding.layoutFps.isVisible = false
+                binding.layoutBitrate.isVisible = false
+            }
         }
     }
 
@@ -157,21 +169,13 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
 
     private fun setupZegoSettings() {
         when (binding.groupResolution.checkedRadioButtonId) {
-            R.id.resolution_1080p -> {
-                ZegoSettings.mVideoConfigpreset = ZegoVideoConfigPreset.PRESET_1080P
-            }
+            R.id.resolution_1080p -> ZegoSettings.mVideoConfigpreset = ZegoVideoConfigPreset.PRESET_1080P
 
-            R.id.resolution_720p -> {
-                ZegoSettings.mVideoConfigpreset = ZegoVideoConfigPreset.PRESET_720P
-            }
+            R.id.resolution_720p -> ZegoSettings.mVideoConfigpreset = ZegoVideoConfigPreset.PRESET_720P
 
-            R.id.resolution_540p -> {
-                ZegoSettings.mVideoConfigpreset = ZegoVideoConfigPreset.PRESET_540P
-            }
+            R.id.resolution_540p -> ZegoSettings.mVideoConfigpreset = ZegoVideoConfigPreset.PRESET_540P
 
-            else -> {
-                ZegoSettings.mVideoConfigpreset = ZegoVideoConfigPreset.PRESET_1080P
-            }
+            else -> ZegoSettings.mVideoConfigpreset = ZegoVideoConfigPreset.PRESET_1080P
         }
         ZegoSettings.mFrameRate = binding.etFps.text.toString().toIntOrNull() ?: 24
         ZegoSettings.mBitRate = binding.etBitrate.text.toString().toIntOrNull() ?: 0
@@ -208,13 +212,14 @@ class MainFragment : BaseUiFragment<FragmentMainBinding>() {
             return
         }
         val args = Bundle().apply {
-            putString(LivingFragment.KEY_CHANNEL_ID, channelId)
+            putString(KeyCenter.KEY_CHANNEL_ID, channelId)
+            putBoolean(KeyCenter.KEY_IS_MUTED, isMutedBroadcaster)
         }
         if (binding.groupAppId.checkedRadioButtonId == R.id.app_id_agora) {
             KeyCenter.vendor = Vendor.Agora
             args.putInt(
-                LivingFragment.KEY_ROLE,
-                if (isBroadcaster) Constants.CLIENT_ROLE_BROADCASTER else Constants.CLIENT_ROLE_AUDIENCE
+                KeyCenter.KEY_ROLE,
+                if (isBroadcaster|| isMutedBroadcaster) Constants.CLIENT_ROLE_BROADCASTER else Constants.CLIENT_ROLE_AUDIENCE
             )
             setupVideoSettings()
         } else {
