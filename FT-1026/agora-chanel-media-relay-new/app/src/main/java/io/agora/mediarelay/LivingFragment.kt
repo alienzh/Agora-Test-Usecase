@@ -68,12 +68,10 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private var cdnPosition = 0
 
     @Volatile
-    private var audienceStatus: AudienceStatus = AudienceStatus.CDN_Audience
-
-    private val isInPk get() = remotePkChannel.isNotEmpty() || remoteZegoRoomId.isNotEmpty()
+    private var audienceStatus: AudienceStatus = AudienceStatus.RTC_Audience
 
     // pk 频道
-    private var remotePkChannel = ""
+    private var mRemotePkChannel: String? = null
 
     // 用户 account
     private val userAccount by lazy {
@@ -85,9 +83,6 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     //key account，value rtc-uid
     private val uidMapping = mutableMapOf<String, Int>()
-
-    // zego 频道
-    private var remoteZegoRoomId = ""
 
     override fun getViewBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentLivingBinding {
         return FragmentLivingBinding.inflate(inflater)
@@ -101,47 +96,53 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     private fun initView() {
         if (isOwner) {
+            binding.groupBroadcaster.isVisible = true
+            binding.groupPk.isVisible = true
+            binding.groupOtherChannel.isVisible = false
+
             binding.btMuteMic.setImageResource(R.drawable.ic_mic_on)
             binding.btMuteCarma.setImageResource(R.drawable.ic_camera_on)
-            binding.groupBroadcaster.isVisible = true
+
         } else {
             binding.groupBroadcaster.isVisible = false
+            binding.groupPk.isVisible = false
+            binding.groupOtherChannel.isVisible = true
         }
         if (isOwner) {
-            binding.tvVendor.text = KeyCenter.vendor.name + "-Broadcaster"
+            binding.tvVendor.text = "${KeyCenter.vendor.name}-Broadcaster"
         } else if (isMutedBroadcaster) {
-            binding.tvVendor.text = KeyCenter.vendor.name + "-muted broadcaster"
+            binding.tvVendor.text = "${KeyCenter.vendor.name}-MutedBroadcaster"
         } else {
-            binding.tvVendor.text = KeyCenter.vendor.name + "-Audience"
+            binding.tvVendor.text = "${KeyCenter.vendor.name}-Audience"
         }
         binding.tvChannelUid.text = "$channelName-${userAccount}"
         binding.btnBack.setOnClickListener {
             findNavController().popBackStack()
         }
-        binding.btPkAgora.setOnClickListener {
-            if (remotePkChannel.isNotEmpty()) { // pk 中停止pk
-                binding.btPkAgora.text = getString(R.string.start_pk_agora)
-                binding.etPkAgoraChannel.setText("")
-                remotePkChannel = ""
-                stopPk()
-                uidMapping[userAccount]?.let { ownerUid ->
-                    val channelUid = ChannelUid(channelName, ownerUid, userAccount)
-                    updateRtmpStreamEnable(channelUid)
+        binding.btPk.setOnClickListener(object : OnFastClickListener(message = getString(R.string.click_too_fast)) {
+            override fun onClickJacking(view: View) {
+                if (!mRemotePkChannel.isNullOrEmpty()) { // pk 中停止pk
+                    binding.btPk.text = getString(R.string.start_pk)
+                    binding.etPkChannel.setText("")
+                    mRemotePkChannel = null
+                    stopPk()
+                    uidMapping[userAccount]?.let { ownerUid ->
+                        val channelUid = ChannelUid(channelName, ownerUid, userAccount)
+                        updateRtmpStreamEnable(channelUid)
+                    }
+                } else {
+                    val channelId = binding.etPkChannel.text.toString()
+                    if (channelId.isEmpty()) {
+                        ToastUtils.showShort("Please enter pk channelId")
+                        return
+                    }
+                    binding.btPk.text = getString(R.string.stop_pk)
+                    mRemotePkChannel = channelId
+                    startPk(channelId)
                 }
-                binding.groupPkZego.isVisible = true
-            } else {
-                val channelId = binding.etPkAgoraChannel.text.toString()
-                if (channelId.isEmpty()) {
-                    ToastUtils.showShort("Please enter agora channelId")
-                    return@setOnClickListener
-                }
-                binding.btPkAgora.text = getString(R.string.stop_pk_agora)
-                remotePkChannel = channelId
-                startPk(channelId)
-
-                binding.groupPkZego.isVisible = false
             }
-        }
+        })
+
         binding.btSwitchCarma.setOnClickListener {
             rtcEngine.switchCamera()
         }
@@ -180,29 +181,27 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
             dashboardFragment.setOn(it.isSelected)
             binding.flDashboard.isVisible = it.isSelected
         }
-        binding.btPkZego.setOnClickListener(object :
+        binding.btOtherChannel.setOnClickListener(object :
             OnFastClickListener(message = getString(R.string.click_too_fast)) {
             override fun onClickJacking(view: View) {
-                if (remoteZegoRoomId.isNotEmpty()) { // pk 中停止pk
-                    binding.btPkZego.text = getString(R.string.start_pk_zego)
-                    binding.etPkZegoRoomid.setText("")
-                    remoteZegoRoomId = ""
+                if (!mRemotePkChannel.isNullOrEmpty()) { // pk 中停止pk
+                    binding.btOtherChannel.text = getString(R.string.join_channel)
+                    binding.etOtherChannel.setText("")
+                    mRemotePkChannel = null
                     stopPk()
                     uidMapping[userAccount]?.let { ownerUid ->
                         val channelUid = ChannelUid(channelName, ownerUid, userAccount)
                         updateRtmpStreamEnable(channelUid)
                     }
-                    binding.groupPk.isVisible = true
                 } else {
-                    val zegoRoomId = binding.etPkZegoRoomid.text.toString()
-                    if (zegoRoomId.isEmpty()) {
-                        ToastUtils.showShort("Please enter zego roomId")
+                    val otherChannelId = binding.etOtherChannel.text.toString()
+                    if (otherChannelId.isEmpty()) {
+                        ToastUtils.showShort("Please enter other channelId")
                         return
                     }
-                    binding.btPkZego.text = getString(R.string.stop_pk_zego)
-                    remoteZegoRoomId = zegoRoomId
-                    startPk(zegoRoomId)
-                    binding.groupPk.isVisible = false
+                    binding.btOtherChannel.text = getString(R.string.leave_channel)
+                    mRemotePkChannel = otherChannelId
+                    startPk(otherChannelId)
                 }
             }
         })
@@ -265,13 +264,13 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
                 val jsonMsg = JSONObject(strMsg)
                 if (jsonMsg.getString("cmd") == "StartPk") { //同步远端 remotePk
                     val channel = jsonMsg.getString("channel")
-                    if (isInPk) return@IChannelEventListener
-                    remotePkChannel = channel
-                    startPk(remotePkChannel)
+                    if (!mRemotePkChannel.isNullOrEmpty()) return@IChannelEventListener
+                    mRemotePkChannel = channel
+                    startPk(channel)
                 } else if (jsonMsg.getString("cmd") == "StopPk") {
-                    if (!isInPk) return@IChannelEventListener
-                    val tempChannel = remotePkChannel
-                    remotePkChannel = ""
+                    if (mRemotePkChannel.isNullOrEmpty()) return@IChannelEventListener
+                    val tempChannel = mRemotePkChannel
+                    mRemotePkChannel = null
                     stopPk()
                 }
             } catch (e: Exception) {
@@ -381,6 +380,9 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
     /**pk 模式,*/
     private fun updatePkMode(remotePkUid: Int) {
+        mRemotePkChannel ?: return
+        val pkRemoteUid = uidMapping[mRemotePkChannel] ?: return
+        if (remotePkUid != pkRemoteUid) return
         val act = activity ?: return
         binding.videoPKLayout.videoContainer.isVisible = true
         binding.layoutVideoContainer.isVisible = false
@@ -521,7 +523,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     }
 
     private fun updateVideoEncoder() {
-        if (isInPk && RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_1920x1080) {
+        if (!mRemotePkChannel.isNullOrEmpty() && RtcSettings.mVideoDimensions == VideoEncoderConfiguration.VD_1920x1080) {
             val videoEncoderConfiguration = VideoEncoderConfiguration().apply {
                 mirrorMode = VideoEncoderConfiguration.MIRROR_MODE_TYPE.MIRROR_MODE_DISABLED
                 dimensions = VideoEncoderConfiguration.VD_1280x720
@@ -550,6 +552,10 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     }
 
     override fun onDestroy() {
+        remoteRtcConnection?.let {
+            rtcEngine.leaveChannelEx(it)
+            remoteRtcConnection = null
+        }
         if (isOwner) {
             stopSendRemoteChannel()
             setRtmpStreamEnable(false)
@@ -607,22 +613,26 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
 
         override fun onUserJoined(remoteUid: Int, elapsed: Int) {
             super.onUserJoined(remoteUid, elapsed)
-            LogTool.d(TAG, "remoteChannel remoteChannel uid:$remoteUid")
+            LogTool.d(TAG, "remoteChannel onUserJoined remoteUid:$remoteUid")
             runOnMainThread {
-                updatePkMode(remoteUid)
-                if (isOwner) {
-                    uidMapping[userAccount]?.let { ownerUid ->
-                        val channelUid = ChannelUid(channelName, ownerUid, userAccount)
+                if (mRemotePkChannel.isNullOrEmpty()) {
+                    if (!isOwner) {
+                        updateIdleMode()
+                    }
+                } else {
+                    updatePkMode(remoteUid)
+                    if (isOwner) {
+                        mRemotePkChannel ?: return@runOnMainThread
+                        // 防止muteBroadcast视频流
+                        val pkRemoteUid = uidMapping[mRemotePkChannel] ?: return@runOnMainThread
+                        if (pkRemoteUid != remoteUid) return@runOnMainThread
+                        uidMapping[userAccount]?.let { ownerUid ->
+                            val channelUid = ChannelUid(channelName, ownerUid, userAccount)
 
-                        var remoteAccount = ""
-                        uidMapping.forEach { fAccount, fUid ->
-                            if (fUid == remoteUid) {
-                                remoteAccount = fAccount
-                            }
+                            val remoteChannelUid = ChannelUid(mRemotePkChannel!!, remoteUid, mRemotePkChannel!!)
+                            val channelUids = arrayOf(channelUid, remoteChannelUid)
+                            updateRtmpStreamEnable(*channelUids)
                         }
-                        val remoteChannelUid = ChannelUid(remotePkChannel, remoteUid, remoteAccount)
-                        val channelUids = arrayOf(channelUid, remoteChannelUid)
-                        updateRtmpStreamEnable(*channelUids)
                     }
                 }
             }
@@ -656,7 +666,7 @@ class LivingFragment : BaseUiFragment<FragmentLivingBinding>() {
     private val remoteChannelTask = object : Utils.Task<Boolean>(Utils.Consumer {
         if (mStopRemoteChannel) return@Consumer
         if (!isOwner) return@Consumer
-        sendRemoteChannel(remotePkChannel)
+//        sendRemoteChannel(mRemotePkChannel)
     }) {
         override fun doInBackground(): Boolean {
             return true
